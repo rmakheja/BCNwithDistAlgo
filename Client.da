@@ -1,0 +1,41 @@
+import sys
+
+class Client(process):
+    def setup(head_replica: Replica, olympus: Olympus):
+        self.successFlag = False
+
+    def receive(msg=config, from_= olympus):
+        output('Received config from olympus - ')
+        print(config)
+        output('Sending operation to Replica')
+        send(('execute'), to= head_replica)
+
+    def receive(msg=result, from_= head_replica):
+        output('Received result from replica -')
+        successFlag = True
+
+    def execute_operation():
+        # start timer
+        output('Fetching current configuration request to Olympus')
+        send(('current_configuration'), to= olympus)
+
+        #await(received(config))
+        #output('Config is - ')
+        #print(config)
+        #output('Sending operation to Replica')
+        #send(('execute'), to= head_replica)
+        #await(received(('execution_success')))
+        #successFlag = True
+
+    def abort():
+        output('abort...!')
+    def success():
+        output('success..!')
+
+    def execute_retransmission():
+        output('Executing retransmission...')
+
+    def run():
+        execute_operation()
+        await(successFlag)
+        output('terminating...')

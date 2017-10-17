@@ -1,0 +1,13 @@
+
+class Replica(process):
+    def setup(olympus: Olympus, client: Client):
+        self.terminate = False
+
+    def receive(msg='execute', from_= client1):
+        output('Received request from Client for task execution')
+        send(('execution_success'), to= client1)
+        terminate = True
+
+    def run():
+        output('Started Replica...waiting for an operations...')
+        await(terminate)

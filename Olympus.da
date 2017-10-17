@@ -1,0 +1,16 @@
+import sys
+
+class Olympus(process):
+
+    def setup(head_replica: Replica, client: Client, config: set):
+        self.terminate = False
+
+    def receive(msg='current_configuration', from_= client1):
+        output('Received request from Client for current configuration')
+        print(config)
+        send((config), to= client1)
+        terminate = True
+
+    def run():
+        output('Started Olympus...waiting for an operations...')
+        await(terminate)

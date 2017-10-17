@@ -1,0 +1,33 @@
+import sys
+c = import_da("Client")
+o = import_da("Olympus")
+r = import_da("Replica")
+
+def main():
+    conf = read_config()
+    # no_replicas = conf.no_replicas
+
+    olympus = new(o.Olympus, num=1, at="OlympusNode@172.24.16.107")
+    head_replica = new(r.Replica, num=1, at="ReplicaNode@172.24.16.107")
+    client = new(c.Client, num=1, at="ClientNode@172.24.16.107")
+
+    setup(olympus, (head_replica, client, conf))
+    setup(client, (head_replica, olympus))
+    setup(head_replica, (olympus, client))
+
+    start(olympus)
+    start(head_replica)
+    start(client)
+
+def read_config():
+    config = {}
+    with open('system.conf', 'r') as f:
+        for line in f:
+            if line[0] != '#':
+                (key,sep,val) = line.partition('=')
+                # if the line does not contain '=', it is invalid and hence ignored
+                if len(sep) != 0:
+                    val = val.strip()
+                    config[key.strip()] = int(val) if str.isdecimal(val) else val
+    return config
+    # print(config)
