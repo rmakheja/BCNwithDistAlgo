@@ -5,18 +5,25 @@ r = import_da("Replica")
 
 def main():
     conf = read_config()
-    # no_replicas = conf.no_replicas
+    print(conf)
+    no_replicas = conf["num_clients"]
+    print('Number of replicas - ' + str(no_replicas))
 
-    olympus = new(o.Olympus, num=1, at="OlympusNode@172.24.16.107")
-    head_replica = new(r.Replica, num=1, at="ReplicaNode@172.24.16.107")
-    client = new(c.Client, num=1, at="ClientNode@172.24.16.107")
+    olympus = new(o.Olympus, num=1, at="OlympusNode@172.24.19.201")
+    replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.201")
+    client = new(c.Client, num=1, at="ClientNode@172.24.19.201")
 
-    setup(olympus, (head_replica, client, conf))
-    setup(client, (head_replica, olympus))
-    setup(head_replica, (olympus, client))
+    list_replica = list(replica_set)
+    print('Type of replica_set variable - ' + str(type(list_replica)) )
+    for r_s in list_replica:
+        print(r_s)
+
+    setup(olympus, (list_replica, client, conf))
+    setup(client, (list_replica, olympus))
+    setup(list_replica, (olympus, client, list_replica))
 
     start(olympus)
-    start(head_replica)
+    start(list_replica)
     start(client)
 
 def read_config():

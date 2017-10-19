@@ -1,16 +1,17 @@
 import sys
 
 class Client(process):
-    def setup(head_replica: Replica, olympus: Olympus):
+    def setup(list_replicas: list, olympus: Olympus):
         self.successFlag = False
 
     def receive(msg=config, from_= olympus):
         output('Received config from olympus - ')
         print(config)
         output('Sending operation to Replica')
-        send(('execute'), to= head_replica)
+        # print(len(list_replicas))
+        send(('execute', '0'), to= list_replicas[0])
 
-    def receive(msg=result, from_= head_replica):
+    def receive(msg=result, from_= list_replicas[3]):
         output('Received result from replica -')
         successFlag = True
 
@@ -18,14 +19,6 @@ class Client(process):
         # start timer
         output('Fetching current configuration request to Olympus')
         send(('current_configuration'), to= olympus)
-
-        #await(received(config))
-        #output('Config is - ')
-        #print(config)
-        #output('Sending operation to Replica')
-        #send(('execute'), to= head_replica)
-        #await(received(('execution_success')))
-        #successFlag = True
 
     def abort():
         output('abort...!')

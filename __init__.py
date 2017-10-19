@@ -25,12 +25,19 @@ class Node_(da.NodeProcess):
 
     def run(self):
         conf = read_config()
-        olympus = self.new(o.Olympus, num=1, at='OlympusNode@172.24.16.107')
-        head_replica = self.new(r.Replica, num=1, at='ReplicaNode@172.24.16.107')
-        client = self.new(c.Client, num=1, at='ClientNode@172.24.16.107')
-        self._setup(olympus, (head_replica, client, conf))
-        self._setup(client, (head_replica, olympus))
-        self._setup(head_replica, (olympus, client))
+        print(conf)
+        no_replicas = conf['num_clients']
+        print(('Number of replicas - ' + str(no_replicas)))
+        olympus = self.new(o.Olympus, num=1, at='OlympusNode@172.24.19.201')
+        replica_set = self.new(r.Replica, num=no_replicas, at='ReplicaNode@172.24.19.201')
+        client = self.new(c.Client, num=1, at='ClientNode@172.24.19.201')
+        list_replica = list(replica_set)
+        print(('Type of replica_set variable - ' + str(type(list_replica))))
+        for r_s in list_replica:
+            print(r_s)
+        self._setup(olympus, (list_replica, client, conf))
+        self._setup(client, (list_replica, olympus))
+        self._setup(list_replica, (olympus, client, list_replica))
         self._start(olympus)
-        self._start(head_replica)
+        self._start(list_replica)
         self._start(client)

@@ -2,7 +2,7 @@ import sys
 
 class Olympus(process):
 
-    def setup(head_replica: Replica, client: Client, config: set):
+    def setup(replica_set: set, client: Client, config: set):
         self.terminate = False
 
     def receive(msg='current_configuration', from_= client1):
