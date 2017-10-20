@@ -6,19 +6,21 @@ class Client(process):
         self.curr_config = {}
         self.successFlag = False
 
-    def receive(msg=config, from_= olympus):
-        output('Received config from olympus - ')
-        print(config)
-        output('Sending operation to Replica')
-        # print(len(list_replicas))
+    def receive(msg=('cur_conf', config), from_= olympus):
         self.curr_config = config
-        send(('execute', '0'), to= self.curr_config["head_replica"])
+        output('Received config from olympus - ')
+        print(curr_config);
+        self.successFlag = True;
 
-    def receive(msg=result, from_= self.curr_config["tail_replica"]):
-        output('Received result from replica -')
+    def receive(msg=('execution_success', result), from_= self.curr_config["tail_replica"]):
+        output('Received result from replica -', result)
         successFlag = True
 
     def execute_operation():
+        send(('execute', '0'), to= self.curr_config["head_replica"])
+        successFlag = False;
+
+    def fetch_config():
         # start timer
         output('Fetching current configuration request to Olympus')
         send(('current_configuration'), to= olympus)
@@ -29,9 +31,13 @@ class Client(process):
         output('success..!')
 
     def execute_retransmission():
+        send(('reconfigure'), to= olympus)
         output('Executing retransmission...')
 
+
     def run():
+        fetch_config();
+        await(successFlag)
         execute_operation()
         await(successFlag)
         output('terminating...')
