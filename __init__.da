@@ -6,9 +6,9 @@ o = import_da("Olympus")
 
 def main():
 
-    if(len(sys.argv) != 2)
+    if(len(sys.argv) != 2):
         print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'WORKLOAD_ID'")
-    else
+    else:
         print("Selected workload id is - " + sys.argv[1])
         # print(conf)
 
