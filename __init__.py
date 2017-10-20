@@ -24,6 +24,8 @@ class Node_(da.NodeProcess):
 
     def run(self):
         conf = read_config()
+        print(sys.argv[1])
+        print(conf)
         olympus = self.new(o.Olympus, num=1, at='OlympusNode@127.0.0.1')
         client = self.new(c.Client, num=1, at='ClientNode@127.0.0.1')
         self._setup(olympus, (client, conf))

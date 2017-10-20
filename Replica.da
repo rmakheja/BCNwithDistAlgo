@@ -9,7 +9,8 @@ class Replica(process):
         print('Replica i received - ', replica_index)
 
         if(replica_index == '2'):
-            send(('execution_success'), to= client1)
+            output('Ending condition')
+            # send(('execution_success'), to= client1)
         else:
             send(('execute', str(int(replica_index)+1)), to= list_replicas[int(replica_index) + 1])
         terminate = True

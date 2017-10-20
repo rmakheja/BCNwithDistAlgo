@@ -2,8 +2,8 @@
 import da
 PatternExpr_289 = da.pat.ConstantPattern('current_configuration')
 PatternExpr_293 = da.pat.FreePattern('client1')
-PatternExpr_357 = da.pat.ConstantPattern('reconfigure')
-PatternExpr_361 = da.pat.FreePattern('client')
+PatternExpr_375 = da.pat.ConstantPattern('reconfigure')
+PatternExpr_379 = da.pat.FreePattern('client')
 _config_object = {}
 import sys
 r = da.import_da('Replica')
@@ -16,10 +16,10 @@ class Olympus(da.DistProcess):
 
     def __init__(self, procimpl, props):
         super().__init__(procimpl, props)
-        self._events.extend([da.pat.EventPattern(da.pat.ReceivedEvent, '_OlympusReceivedEvent_0', PatternExpr_289, sources=[PatternExpr_293], destinations=None, timestamps=None, record_history=None, handlers=[self._Olympus_handler_288]), da.pat.EventPattern(da.pat.ReceivedEvent, '_OlympusReceivedEvent_1', PatternExpr_357, sources=[PatternExpr_361], destinations=None, timestamps=None, record_history=None, handlers=[self._Olympus_handler_356])])
+        self._events.extend([da.pat.EventPattern(da.pat.ReceivedEvent, '_OlympusReceivedEvent_0', PatternExpr_289, sources=[PatternExpr_293], destinations=None, timestamps=None, record_history=None, handlers=[self._Olympus_handler_288]), da.pat.EventPattern(da.pat.ReceivedEvent, '_OlympusReceivedEvent_1', PatternExpr_375, sources=[PatternExpr_379], destinations=None, timestamps=None, record_history=None, handlers=[self._Olympus_handler_374])])
 
-    def setup(self, client, config, **rest_377):
-        super().setup(client=client, config=config, **rest_377)
+    def setup(self, client, config, **rest_395):
+        super().setup(client=client, config=config, **rest_395)
         self._state.client = client
         self._state.config = config
         self._state.oly_private_key = 'oly_priv_key_VALUE'
@@ -43,15 +43,15 @@ class Olympus(da.DistProcess):
     def run(self):
         self.output('Started Olympus...Initializing variables')
         self.output('Waiting for an operations...')
-        super()._label('_st_label_375', block=False)
-        _st_label_375 = 0
-        while (_st_label_375 == 0):
-            _st_label_375 += 1
+        super()._label('_st_label_393', block=False)
+        _st_label_393 = 0
+        while (_st_label_393 == 0):
+            _st_label_393 += 1
             if self._state.terminate:
-                _st_label_375 += 1
+                _st_label_393 += 1
             else:
-                super()._label('_st_label_375', block=True)
-                _st_label_375 -= 1
+                super()._label('_st_label_393', block=True)
+                _st_label_393 -= 1
 
     def _Olympus_handler_288(self, client1):
         self.output('Received request from Client for current configuration')
@@ -62,12 +62,15 @@ class Olympus(da.DistProcess):
         client_config['client_private_key'] = self._state.client_private_key
         client_config['head_replica'] = self._state.replica_list[0]
         client_config['tail_replica'] = self._state.replica_list[(len(self._state.replica_list) - 1)]
+        self.output(('Client timeout received from system.conf is - ' + str(client_timeout)))
+        client_config['client_timeout'] = self._state.config['client_timeout']
+        client_config['']
         self.send(client_config, to=client1)
     _Olympus_handler_288._labels = None
     _Olympus_handler_288._notlabels = None
 
-    def _Olympus_handler_356(self, client):
+    def _Olympus_handler_374(self, client):
         self.output('Received reconfiguration request from Client')
         self._state.terminate = True
-    _Olympus_handler_356._labels = None
-    _Olympus_handler_356._notlabels = None
+    _Olympus_handler_374._labels = None
+    _Olympus_handler_374._notlabels = None

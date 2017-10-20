@@ -11,8 +11,8 @@ class Replica(da.DistProcess):
         super().__init__(procimpl, props)
         self._events.extend([da.pat.EventPattern(da.pat.ReceivedEvent, '_ReplicaReceivedEvent_0', PatternExpr_181, sources=[PatternExpr_188], destinations=None, timestamps=None, record_history=None, handlers=[self._Replica_handler_180])])
 
-    def setup(self, olympus, client, list_replicas, config, **rest_233):
-        super().setup(olympus=olympus, client=client, list_replicas=list_replicas, config=config, **rest_233)
+    def setup(self, olympus, client, list_replicas, config, **rest_231):
+        super().setup(olympus=olympus, client=client, list_replicas=list_replicas, config=config, **rest_231)
         self._state.olympus = olympus
         self._state.client = client
         self._state.list_replicas = list_replicas
@@ -21,21 +21,21 @@ class Replica(da.DistProcess):
 
     def run(self):
         self.output('Started Replica...waiting for an operations...')
-        super()._label('_st_label_231', block=False)
-        _st_label_231 = 0
-        while (_st_label_231 == 0):
-            _st_label_231 += 1
+        super()._label('_st_label_229', block=False)
+        _st_label_229 = 0
+        while (_st_label_229 == 0):
+            _st_label_229 += 1
             if self._state.terminate:
-                _st_label_231 += 1
+                _st_label_229 += 1
             else:
-                super()._label('_st_label_231', block=True)
-                _st_label_231 -= 1
+                super()._label('_st_label_229', block=True)
+                _st_label_229 -= 1
 
     def _Replica_handler_180(self, replica_index, client1):
         self.output('Received request from Client for task execution')
         print('Replica i received - ', replica_index)
         if (replica_index == '2'):
-            self.send('execution_success', to=client1)
+            self.output('Ending condition')
         else:
             self.send(('execute', str((int(replica_index) + 1))), to=self._state.list_replicas[(int(replica_index) + 1)])
         self._state.terminate = True
