@@ -4,7 +4,6 @@ _config_object = {}
 import sys
 c = da.import_da('Client')
 o = da.import_da('Olympus')
-r = da.import_da('Replica')
 
 def read_config():
     config = {}
@@ -25,19 +24,9 @@ class Node_(da.NodeProcess):
 
     def run(self):
         conf = read_config()
-        print(conf)
-        no_replicas = conf['num_clients']
-        print(('Number of replicas - ' + str(no_replicas)))
-        olympus = self.new(o.Olympus, num=1, at='OlympusNode@172.24.19.201')
-        replica_set = self.new(r.Replica, num=no_replicas, at='ReplicaNode@172.24.19.201')
-        client = self.new(c.Client, num=1, at='ClientNode@172.24.19.201')
-        list_replica = list(replica_set)
-        print(('Type of replica_set variable - ' + str(type(list_replica))))
-        for r_s in list_replica:
-            print(r_s)
-        self._setup(olympus, (list_replica, client, conf))
-        self._setup(client, (list_replica, olympus))
-        self._setup(list_replica, (olympus, client, list_replica))
+        olympus = self.new(o.Olympus, num=1, at='OlympusNode@127.0.0.1')
+        client = self.new(c.Client, num=1, at='ClientNode@127.0.0.1')
+        self._setup(olympus, (client, conf))
+        self._setup(client, (olympus, conf))
         self._start(olympus)
-        self._start(list_replica)
         self._start(client)

@@ -1,7 +1,9 @@
 import sys
 
 class Client(process):
-    def setup(list_replicas: list, olympus: Olympus):
+
+    def setup(olympus: Olympus, config: set):
+        self.curr_config = {}
         self.successFlag = False
 
     def receive(msg=config, from_= olympus):
@@ -9,9 +11,10 @@ class Client(process):
         print(config)
         output('Sending operation to Replica')
         # print(len(list_replicas))
-        send(('execute', '0'), to= list_replicas[0])
+        self.curr_config = config
+        send(('execute', '0'), to= self.curr_config["head_replica"])
 
-    def receive(msg=result, from_= list_replicas[3]):
+    def receive(msg=result, from_= self.curr_config["tail_replica"]):
         output('Received result from replica -')
         successFlag = True
 

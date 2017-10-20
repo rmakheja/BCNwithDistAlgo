@@ -1,7 +1,7 @@
 import sys
 
 class Replica(process):
-    def setup(olympus: Olympus, client: Client, list_replicas: list):
+    def setup(olympus: Olympus, client: Client, list_replicas: list, config: set):
         self.terminate = False
 
     def receive(msg=('execute', replica_index), from_= client1):
