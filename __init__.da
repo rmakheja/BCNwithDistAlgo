@@ -5,27 +5,24 @@ o = import_da("Olympus")
 # r = import_da("Replica")
 
 def main():
-    conf = read_config()
-    # print(conf)
-    # no_replicas = conf["num_replicas"]
-    # print('Number of replicas - ' + str(no_replicas))
 
-    olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
-    #  replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
-    client = new(c.Client, num=1, at="ClientNode@127.0.0.1")
+    if(len(sys.argv) != 2):
+        print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'WORKLOAD_ID'")
+    else:
+        print("Selected workload id is - " + sys.argv[1])
+        # print(conf)
 
-    # list_replica = list(replica_set)
-    # print('Type of replica_set variable - ' + str(type(replica_set)) )
-    # for r_s in list_replica:
-    #    print(r_s)
+        conf = read_config()
+        conf["current_workload_id"] = int(sys.argv[1])
 
-    setup(olympus, (client, conf))
-    setup(client, (olympus, conf))
-    # setup(list_replica, (olympus, client, list_replica, conf))
+        olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
+        client = new(c.Client, num=1, at="ClientNode@127.0.0.1")
 
-    start(olympus)
-    # start(list_replica)
-    start(client)
+        setup(olympus, (client, conf))
+        setup(client, (olympus, conf))
+
+        start(olympus)
+        start(client)
 
 def read_config():
     config = {}
@@ -38,4 +35,3 @@ def read_config():
                     val = val.strip()
                     config[key.strip()] = int(val) if str.isdecimal(val) else val
     return config
-    # print(config)

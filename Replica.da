@@ -8,9 +8,11 @@ class Replica(process):
         output('Received request from Client for task execution')
         print('Replica i received - ', replica_index)
         ind = int(replica_index)
-        if(ind == 2):
+
+        if(ind == (len(list_replicas) - 1)):
             #send(('execution_success', '10'), to= client)
             print('not sending res to client')
+
         else:
             ind += 1
             send(('execute', str(ind)), to= list_replicas[ind])
