@@ -16,7 +16,12 @@ class Client(process):
         output('Received result from replica -', result)
         successFlag = True
 
+    def receive(msg=('retrans_res', result), from_= self.curr_config["head_replica"]):
+        output('Received retrans result from replica -', result)
+        successFlag = True
+
     def execute_operation():
+        print('sending operation')
         send(('execute', '0'), to= self.curr_config["head_replica"])
         successFlag = False;
 
@@ -31,13 +36,19 @@ class Client(process):
         output('success..!')
 
     def execute_retransmission():
-        send(('reconfigure'), to= olympus)
         output('Executing retransmission...')
-
+        send(('retrans', '0'), to= self.curr_config["head_replica"])
 
     def run():
         fetch_config();
         await(successFlag)
         execute_operation()
-        await(successFlag)
-        output('terminating...')
+        if await(successFlag):
+            output('terminating...');
+        elif timeout(2):
+            execute_retransmission();
+            output('Executed retransmission...')
+            if await(successFlag):
+                print('retransmit worked...so did timeout...terminating...');
+            elif timeout(5):
+                print('retransmit failed...but Timeout worked');

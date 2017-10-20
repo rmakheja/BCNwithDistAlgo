@@ -8,12 +8,21 @@ class Replica(process):
         output('Received request from Client for task execution')
         print('Replica i received - ', replica_index)
         ind = int(replica_index)
+
         if(ind == (len(list_replicas) - 1)):
-            send(('execution_success', '10'), to= client)
+            #send(('execution_success', '10'), to= client)
+            print('not sending res to client')
+
         else:
             ind += 1
-            send(('execute', str(ind),), to= list_replicas[ind])
+            send(('execute', str(ind)), to= list_replicas[ind])
+
+
+    def receive(msg=('retrans', replica_index), from_= client1):
+        print('sent')
+        send(('retrans_res', '10'), to= client)
         terminate = True
+
 
     def run():
         output('Started Replica...waiting for an operations...')
