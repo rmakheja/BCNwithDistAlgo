@@ -18,7 +18,7 @@ class Olympus(process):
         self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
 
         ## Create replica processes here
-        no_replicas = config["num_clients"]
+        no_replicas = config["num_replicas"]
         replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         list_replica = list(replica_set)
         print('Type of replica_set variable - ' + str(type(replica_set)) )
@@ -31,7 +31,7 @@ class Olympus(process):
         ## Olympus terminating flag
         self.terminate = False
 
-    def receive(msg='current_configuration', from_= client1):
+    def receive(msg=('current_configuration'), from_= client1):
         output('Received request from Client for current configuration')
 
         client_config = {}
@@ -42,7 +42,7 @@ class Olympus(process):
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
 
-        send((client_config), to= client1)
+        send(('cur_conf', client_config), to= client1)
         # terminate = True
 
     def receive(msg=('reconfigure'), from_= client):

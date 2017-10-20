@@ -7,7 +7,7 @@ o = import_da("Olympus")
 def main():
     conf = read_config()
     # print(conf)
-    # no_replicas = conf["num_clients"]
+    # no_replicas = conf["num_replicas"]
     # print('Number of replicas - ' + str(no_replicas))
 
     olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
