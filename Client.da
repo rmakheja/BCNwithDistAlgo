@@ -41,7 +41,7 @@ class Client(process):
     def receive(msg=(('Error - Replica Immutable')), from_= sender):
         ## validate with encription if valid sender has send this error msg
         ## if so retrive latest configuration and try again
-        output('Recevied Error - Replica Immutable from - ' + str(sender))
+        print('Recevied Error - Replica Immutable from - ' + str(sender))
 
     def execute_operation():
         print('sending operations')
