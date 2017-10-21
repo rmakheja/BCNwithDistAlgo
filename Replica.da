@@ -10,120 +10,121 @@ class Replica(process):
         self.isImmutable = False
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
-        output('Received the result shuttle')
-        history[slot_no] = payload['seqNo']
-        cache[payload['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
-        slot_no += 1
         ind = int(replica_index)
-        if(ind > 0):
+        if(sender == list_replicas[ind + 1]):
+            print('Received the result shuttle')
+            cache[payload['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
             ind -= 1
-            send(('result_shuttle', payload, ind), to= list_replicas[ind])
-
+            if(ind >= 0):
+                send(('result_shuttle', payload, ind), to= list_replicas[ind])
+        else:
+            print('discarding the result shuttle due to invalid sender')
     def receive(msg=('execute', payload, replica_index), from_= sender):
-        # output('Received request from Client for task execution ', payload)
-        print('Replica i received - ', replica_index)
+        # print('Received request from Client for task execution ', payload)
         ind = int(replica_index)
-
         ind += 1
+
         if(ind == 1):
-            output('In HEAD')
+            print('In HEAD')
             ## HEAD case
-            ## Verify if this slot is not already occupied
-
-            result = execute_actual_command(payload['oper'])
-
-            order_shuttle = payload
-            order_shuttle['type'] = "Order Shuttle"
-            order_shuttle['slot_no'] = self.slot_no
-            order_shuttle['result'] = result
-            order_proof = []
-            result_proof = []
-
-            order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof)
-
-            send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
+            ## Verify if this slot is not already occupied and its previous is occupied.
+            if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)) :
+                result = execute_actual_command(payload['oper'])
+                order_shuttle = payload
+                order_shuttle['type'] = "Order Shuttle"
+                order_shuttle['slot_no'] = self.slot_no
+                order_shuttle['result'] = result
+                order_proof = []
+                result_proof = []
+                order_stmt = ('ORDER', self.slot_no, payload['seqNo'], payload['oper']);
+                order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+                history[order_shuttle['slot_no']] = order_stmt
+                send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
+                self.slot_no +=1
+            else:
+                print('invalid slot_no... or waiting for previous slot')
         elif(ind == (len(list_replicas))):
-            output('In TAIL')
+
+            print('In TAIL')
             ## TAIL case
             result = ""
             order_shuttle = payload
-            if(validate_order_proof(order_shuttle["order_proof"])):
+            order_stmt = ('ORDER', payload['slot_no'], payload['seqNo'], payload['oper']);
+            if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
                 result = execute_actual_command(order_shuttle['oper'])
-                ## cross-verify is this result matches the order_shuttle['result'],
-                ## If not, some error in system. Re-config
-
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
-                order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof)
+                if not validate_result_proof(result_proof, result):
+                    print('invalid result_proof')
+                    ## Reconfig request from replica
+                else :
+                    order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
 
-                ## Now this operation is persistent, So add it to its history
-                #history.append(('ORDER', slot_no, payload['seqNo'], payload['oper']))
-                history[slot_no] = payload['seqNo']
-                cache[order_shuttle['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
+                    history[order_shuttle['slot_no']] = order_stmt
+                    cache[order_shuttle['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
 
-                clientResult = {}
-                clientResult['seqNo'] = payload['seqNo']
-                clientResult['result'] = result
-                clientResult['result_proof'] = order_shuttle['result_proof']
+                    clientResult = {}
+                    clientResult['seqNo'] = payload['seqNo']
+                    clientResult['oper'] = payload['oper']
+                    clientResult['result'] = result
+                    clientResult['result_proof'] = order_shuttle['result_proof']
 
-                ## save result to cache
-                payload['seqNo'] = clientResult
-                slot_no += 1
+                    ## ind is already beyond last replica index. So subtract 2
+                    ind = ind - 2
+                    send(('result_shuttle', clientResult, ind), to= list_replicas[ind])
 
-                ## ind is already beyond last replica index. So subtract 2
-                ind = ind - 2
-                send(('result_shuttle', clientResult, ind), to= list_replicas[ind])
-
-                ## Send Result to client
-                send(('execution_success', clientResult), to= client)
+                    ## Send Result to client
+                    send(('execution_success', clientResult), to= client)
             else:
                 print('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
 
         else:
             ## REST of the cases
-            output('In MIDDLE')
+            print('In MIDDLE')
             order_shuttle = payload
-            if(validate_order_proof(order_shuttle["order_proof"])):
+            order_stmt = ('ORDER', payload['slot_no'], payload['seqNo'], payload['oper']);
+            if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
                 result = execute_actual_command(order_shuttle['oper'])
-                ## cross-verify is this result matches the order_shuttle['result'],
-                ## If not, some error in system. Re-config
-
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
-                order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof)
-                send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
+                if not validate_result_proof(result_proof,result):
+                    print('invalid result_proof')
+                    ## Reconfig request from replica
+                else :
+                    order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+                    history[order_shuttle['slot_no']] = order_stmt
+                    send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
             else:
                 print('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
 
-    def process_order_shuttle(order_shuttle, order_proof, result_proof):
-        order_proof.append(('ORDER', order_shuttle['slot_no'], order_shuttle['seqNo'], order_shuttle['oper']))
+    def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
+        order_proof.append(order_stmt)
         order_shuttle['order_proof'] = order_proof
-        result_hash = "##THIS IS RESULT HASH##"
+        result_hash = "##THIS IS RESULT HASH of " + result + " ##";
         result_proof.append(('RESULT', order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
         order_shuttle['result_proof'] =result_proof
         return order_shuttle
 
-    def validate_order_proof(order_proof):
+    def validate_order_proof(order_proof,order_stmt):
+        #check if received slot no is not in history and the previous slot is finished
+        slot_no = int(order_stmt[1])
+        if(slot_no in history or ( slot_no != 0 and (slot_no - 1) in history)) :
+            return False
         for each_order_p in order_proof:
-            if(each_order_p[1] in history):
-                if(each_order_p[2] == history[each_order_p[1]]):
-                    output('Correct slot and seqNo operation pair')
-                    output('This should not happen for normal execute operation...')
-                    output('Can happen in retransmission which is handled seperately...')
-                else:
-                    output('Incorrect seqNo operation on this slot' + str(each_order_p[1]))
-                    #output('order proof - ')
-                    #output(each_order_p)
-                    #output('history - ')
-                    #output(self.history)
-                    return False
-            else:
-                output('Slot is free for current operation')
+            if(each_order_p != order_stmt):
+                return False;
         return True
+
+    def validate_result_proof(result_proof,result):
+        cur_hash = "##THIS IS RESULT HASH of " + result + " ##";
+        for res_stmt in result_proof:
+            if res_stmt[3] != cur_hash:
+                return False
+        return True;
 
     def execute_actual_command(operation):
         print('Executing actual operation command ...' + operation)
@@ -166,14 +167,31 @@ class Replica(process):
             ind += 1
             if(ind == 1):
                 ## HEAD
-                send(('execute', command, 0), to= list_replicas[0])
+                #check if oper in history
+                foundSlot = False
+                for slot in history:
+                    stmt = history[slot]
+                    if(stmt[2] == command['seqNo'] and stmt[3] == command['oper']):
+                        FoundSlot = True
+                        break;
+                if not foundSlot:
+                    send(('execute', command, 0), to= list_replicas[0])
+                if await(command['seqNo'] in cache):
+                    send(('retrans_res', cache[command['seqNo']]), to= client)
+                elif timeout(5):
+                    print('retrans failed, head dint receive result shuttle')
+                    ##send reconfig
                 ## Start the replica timer for retranmission
             else:
-                ## REST CASES
+                ## send retrans to head and wait for result.
                 send(('retrans', command, 0), to= list_replicas[0])
-                ## Start the replica timer for retranmission
+                if await(command['seqNo'] in cache):
+                    send(('retrans_res', cache[command['seqNo']]), to= client)
+                elif timeout(5):
+                    print('retrans failed, replica dint receive result shuttle');
+                    ##send reconfig
 
 
     def run():
-        output('Started Replica...waiting for an operations...')
+        print('Started Replica...waiting for an operations...')
         await(terminate)

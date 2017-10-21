@@ -32,7 +32,7 @@ class Olympus(process):
         self.terminate = False
 
     def receive(msg=('current_configuration'), from_= client1):
-        output('Received request from Client for current configuration')
+        print('Received request from Client for current configuration')
 
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
@@ -46,11 +46,11 @@ class Olympus(process):
         # terminate = True
 
     def receive(msg=('reconfigure'), from_= client):
-        output('Received reconfiguration request from Client')
+        print('Received reconfiguration request from Client')
         terminate = True
 
     def run():
-        output('Started Olympus...Initializing variables')
+        print('Started Olympus...Initializing variables')
         ## use pynacl lib to initiailze all keys
-        output('Waiting for an operations...')
+        print('Waiting for an operations...')
         await(terminate)
