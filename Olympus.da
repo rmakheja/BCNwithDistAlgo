@@ -42,11 +42,6 @@ class Olympus(process):
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
 
-        # print(config)
-        output("Client timeout received from system.conf is - " + str(config['client_timeout']))
-        client_config["client_timeout"] = config['client_timeout']
-        client_config["workload"] = config['workload']
-
         send(('cur_conf', client_config), to= client1)
         # terminate = True
 

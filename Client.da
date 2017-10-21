@@ -18,8 +18,6 @@ class Client(process):
         print(curr_config)
         successFlag = True
 
-
-
     def receive(msg=('execution_success', result), from_= sender):
         if self.seqNo == int(result['seqNo']) :
             output('Received result from replica -', result)
