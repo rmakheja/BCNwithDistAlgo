@@ -2,7 +2,7 @@ import sys
 
 class Client(process):
 
-    def setup(olympus: Olympus, config: set):
+    def setup(olympus: Olympus, sys_config: set):
         self.successFlag = False
         self.resultList = [];
         self.seqNo = -1;
@@ -11,13 +11,11 @@ class Client(process):
         self.invalidResponses = 0
         self.curr_config = {};
 
-
     def receive(msg=('cur_conf', config), from_= olympus):
         self.curr_config = config
         output('Received config from olympus - ')
         print(curr_config)
         successFlag = True
-
 
 
     def receive(msg=('execution_success', result), from_= sender):
@@ -30,10 +28,12 @@ class Client(process):
                 print('ask for reconfig...received invalid result');
 
     def receive(msg=('retrans_res', result), from_= sender):
-        if result['seqNo'] == str(self.seqNo) :
-            if not foundResponse and responsesCount != self.curr_config['num_replicas'] and invalidResponses <= self.curr_config['failures_handled'] + 1:
+
+        if self.seqNo == int(result['seqNo']) :
+            output('Received result from replica -', result)
+            if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['failures_handled'] + 1:
                 responsesCount += 1;
-                if is_valid_response(response) :
+                if is_valid_response(result) :
                     resultList.append(result['res'])
                     foundResponse = True
                 else :
