@@ -3,17 +3,17 @@ import sys
 class Replica(process):
     def setup(olympus: Olympus, client: Client, list_replicas: list, config: set):
         self.history = {}
-        self.cache = []
+        self.cache = {}
         self.slot_no = 0
         self.core_data = {}
         self.terminate = False
+        self.isImmutable = False
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
         output('Received the result shuttle')
         history[slot_no] = payload['seqNo']
+        cache[payload['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
         slot_no += 1
-        #history.append((slot_no, payload['seqNo'], payload['oper']))
-        cache.append(payload)
         ind = int(replica_index)
         if(ind > 0):
             ind -= 1
@@ -28,6 +28,8 @@ class Replica(process):
         if(ind == 1):
             output('In HEAD')
             ## HEAD case
+            ## Verify if this slot is not already occupied
+
             result = execute_actual_command(payload['oper'])
 
             order_shuttle = payload
@@ -58,18 +60,23 @@ class Replica(process):
                 ## Now this operation is persistent, So add it to its history
                 #history.append(('ORDER', slot_no, payload['seqNo'], payload['oper']))
                 history[slot_no] = payload['seqNo']
+                cache[order_shuttle['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
+
+                clientResult = {}
+                clientResult['seqNo'] = payload['seqNo']
+                clientResult['result'] = result
+                clientResult['result_proof'] = order_shuttle['result_proof']
+
+                ## save result to cache
+                payload['seqNo'] = clientResult
                 slot_no += 1
 
                 ## ind is already beyond last replica index. So subtract 2
                 ind = ind - 2
-                send(('result_shuttle', order_shuttle, ind), to= list_replicas[ind])
+                send(('result_shuttle', clientResult, ind), to= list_replicas[ind])
 
                 ## Send Result to client
-                newPayload = {}
-                newPayload['seqNo'] = payload['seqNo']
-                newPayload['result'] = result
-                newPayload['result_proof'] = order_shuttle['result_proof']
-                send(('execution_success', newPayload), to= client)
+                send(('execution_success', clientResult), to= client)
             else:
                 print('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
@@ -93,7 +100,7 @@ class Replica(process):
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof):
-        order_proof.append(('ORDER', slot_no, order_shuttle['seqNo'], order_shuttle['oper']))
+        order_proof.append(('ORDER', order_shuttle['slot_no'], order_shuttle['seqNo'], order_shuttle['oper']))
         order_shuttle['order_proof'] = order_proof
         result_hash = "##THIS IS RESULT HASH##"
         result_proof.append(('RESULT', order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
@@ -105,12 +112,14 @@ class Replica(process):
             if(each_order_p[1] in history):
                 if(each_order_p[2] == history[each_order_p[1]]):
                     output('Correct slot and seqNo operation pair')
+                    output('This should not happen for normal execute operation...')
+                    output('Can happen in retransmission which is handled seperately...')
                 else:
                     output('Incorrect seqNo operation on this slot' + str(each_order_p[1]))
-                    output('order proof - ')
-                    output(each_order_p)
-                    output('history - ')
-                    output(self.history)
+                    #output('order proof - ')
+                    #output(each_order_p)
+                    #output('history - ')
+                    #output(self.history)
                     return False
             else:
                 output('Slot is free for current operation')
@@ -146,10 +155,24 @@ class Replica(process):
             result = "fail"
         return result
 
-    def receive(msg=('retrans', command, replica_index), from_= client1):
-        print('sent')
-        result = {'seqNo' : command['seqNo'], 'res' : 'result for ' + command['oper']}
-        send(('retrans_res', result), to= client)
+    def receive(msg=('retrans', command, replica_index), from_= sender):
+        print('Received retransmission...')
+        if(command['seqNo'] in cache):
+            send(('retrans_res', cache[command['seqNo']]), to= client)
+        elif(self.isImmutable):
+            send(('Error - Replica Immutable'), to= client)
+        else:
+            ind = int(replica_index)
+            ind += 1
+            if(ind == 1):
+                ## HEAD
+                send(('execute', command, 0), to= list_replicas[0])
+                ## Start the replica timer for retranmission
+            else:
+                ## REST CASES
+                send(('retrans', command, 0), to= list_replicas[0])
+                ## Start the replica timer for retranmission
+
 
     def run():
         output('Started Replica...waiting for an operations...')
