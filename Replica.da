@@ -4,23 +4,25 @@ class Replica(process):
     def setup(olympus: Olympus, client: Client, list_replicas: list, config: set):
         self.terminate = False
 
-    def receive(msg=('execute', replica_index), from_= client1):
-        output('Received request from Client for task execution')
+    def receive(msg=('execute', command, replica_index), from_= client1):
+        output('Received request from Client for task execution ', command)
         print('Replica i received - ', replica_index)
         ind = int(replica_index)
 
         if(ind == (len(list_replicas) - 1)):
-            #send(('execution_success', '10'), to= client)
-            print('not sending res to client')
+            result = {'seqNo' : command['seqNo'], 'res' : 'result for ' + command['oper']}
+            send(('execution_success', result), to= client)
+            #print('not sending res to client')
 
         else:
             ind += 1
-            send(('execute', str(ind)), to= list_replicas[ind])
+            send(('execute', command, str(ind)), to= list_replicas[ind])
 
 
-    def receive(msg=('retrans', replica_index), from_= client1):
+    def receive(msg=('retrans', command, replica_index), from_= client1):
         print('sent')
-        send(('retrans_res', '10'), to= client)
+        result = {'seqNo' : command['seqNo'], 'res' : 'result for ' + command['oper']}
+        send(('retrans_res', result), to= client)
         terminate = True
 
 
