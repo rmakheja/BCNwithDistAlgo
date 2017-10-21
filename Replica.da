@@ -10,20 +10,15 @@ class Replica(process):
         self.isImmutable = False
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
-        ind = int(replica_index)
-        if(sender == list_replicas[ind + 1]):
-            print('Received the result shuttle')
-            cache[payload['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
-            ind -= 1
-            if(ind >= 0):
-                send(('result_shuttle', payload, ind), to= list_replicas[ind])
-        else:
-            print('discarding the result shuttle due to invalid sender')
+        ind = int(replica_index) - 1
+        print('Received the result shuttle')
+        cache[payload['seqNo']] = {'seqNo': payload['seqNo'], 'result': payload['result'], 'result_proof': payload['result_proof']}
+        if(ind >= 0):
+            send(('result_shuttle', payload, ind), to= list_replicas[ind])
+
     def receive(msg=('execute', payload, replica_index), from_= sender):
         # print('Received request from Client for task execution ', payload)
-        ind = int(replica_index)
-        ind += 1
-
+        ind = int(replica_index) + 1
         if(ind == 1):
             print('In HEAD')
             ## HEAD case
@@ -163,8 +158,7 @@ class Replica(process):
         elif(self.isImmutable):
             send(('Error - Replica Immutable'), to= client)
         else:
-            ind = int(replica_index)
-            ind += 1
+            ind = int(replica_index) + 1
             if(ind == 1):
                 ## HEAD
                 #check if oper in history
