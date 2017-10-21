@@ -21,7 +21,7 @@ class Client(process):
         if self.seqNo == int(result['seqNo']) :
             output('Received result from replica -', result)
             if is_valid_response(result):
-                resultList.append(result['res']);
+                resultList.append(result['result']);
                 successFlag = True
             else:
                 print('ask for reconfig...received invalid result');
@@ -41,7 +41,8 @@ class Client(process):
 
     def execute_operation():
         print('sending operations')
-        operations = ['a','b','c'];#cur_config[workload];
+        operations = sys_config['workload'];
+        print(operations)
         #idx => use as sequence number for oper
         for oper in operations:
             seqNo += 1;
@@ -50,8 +51,10 @@ class Client(process):
             msg = {'seqNo': self.seqNo, 'oper': oper};
             send(('execute', msg, 0), to= self.curr_config['head_replica']);
             if await(successFlag):
+                print('Received successful result...')
                 print(resultList[self.seqNo]);
             elif timeout(2):
+                print('Timeout...Executing retransmission...')
                 execute_retransmission(msg);
                 await(foundResponse)
                 print(resultList[self.seqNo]);
@@ -82,7 +85,7 @@ class Client(process):
         fetch_config();
         await(successFlag)
         execute_operation()
-        print('Terminating');
+        print('Terminating...');
         #if await(successFlag):
         #    output('terminating...');
         #elif timeout(2):
