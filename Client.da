@@ -9,8 +9,8 @@ class Client(process):
     def receive(msg=('cur_conf', config), from_= olympus):
         self.curr_config = config
         output('Received config from olympus - ')
-        print(curr_config);
-        self.successFlag = True;
+        print(curr_config)
+
 
     def receive(msg=('execution_success', result), from_= self.curr_config["tail_replica"]):
         output('Received result from replica -', result)

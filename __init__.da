@@ -13,7 +13,14 @@ def main():
         # print(conf)
 
         conf = read_config()
-        conf["current_workload_id"] = sys.argv[1]
+        current_workload_id = sys.argv[1]
+        curr_workload = "workload[" + current_workload_id + "]"
+        workloads = conf[curr_workload].split(';')
+        for wIndex in range(0, len(workloads)):
+            workloads[wIndex] = workloads[wIndex].strip()
+
+        conf["workload"] = workloads
+        print("Workload is - " + str(conf['workload']))
 
         olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
         client = new(c.Client, num=1, at="ClientNode@127.0.0.1")
