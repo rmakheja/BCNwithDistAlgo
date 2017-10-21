@@ -27,7 +27,7 @@ class Client(process):
                 print('ask for reconfig...received invalid result');
 
     def receive(msg=('retrans_res', result), from_= sender):
-
+        print('retrans: ',sender)
         if self.seqNo == int(result['seqNo']) :
             output('Received result from replica -', result)
             if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['failures_handled'] + 1:
@@ -41,8 +41,8 @@ class Client(process):
 
     def execute_operation():
         print('sending operations')
-        operations = sys_config['workload'];
-        print(operations)
+        operations = sys_config['workload']
+        # print(operations)
         #idx => use as sequence number for oper
         for oper in operations:
             seqNo += 1;
@@ -58,8 +58,6 @@ class Client(process):
                 execute_retransmission(msg);
                 await(foundResponse)
                 print(resultList[self.seqNo]);
-
-
 
     def fetch_config():
         # start timer
@@ -79,7 +77,8 @@ class Client(process):
         self.foundResponse = False
         self.responsesCount = 0
         self.invalidResponses = 0
-        send(('retrans', msg, '0'), to= self.curr_config["head_replica"])
+        for replica in self.curr_config['replicas']:
+            send(('retrans', msg, '0'), to= replica)
 
     def run():
         fetch_config();

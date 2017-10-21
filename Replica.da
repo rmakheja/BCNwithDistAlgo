@@ -101,7 +101,6 @@ class Replica(process):
         return True
 
     def execute_actual_command(operation):
-
         print('Executing actual operation command ...' + operation)
         result = ""
         ## execute operation on current state
@@ -129,7 +128,6 @@ class Replica(process):
                 result = "OK"
         else:
             result = "fail"
-
         return result
 
     def receive(msg=('retrans', command, replica_index), from_= client1):
