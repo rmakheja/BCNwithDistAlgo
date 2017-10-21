@@ -16,6 +16,7 @@ class Client(process):
         self.curr_config = config
         output('Received config from olympus - ')
         print(curr_config)
+        successFlag = True
 
 
 
