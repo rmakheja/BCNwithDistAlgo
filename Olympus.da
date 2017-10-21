@@ -45,6 +45,7 @@ class Olympus(process):
         # print(config)
         output("Client timeout received from system.conf is - " + str(config['client_timeout']))
         client_config["client_timeout"] = config['client_timeout']
+        client_config["workload"] = config['workload']
 
         send(('cur_conf', client_config), to= client1)
         # terminate = True
