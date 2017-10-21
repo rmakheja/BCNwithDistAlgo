@@ -5,18 +5,15 @@ class Replica(process):
         self.terminate = False
 
     def receive(msg=('execute', command, replica_index), from_= client1):
-        output('Received request from Client for task execution ', command)
-        print('Replica i received - ', replica_index)
-        ind = int(replica_index)
-        if command['seqNo'] == '1':
+        ind = int(replica_index) + 1
+        if command['seqNo'] == 1:
             print('not sending response for 2nd request');
-        elif(ind == (len(list_replicas) - 1)):
+        elif(ind == len(list_replicas)):
             result = {'seqNo' : command['seqNo'], 'res' : 'result for ' + command['oper']}
             send(('execution_success', result), to= client)
-            #print('not sending res to client')
+            print('sending res to client')
         else:
-            ind += 1
-            send(('execute', command, str(ind)), to= list_replicas[ind])
+            send(('execute', command, ind), to= list_replicas[ind])
 
     def receive(msg=('retrans', command, replica_index), from_= client1):
         print('sent')
