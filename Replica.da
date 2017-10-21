@@ -2,7 +2,7 @@ import sys
 
 class Replica(process):
     def setup(olympus: Olympus, client: Client, list_replicas: list, config: set):
-        self.history = []
+        self.history = {}
         self.cache = []
         self.slot_no = 0
         self.core_data = {}
@@ -10,7 +10,9 @@ class Replica(process):
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
         output('Received the result shuttle')
-        history.append({slot_no, payload['seqNo'], payload['oper']})
+        history[slot_no] = payload['seqNo']
+        slot_no += 1
+        #history.append((slot_no, payload['seqNo'], payload['oper']))
         cache.append(payload)
         ind = int(replica_index)
         if(ind > 0):
@@ -54,7 +56,9 @@ class Replica(process):
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof)
 
                 ## Now this operation is persistent, So add it to its history
-                history.append({slot_no, payload['seqNo'], payload['oper']})
+                #history.append(('ORDER', slot_no, payload['seqNo'], payload['oper']))
+                history[slot_no] = payload['seqNo']
+                slot_no += 1
 
                 ## ind is already beyond last replica index. So subtract 2
                 ind = ind - 2
@@ -89,15 +93,27 @@ class Replica(process):
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof):
-        order_proof.append({'ORDER', slot_no, order_shuttle['seqNo'], order_shuttle['oper']})
-        slot_no += 1
+        order_proof.append(('ORDER', slot_no, order_shuttle['seqNo'], order_shuttle['oper']))
         order_shuttle['order_proof'] = order_proof
         result_hash = "##THIS IS RESULT HASH##"
-        result_proof.append({'RESULT', order_shuttle['seqNo'], order_shuttle['oper'], result_hash})
+        result_proof.append(('RESULT', order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
         order_shuttle['result_proof'] =result_proof
         return order_shuttle
 
     def validate_order_proof(order_proof):
+        for each_order_p in order_proof:
+            if(each_order_p[1] in history):
+                if(each_order_p[2] == history[each_order_p[1]]):
+                    output('Correct slot and seqNo operation pair')
+                else:
+                    output('Incorrect seqNo operation on this slot' + str(each_order_p[1]))
+                    output('order proof - ')
+                    output(each_order_p)
+                    output('history - ')
+                    output(self.history)
+                    return False
+            else:
+                output('Slot is free for current operation')
         return True
 
     def execute_actual_command(operation):
