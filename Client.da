@@ -1,8 +1,9 @@
 import sys
+import logging
 
 class Client(process):
 
-    def setup(olympus: Olympus, sys_config: set):
+    def setup(olympus: Olympus, sys_config: set):s
         self.successFlag = False
         self.resultList = [];
         self.seqNo = -1;
@@ -22,7 +23,7 @@ class Client(process):
                 resultList.append(result['result']);
                 successFlag = True
             else:
-                print('ask for reconfig...received invalid result');
+                output('ask for reconfig...received invalid result');
 
     def receive(msg=('retrans_res', result), from_= sender):
         output('retrans res sender: ',sender)
@@ -38,7 +39,7 @@ class Client(process):
     def receive(msg=(('Error - Replica Immutable')), from_= sender):
         ## validate with encription if valid sender has send this error msg
         ## if so retrive latest configuration and try again
-        print('Recevied Error - Replica Immutable from - ' + str(sender))
+        output('Recevied Error - Replica Immutable from - ' + str(sender))
 
     def execute_operation():
 
@@ -54,26 +55,26 @@ class Client(process):
                 output('Received successful result...')
                 output(resultList[self.seqNo]);
             elif timeout(2):
-                print('Timeout...Executing retransmission...')
+                output('Timeout...Executing retransmission...')
                 execute_retransmission(msg);
                 await(foundResponse)
-                print(resultList[self.seqNo]);
+                output(resultList[self.seqNo]);
 
     def fetch_config():
         # start timer
-        print('Fetching current configuration request to Olympus')
+        output('Fetching current configuration request to Olympus')
         send(('current_configuration'), to= olympus)
 
     def is_valid_response(res):
         return True;
 
     def abort():
-        print('abort...!')
+        output('abort...!')
     def success():
-        print('success..!')
+        output('success..!')
 
     def execute_retransmission(msg):
-        print('Executing retransmission...')
+        output('Executing retransmission...')
         self.foundResponse = False
         self.responsesCount = 0
         self.invalidResponses = 0
@@ -84,14 +85,14 @@ class Client(process):
         fetch_config();
         await(successFlag)
         execute_operation()
-        print('Terminating...');
+        output('Terminating...');
         #if await(successFlag):
-        #    print('terminating...');
+        #    output('terminating...');
         #elif timeout(2):
         #    execute_retransmission();
-        #    print('Executed retransmission...')
+        #    output('Executed retransmission...')
         #    if await(successFlag):
-        #        print('retransmit worked...so did timeout...terminating...', self.ope);
+        #        output('retransmit worked...so did timeout...terminating...', self.ope);
         #    elif timeout(5):
-        #        print('retransmit failed...but Timeout worked');
+        #        output('retransmit failed...but Timeout worked');
 

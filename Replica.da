@@ -1,4 +1,5 @@
 import sys
+import logging
 
 class Replica(process):
     def setup(olympus: Olympus, list_clients: list, list_replicas: list, config: set):
@@ -11,7 +12,7 @@ class Replica(process):
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
         ind = int(replica_index) - 1
-        print('Received the result shuttle')
+        output('Received the result shuttle')
         cache[str(payload['client']) + ' : ' + str(payload['seqNo']) ] = payload
         if(ind >= 0):
             send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
@@ -20,7 +21,7 @@ class Replica(process):
 
         ind = int(replica_index) + 1
         if(ind == 1):
-            print('head Received request from Client for task execution ', payload)
+            output('head Received request from Client for task execution ', payload)
 
             ## HEAD case
             ## Verify if this slot is not already occupied and its previous is occupied.
@@ -38,10 +39,10 @@ class Replica(process):
                 send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
                 self.slot_no +=1
             else:
-                print('invalid slot_no... or waiting for previous slot')
+                output('invalid slot_no... or waiting for previous slot')
         elif(ind == (len(list_replicas))):
 
-            print('In TAIL')
+            output('In TAIL')
             ## TAIL case
             result = ""
             order_shuttle = payload
@@ -52,7 +53,7 @@ class Replica(process):
                 result_proof = order_shuttle['result_proof']
 
                 if not validate_result_proof(result_proof, result):
-                    print('invalid result_proof')
+                    output('invalid result_proof')
                     ## Reconfig request from replica
                 else :
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
@@ -74,12 +75,12 @@ class Replica(process):
                     ## Send Result to client
                     send(('execution_success', clientResult), to= payload['client'])
             else:
-                print('Some error in order proof validation. Reconfigure the system...')
+                output('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
 
         else:
             ## REST of the cases
-            print('In MIDDLE')
+            output('In MIDDLE')
             order_shuttle = payload
             order_stmt = (payload['slot_no'], payload['client'], payload['seqNo'], payload['oper']);
             if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
@@ -88,14 +89,14 @@ class Replica(process):
                 result_proof = order_shuttle['result_proof']
 
                 if not validate_result_proof(result_proof,result):
-                    print('invalid result_proof')
+                    output('invalid result_proof')
                     ## Reconfig request from replica
                 else :
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                     history[order_shuttle['slot_no']] = order_stmt
                     send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
             else:
-                print('Some error in order proof validation. Reconfigure the system...')
+                output('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
@@ -124,21 +125,23 @@ class Replica(process):
         return True;
 
     def execute_actual_command(operation):
-        print('Executing actual operation command ...' + operation)
+        output('Executing actual operation command ...' + operation)
         result = ""
         ## execute operation on current state
         splits = operation.split("'")
         if(operation[0] == 'p'):
             ind = operation.index(',')
-            ind1 = len(operation) - 2
-            key = operation[5:ind]
-            val = operation[ind+1 : ind1]
+            ind1 = len(operation) - 1
+            key = operation[4:ind].strip('\'')
+            val = operation[ind+1 : ind1].strip('\'')
+            print(key, ' => ', val)
             core_data[key] = val
             result = "OK"
         elif(operation[0] == 'g'):
             ind = operation.index('(')+1
             ind1 = len(operation) - 1
-            key = operation[ind: ind1]
+            key = operation[ind: ind1].strip('\'')
+            print(key)
             if(key in core_data):
                 result = core_data[key]
             else:
@@ -146,19 +149,21 @@ class Replica(process):
         elif(operation[0] == 'a'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
-            key = operation[8:ind]
-            val = operation[ind+1 : ind1]
+            key = operation[8:ind].strip('\'')
+            val = operation[ind+1 : ind1].strip('\'')
             if(key in core_data):
                 core_data[key] = str(core_data[key]) + str(val)
                 result = "OK"
             else:
                 result = "fail"
+            print(key, ' => ', val)
         elif(operation[0] == 's'):
             ind = operation.index(',')
             ind1 = len(operation) - 2
-            key = operation[6:ind]
+            key = operation[6:ind].strip('\'')
             ran = operation[ind+2 : ind1]
             start_end = ran.split(':')
+            print(key, ' => ', start_end)
             if(key in core_data and (int(start_end[0]) >= 0) and (int(start_end[1]) <= len(core_data[key]))):
                 core_data[key] = core_data[key][int(start_end[0]):int(start_end[1])]
                 result = "OK"
@@ -169,7 +174,7 @@ class Replica(process):
         return result
 
     def receive(msg=('retrans', command, replica_index), from_= sender):
-        print('Received retransmission...')
+        output('Received retransmission...')
         cache_key = str(command['client']) + ' : ' + str(command['seqNo'])
         if(cache_key in cache):
             send(('retrans_res', cache[cache_key]), to= command['client'])
@@ -194,9 +199,9 @@ class Replica(process):
             if await(cache_key in cache):
                     send(('retrans_res', cache[cache_key]), to= command['client'])
             elif timeout(5):
-                    print('retrans failed, replica dint receive result shuttle')
+                    output('retrans failed, replica dint receive result shuttle')
                     ##send reconfig
 
     def run():
-        print('Started Replica...waiting for an operations...')
+        output('Started Replica...waiting for an operations...')
         await(terminate)
