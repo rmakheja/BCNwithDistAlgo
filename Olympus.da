@@ -1,4 +1,7 @@
 import sys
+# import nacl.utils
+import pickle
+from nacl.public import PrivateKey, Box
 import logging
 r = import_da("Replica")
 
@@ -10,13 +13,15 @@ class Olympus(process):
 
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
-        self.oly_private_key = 'oly_priv_key_VALUE'
-        self.oly_public_key = 'oly_pub_key_VALUE'
+
+        ## use pynacl lib to initiailze all keys
+        oly_priv_key = PrivateKey.generate()
+        self.oly_private_key = oly_priv_key
+        self.oly_public_key = oly_priv_key.public_key
         self.replica_public_keys = {}
         self.replica_private_keys = {}
         self.client_private_keys = {}
         self.client_public_keys = {}
-
         self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
 
         ## Create replica processes here
@@ -28,14 +33,22 @@ class Olympus(process):
         self.replica_list = list_replica
 
         for client in list_clients:
-            self.client_public_keys[str(client)] = 'public_key for client -' + str(client)
-            self.client_private_keys[str(client)] = 'private_key for client -' + str(client)
+            priv_key = PrivateKey.generate()
+            self.client_public_keys[str(client)] = priv_key.public_key
+            self.client_private_keys[str(client)] = priv_key
 
         for replica in replica_list:
-            self.replica_public_keys[str(replica)] = 'public_key for replica -' + str(replica)
-            self.replica_private_keys[str(replica)] = 'private_key for replica -' + str(replica)
+            priv_key = PrivateKey.generate()
+            self.replica_public_keys[str(replica)] = priv_key.public_key
+            self.replica_private_keys[str(replica)] = priv_key
 
-        output('client','hello')
+        for replica in replica_list:
+            keysForReplica = {}
+            keysForReplica['private_key'] = self.replica_private_keys[str(replica)]
+            keysForReplica['public_key'] = self.replica_public_keys[str(replica)]
+            keysForReplica['client_public_keys'] = self.client_public_keys
+            keysForReplica['replica_public_keys'] = self.replica_public_keys
+            send(('keys', keysForReplica), to= replica)
 
         ## Olympus terminating flag
         self.terminate = False
@@ -53,6 +66,7 @@ class Olympus(process):
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
+
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):
@@ -60,7 +74,20 @@ class Olympus(process):
 
 
     def run():
+<<<<<<< HEAD
         print('Started Olympus...Initializing variables')
         ## use pynacl lib to initiailze all keys
         ##output('Waiting for an operations...')
         await(terminate)
+=======
+        print('Started Olympus...Waiting for an operations...')
+        await(terminate)
+
+    def dict_to_binary(the_dict):
+        binary = pickle.dumps(the_dict)
+        return binary
+
+    def binary_to_dict(the_binary):
+        d = pickle.loads(the_binary)
+        return d
+>>>>>>> 7c9814a556183cf0e36239aa31a8d815d3a229f3

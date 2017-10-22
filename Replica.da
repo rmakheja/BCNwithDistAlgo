@@ -1,4 +1,6 @@
 import sys
+import pickle
+from nacl.public import PrivateKey, Box
 import logging
 
 class Replica(process):
@@ -10,6 +12,17 @@ class Replica(process):
         self.core_data = {}
         self.terminate = False
         self.isImmutable = False
+        self.privateKey = "Default"
+        self.client_public_keys = {}
+        self.publicKey = "Default"
+        self.replica_public_keys = {}
+
+    def receive(msg=('keys', payload), from_= sender):
+        print('Received all KEYS---')
+        self.privateKey = payload['private_key']
+        self.publicKey = payload['public_key']
+        self.replica_public_keys = payload['replica_public_keys']
+        self.client_public_keys = payload['client_public_keys']
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
         ind = int(replica_index) - 1
@@ -18,38 +31,71 @@ class Replica(process):
         if(ind >= 0):
             send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
 
-    def receive(msg=('execute', payload, replica_index), from_= sender):
+    def receive(msg=('test_execute', encrypted_payload, replica_index), from_= sender):
+        print('Recevied test_execute')
+        decrypt_box = Box(self.privateKey, self.client_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+
+        payload = pickle.loads(plaintext)
+        print('Test_execute: Decrypted payload is - ')
+        print(payload)
+
+    def receive(msg=('execute', encrypted_payload, replica_index), from_= sender):
+
+        #payload = encrypted_payload ## THIS IS USED FOR TEST_EXECUTE (TESTING ENCRYPTION)
 
         ind = int(replica_index) + 1
         if(ind == 1):
-            output('head Received request from Client for task execution ', payload)
 
             ## HEAD case
+            print('head Received request from Client for task execution..')
+
+            decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+            print('Decrypted payload at HEAD is - ')
+            print(payload)
+
             ## Verify if this slot is not already occupied and its previous is occupied.
             if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)) :
                 result = execute_actual_command(payload['oper'])
+                print("Execution Result at HEAD is - " + result)
                 order_shuttle = payload
                 order_shuttle['type'] = "Order Shuttle"
                 order_shuttle['slot_no'] = self.slot_no
                 order_shuttle['result'] = result
                 order_proof = []
                 result_proof = []
+                print('Creating order stmt...')
                 order_stmt = (self.slot_no, payload['client'], payload['seqNo'], payload['oper'], );
+                print('Processing Order Shuttle')
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+                print('Adding to History...')
                 history[order_shuttle['slot_no']] = order_stmt
-                send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
+
+                encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
+                send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
+                # send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
                 self.slot_no +=1
             else:
                 output('invalid slot_no... or waiting for previous slot')
         elif(ind == (len(list_replicas))):
 
-            output('In TAIL')
+            #print('In TAIL')
             ## TAIL case
+
+            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+            print('Decrypted payload at TAIL is - ')
+            print(payload)
+
             result = ""
             order_shuttle = payload
             order_stmt = ( payload['slot_no'],  payload['client'], payload['seqNo'], payload['oper']);
             if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
                 result = execute_actual_command(order_shuttle['oper'])
+                print("Execution Result at TAIL is - " + result)
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
@@ -81,11 +127,19 @@ class Replica(process):
 
         else:
             ## REST of the cases
-            output('In MIDDLE')
+            #print('In MIDDLE')
+
+            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+            print('Decrypted payload in MIDDLE is - ')
+            print(payload)
+
             order_shuttle = payload
             order_stmt = (payload['slot_no'], payload['client'], payload['seqNo'], payload['oper']);
             if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
                 result = execute_actual_command(order_shuttle['oper'])
+                print("Execution Result is - " + result)
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
@@ -95,7 +149,11 @@ class Replica(process):
                 else :
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                     history[order_shuttle['slot_no']] = order_stmt
-                    send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
+
+                    encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
+                    send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
+
+                    #send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
             else:
                 output('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
@@ -133,7 +191,7 @@ class Replica(process):
         if(operation[0] == 'p'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
-            key = operation[4:ind].strip('\'')
+            key = operation[4:ind].strip('\'').strip()
             val = operation[ind+1 : ind1].strip('\'')
             print(key, ' => ', val)
             core_data[key] = val
@@ -141,7 +199,7 @@ class Replica(process):
         elif(operation[0] == 'g'):
             ind = operation.index('(')+1
             ind1 = len(operation) - 1
-            key = operation[ind: ind1].strip('\'')
+            key = operation[ind: ind1].strip('\'').strip()
             print(key)
             if(key in core_data):
                 result = core_data[key]
@@ -150,7 +208,7 @@ class Replica(process):
         elif(operation[0] == 'a'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
-            key = operation[7:ind].strip('\'')
+            key = operation[8:ind].strip('\'').strip()
             val = operation[ind+1 : ind1].strip('\'')
             if(key in core_data):
                 core_data[key] = str(core_data[key]) + str(val)
@@ -161,7 +219,7 @@ class Replica(process):
         elif(operation[0] == 's'):
             ind = operation.index(',')
             ind1 = len(operation) - 2
-            key = operation[6:ind].strip('\'')
+            key = operation[6:ind].strip('\'').strip()
             ran = operation[ind+2 : ind1]
             start_end = ran.split(':')
             print(key, ' => ', start_end)
@@ -202,6 +260,20 @@ class Replica(process):
             elif timeout(5):
                     output('retrans failed, replica dint receive result shuttle')
                     ##send reconfig
+
+    def getEncryptedMsg(msg, receiverPubKey):
+        box = Box(self.privateKey, receiverPubKey)
+        binary_msg = pickle.dumps(msg)
+        encrypted_msg = box.encrypt(binary_msg)
+        return encrypted_msg
+
+    def dict_to_binary(the_dict):
+        binary = pickle.dumps(the_dict)
+        return binary
+
+    def binary_to_dict(the_binary):
+        d = pickle.loads(the_binary)
+        return d
 
     def run():
         output('Started Replica...waiting for an operations...')

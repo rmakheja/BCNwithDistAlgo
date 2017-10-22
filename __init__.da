@@ -31,7 +31,7 @@ def main():
                 if oper.startswith('pseudorandom', 0):
                     workloads = pseudorandom(oper);
                 else :
-                    workloads[wIndex] = workloads[wIndex].strip()
+                    workloads[wIndex] = oper
             all_workloads[str(list_client[i])] = workloads
         conf['workload'] = all_workloads
 
