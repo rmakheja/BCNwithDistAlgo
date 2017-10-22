@@ -13,13 +13,11 @@ class Client(process):
 
     def receive(msg=('cur_conf', config), from_= olympus):
         self.curr_config = config
-        print('Received config from olympus - ')
-        print(curr_config)
         successFlag = True
 
     def receive(msg=('execution_success', result), from_= sender):
-        if self.seqNo == int(result['seqNo']) :
-            print('Received result from replica -', result)
+        if self.seqNo == int(result['seqNo']) and result['client'] == self:
+            output('Received result from replica -', result)
             if is_valid_response(result):
                 resultList.append(result['result']);
                 successFlag = True
@@ -27,9 +25,8 @@ class Client(process):
                 print('ask for reconfig...received invalid result');
 
     def receive(msg=('retrans_res', result), from_= sender):
-        print('retrans res sender: ',sender)
+        output('retrans res sender: ',sender)
         if self.seqNo == int(result['seqNo']) :
-            print('Received result from replica -', result)
             if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['failures_handled'] + 1:
                 responsesCount += 1;
                 if is_valid_response(result) :
@@ -44,19 +41,18 @@ class Client(process):
         print('Recevied Error - Replica Immutable from - ' + str(sender))
 
     def execute_operation():
-        print('sending operations')
-        operations = sys_config['workload']
-        # print(operations)
-        #idx => use as sequence number for oper
+
+        operations = sys_config['workload'][str(self)]
+        output('sending operations.....')
+        output(operations)
         for oper in operations:
             seqNo += 1;
-            # start timer and associate it with this <ind,oper>
             successFlag = False;
-            msg = {'seqNo': self.seqNo, 'oper': oper};
+            msg = {'seqNo': self.seqNo, 'oper': oper, 'client': self};
             send(('execute', msg, 0), to= self.curr_config['head_replica']);
             if await(successFlag):
-                print('Received successful result...')
-                print(resultList[self.seqNo]);
+                output('Received successful result...')
+                output(resultList[self.seqNo]);
             elif timeout(2):
                 print('Timeout...Executing retransmission...')
                 execute_retransmission(msg);

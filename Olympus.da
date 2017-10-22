@@ -7,45 +7,52 @@ class config():
 
 class Olympus(process):
 
-    def setup(client: Client, config: set):
+    def setup(list_clients: list, config: set):
 
         self.oly_private_key = 'oly_priv_key_VALUE'
         self.oly_public_key = 'oly_pub_key_VALUE'
-        self.replica_public_keys = []
-        self.replica_private_keys = []
-        self.client_public_key = 'client_pub_key_VALUE'
-        self.client_private_key = 'client_priv_key_VALUE'
+        self.replica_public_keys = {}
+        self.replica_private_keys = {}
+        self.client_private_keys = {}
+        self.client_public_keys = {}
+
         self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
 
         ## Create replica processes here
         no_replicas = config["num_replicas"]
         replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         list_replica = list(replica_set)
-        print('Type of replica_set variable - ' + str(type(replica_set)) )
-        for r_s in list_replica:
-            print(r_s)
-        setup(list_replica, (self, client, list_replica, config))
+        setup(list_replica, (self, list_clients, list_replica, config))
         start(list_replica)
         self.replica_list = list_replica
+
+        for client in list_clients:
+            self.client_public_keys[str(client)] = 'public_key for client -' + str(client)
+            self.client_private_keys[str(client)] = 'private_key for client -' + str(client)
+
+        for replica in replica_list:
+            self.replica_public_keys[str(replica)] = 'public_key for replica -' + str(replica)
+            self.replica_private_keys[str(replica)] = 'private_key for replica -' + str(replica)
+
 
         ## Olympus terminating flag
         self.terminate = False
 
-    def receive(msg=('current_configuration'), from_= client1):
-        print('Received request from Client for current configuration')
+    def receive(msg=('current_configuration'), from_= sender):
+        print('Received request from', sender, ' for current configuration')
 
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
-        client_config["client_public_key"] = self.client_public_key
-        client_config["client_private_key"] = self.client_private_key
+        client_config["client_public_key"] = self.client_public_keys[str(sender)]
+        client_config["client_private_key"] = self.client_private_keys[str(sender)]
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
-        send(('cur_conf', client_config), to= client1)
+        send(('cur_conf', client_config), to= sender)
         # terminate = True
 
-    def receive(msg=('reconfigure'), from_= client):
+    def receive(msg=('reconfigure'), from_= sender):
         print('Received reconfiguration request from Client')
         terminate = True
 

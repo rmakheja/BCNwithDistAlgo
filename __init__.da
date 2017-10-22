@@ -13,23 +13,28 @@ def main():
         # print(conf)
 
         conf = read_config()
+        all_workloads = {}
         current_workload_id = sys.argv[1]
-        curr_workload = "workload[" + current_workload_id + "]"
-        workloads = conf[curr_workload].split(';')
-        for wIndex in range(0, len(workloads)):
-            workloads[wIndex] = workloads[wIndex].strip()
-
-        conf["workload"] = workloads
-        print("Workload is - " + str(conf['workload']))
-
+        no_clients = conf["num_clients"]
         olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
-        client = new(c.Client, num=1, at="ClientNode@127.0.0.1")
+        client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
+        list_client = list(client_set)
 
-        setup(olympus, (client, conf))
-        setup(client, (olympus, conf))
+        for i in range(0, no_clients):
+            workloads = []
+            curr_workload = "workload[" + str(i) + "]"
+            workloads = conf[curr_workload].split(';')
+            for wIndex in range(0, len(workloads)):
+                workloads[wIndex] = workloads[wIndex].strip()
+            all_workloads[str(list_client[i])] = workloads
+
+        conf["workload"] = all_workloads
+
+        setup(olympus, (list_client, conf))
+        setup(list_client, (olympus, conf))
 
         start(olympus)
-        start(client)
+        start(list_client)
 
 def read_config():
     config = {}
