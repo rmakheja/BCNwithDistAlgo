@@ -1,5 +1,7 @@
 import sys
 import random
+import datetime
+import logging
 
 c = import_da("Client")
 o = import_da("Olympus")
@@ -8,10 +10,9 @@ o = import_da("Olympus")
 def main():
     terminate = False
     if(len(sys.argv) != 2):
-        print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'WORKLOAD_ID'")
+        output("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
     else:
-        print("Selected workload id is - " + sys.argv[1])
-        # print(conf)
+        output("Selected config file is - " + sys.argv[1])
 
         conf = read_config()
         all_workloads = {}
@@ -20,7 +21,7 @@ def main():
         olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
         client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
         list_client = list(client_set)
-        print(list_client)
+
         for i in range(0, no_clients):
             workloads = []
             curr_workload = "workload[" + str(i) + "]"
@@ -43,7 +44,7 @@ def main():
 
 def read_config():
     config = {}
-    with open('system.conf', 'r') as f:
+    with open(sys.argv[1], 'r') as f:
         for line in f:
             if line[0] != '#':
                 (key,sep,val) = line.partition('=')

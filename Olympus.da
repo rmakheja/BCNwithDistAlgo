@@ -2,6 +2,7 @@ import sys
 # import nacl.utils
 import pickle
 from nacl.public import PrivateKey, Box
+import logging
 r = import_da("Replica")
 
 class config():
@@ -11,7 +12,6 @@ class config():
 class Olympus(process):
 
     def setup(list_clients: list, config: set):
-
         ## use pynacl lib to initiailze all keys
         oly_priv_key = PrivateKey.generate()
         self.oly_private_key = oly_priv_key
@@ -58,7 +58,7 @@ class Olympus(process):
     def receive(msg=('current_configuration'), from_= sender):
 
         sender_id = str(sender)
-        print('Received request from', sender_id, ' for current configuration')
+        output('Received request from', sender_id, ' for current configuration')
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
@@ -71,13 +71,11 @@ class Olympus(process):
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):
-        print('Received reconfiguration request from Client')
+        output('Received reconfiguration request from Client')
 
 
     def run():
-        print('Started Olympus...Initializing self pub-private keys ...')
-
-        print('Waiting for an operations...')
+        print('Started Olympus...Waiting for an operations...')
         await(terminate)
 
     def dict_to_binary(the_dict):
