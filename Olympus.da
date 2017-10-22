@@ -9,6 +9,7 @@ class config():
 class Olympus(process):
 
     def setup(list_clients: list, config: set):
+        self.logger = logging.getLogger(__name__)
         self.oly_private_key = 'oly_priv_key_VALUE'
         self.oly_public_key = 'oly_pub_key_VALUE'
         self.replica_public_keys = {}
@@ -34,7 +35,7 @@ class Olympus(process):
             self.replica_public_keys[str(replica)] = 'public_key for replica -' + str(replica)
             self.replica_private_keys[str(replica)] = 'private_key for replica -' + str(replica)
 
-        output(list_clients)
+        output('client','hello')
 
         ## Olympus terminating flag
         self.terminate = False
@@ -42,7 +43,8 @@ class Olympus(process):
     def receive(msg=('current_configuration'), from_= sender):
 
         sender_id = str(sender)
-        output('Received request from', sender_id, ' for current configuration')
+        ##output({'message':"received MSG_CLIENT_INIT_RESPONSE (current configuration) from Olympus", 'name':'sender_id'})
+        ##output('Received request from' + sender_id + ' for current configuration')
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
@@ -54,11 +56,11 @@ class Olympus(process):
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):
-        output('Received reconfiguration request from Client')
+        print('Received reconfiguration request from Client')
 
 
     def run():
-        output('Started Olympus...Initializing variables')
+        print('Started Olympus...Initializing variables')
         ## use pynacl lib to initiailze all keys
-        output('Waiting for an operations...')
+        ##output('Waiting for an operations...')
         await(terminate)

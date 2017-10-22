@@ -3,7 +3,8 @@ import logging
 
 class Client(process):
 
-    def setup(olympus: Olympus, sys_config: set):s
+    def setup(olympus: Olympus, sys_config: set):
+        self.logger = logging.getLogger(__name__)
         self.successFlag = False
         self.resultList = [];
         self.seqNo = -1;

@@ -35,6 +35,13 @@ def main():
             all_workloads[str(list_client[i])] = workloads
         conf['workload'] = all_workloads
 
+        logfile = str(datetime.datetime.now()).replace(':','-')+"_logfile.log"
+        for name in ["Client", "Olympus", "Replica"] :
+            logger = logging.getLogger(name)
+            logger.setLevel(logging.INFO)
+            handler = logging.FileHandler(logfile)
+            handler.setLevel(logging.INFO)
+            logger.addHandler(handler)
         setup(olympus, (list_client, conf))
         setup(list_client, (olympus, conf))
 
