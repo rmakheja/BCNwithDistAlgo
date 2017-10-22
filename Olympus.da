@@ -4,6 +4,8 @@ import pickle
 from nacl.public import PrivateKey, Box
 import logging
 r = import_da("Replica")
+import nacl.signing
+import nacl.encoding
 
 class config():
     history = []
@@ -17,6 +19,8 @@ class Olympus(process):
         self.oly_private_key = oly_priv_key
         self.oly_public_key = oly_priv_key.public_key
 
+        self.replica_signing_keys = {}
+        self.replica_verify_keys = {}
         self.replica_public_keys = {}
         self.replica_private_keys = {}
         self.client_private_keys = {}
@@ -38,8 +42,12 @@ class Olympus(process):
 
         for replica in replica_list:
             priv_key = PrivateKey.generate()
+            signing_key = nacl.signing.SigningKey.generate()
             self.replica_public_keys[str(replica)] = priv_key.public_key
             self.replica_private_keys[str(replica)] = priv_key
+
+            self.replica_signing_keys[str(replica)] = signing_key
+            self.replica_verify_keys[str(replica)] = signing_key.verify_key
 
         for replica in replica_list:
             keysForReplica = {}
@@ -47,6 +55,7 @@ class Olympus(process):
             keysForReplica['public_key'] = self.replica_public_keys[str(replica)]
             keysForReplica['client_public_keys'] = self.client_public_keys
             keysForReplica['replica_public_keys'] = self.replica_public_keys
+            keysForReplica['replica_verify_keys'] = self.replica_verify_keys
             send(('keys', keysForReplica), to= replica)
 
         #print("Public keyz ********")
@@ -67,6 +76,7 @@ class Olympus(process):
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
+        client_config["replica_verify_keys"] = self.replica_verify_keys
 
         send(('cur_conf', client_config), to= sender)
 

@@ -1,7 +1,13 @@
 import sys
 import pickle
+import nacl
 from nacl.public import PrivateKey, Box
 import logging
+
+import nacl
+import nacl.encoding
+import nacl.hash
+import nacl.signing
 
 class Replica(process):
     def setup(olympus: Olympus, list_clients: list, list_replicas: list, config: set):
@@ -15,6 +21,8 @@ class Replica(process):
         self.client_public_keys = {}
         self.publicKey = "Default"
         self.replica_public_keys = {}
+        self.HASHER = nacl.hash.sha256
+        self.replica_verify_keys = {}
 
     def receive(msg=('keys', payload), from_= sender):
         print('Received all KEYS---')
@@ -22,6 +30,7 @@ class Replica(process):
         self.publicKey = payload['public_key']
         self.replica_public_keys = payload['replica_public_keys']
         self.client_public_keys = payload['client_public_keys']
+        self.replica_verify_keys = payload['replica_verify_keys']
 
     def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
         ind = int(replica_index) - 1
@@ -45,7 +54,6 @@ class Replica(process):
 
         ind = int(replica_index) + 1
         if(ind == 1):
-
             ## HEAD case
             print('head Received request from Client for task execution..')
 
@@ -66,9 +74,11 @@ class Replica(process):
                 order_proof = []
                 result_proof = []
                 print('Creating order stmt...')
-                order_stmt = (self.slot_no, payload['client'], payload['seqNo'], payload['oper'], );
+                order_stmt = (self.slot_no, payload['client'], payload['seqNo'], payload['oper'])
+
                 print('Processing Order Shuttle')
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+
                 print('Adding to History...')
                 history[order_shuttle['slot_no']] = order_stmt
 
@@ -92,7 +102,7 @@ class Replica(process):
             result = ""
             order_shuttle = payload
             order_stmt = ( payload['slot_no'],  payload['client'], payload['seqNo'], payload['oper']);
-            if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
+            if(validate_order_proof(order_shuttle["order_proof"], order_stmt)):
                 result = execute_actual_command(order_shuttle['oper'])
                 print("Execution Result at TAIL is - " + result)
                 order_proof = order_shuttle['order_proof']
@@ -103,7 +113,6 @@ class Replica(process):
                     ## Reconfig request from replica
                 else :
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
-
                     history[order_shuttle['slot_no']] = order_stmt
 
                     clientResult = {}
@@ -136,13 +145,13 @@ class Replica(process):
 
             order_shuttle = payload
             order_stmt = (payload['slot_no'], payload['client'], payload['seqNo'], payload['oper']);
-            if(validate_order_proof(order_shuttle["order_proof"],order_stmt)):
+            if(validate_order_proof(order_shuttle["order_proof"], order_stmt)):
                 result = execute_actual_command(order_shuttle['oper'])
                 print("Execution Result is - " + result)
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
-                if not validate_result_proof(result_proof,result):
+                if not validate_result_proof(result_proof, result):
                     output('invalid result_proof')
                     ## Reconfig request from replica
                 else :
@@ -158,15 +167,16 @@ class Replica(process):
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
+        binary_result = pickle.dumps(result)
+        result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
         order_proof.append(order_stmt)
         order_shuttle['order_proof'] = order_proof
-        result_hash = "##THIS IS RESULT HASH of " + result + " ##";
         result_proof.append((order_shuttle['client'], order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
-        order_shuttle['result_proof'] =result_proof
+        order_shuttle['result_proof'] = result_proof
         return order_shuttle
 
-    def validate_order_proof(order_proof,order_stmt):
-        #check if received slot no is not in history and the previous slot is finished
+    def validate_order_proof(order_proof, order_stmt):
+        # check if received slot no is not in history and the previous slot is finished
         slot_no = int(order_stmt[0])
         if(slot_no in history or ( slot_no != 0 and (slot_no - 1) not in history)) :
             return False
@@ -175,12 +185,14 @@ class Replica(process):
                 return False;
         return True
 
-    def validate_result_proof(result_proof,result):
-        cur_hash = "##THIS IS RESULT HASH of " + result + " ##";
+    def validate_result_proof(result_proof, result):
+        binary_result = pickle.dumps(result)
+        cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
         for res_stmt in result_proof:
             if res_stmt[3] != cur_hash:
+                output('FATAL ERROR: SIGNATURE FAILED...!!')
                 return False
-        return True;
+        return True
 
     def execute_actual_command(operation):
         output('Executing actual operation command ...' + operation)

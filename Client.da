@@ -1,5 +1,6 @@
 import sys
 import pickle
+import nacl
 import nacl.utils
 from nacl.public import PrivateKey, Box
 import logging
@@ -51,11 +52,8 @@ class Client(process):
 
     def execute_operation():
 
-        print("Creating box for CLIENT-sender")
-
         #print("Head replica - " + str(curr_config['head_replica']))
         #print("Head replica from list - " + str(self.curr_config['replicas'][0]))
-
 
         operations = sys_config['workload'][str(self)]
         output('sending operations.....')
@@ -84,7 +82,15 @@ class Client(process):
         send(('current_configuration'), to= olympus)
 
     def is_valid_response(res):
-        return True;
+        no_of_matches = 0
+        first_result_proof = res['result_proof'][0]
+        for i in range(1, len(res['result_proof'])):
+            if(first_result_proof == res['result_proof'][i]):
+                no_of_matches += 1
+            if(no_of_matches == (int(sys_config['failures_handled']) + 1)):
+                output("T+1 result hashes matched.")
+                return True
+        return False
 
     def abort():
         output('abort...!')
