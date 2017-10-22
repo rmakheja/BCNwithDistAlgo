@@ -19,7 +19,7 @@ class Olympus(process):
         self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
 
         ## Create replica processes here
-        no_replicas = config["num_replicas"]
+        no_replicas = int(config["num_replicas"])
         replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         list_replica = list(replica_set)
         setup(list_replica, (self, list_clients, list_replica, config))
@@ -34,27 +34,28 @@ class Olympus(process):
             self.replica_public_keys[str(replica)] = 'public_key for replica -' + str(replica)
             self.replica_private_keys[str(replica)] = 'private_key for replica -' + str(replica)
 
+        print(list_clients)
 
         ## Olympus terminating flag
         self.terminate = False
 
     def receive(msg=('current_configuration'), from_= sender):
-        print('Received request from', sender, ' for current configuration')
 
+        sender_id = str(sender)
+        print('Received request from', sender_id, ' for current configuration')
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
-        client_config["client_public_key"] = self.client_public_keys[str(sender)]
-        client_config["client_private_key"] = self.client_private_keys[str(sender)]
+        client_config["client_public_key"] = self.client_public_keys[sender_id]
+        client_config["client_private_key"] = self.client_private_keys[sender_id]
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
         send(('cur_conf', client_config), to= sender)
-        # terminate = True
 
     def receive(msg=('reconfigure'), from_= sender):
         print('Received reconfiguration request from Client')
-        terminate = True
+
 
     def run():
         print('Started Olympus...Initializing variables')

@@ -1,11 +1,12 @@
 import sys
+import random
 
 c = import_da("Client")
 o = import_da("Olympus")
 # r = import_da("Replica")
 
 def main():
-
+    terminate = False
     if(len(sys.argv) != 2):
         print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'WORKLOAD_ID'")
     else:
@@ -15,26 +16,30 @@ def main():
         conf = read_config()
         all_workloads = {}
         current_workload_id = sys.argv[1]
-        no_clients = conf["num_clients"]
+        no_clients = int(conf['num_clients'])
         olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
         client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
         list_client = list(client_set)
-
+        print(list_client)
         for i in range(0, no_clients):
             workloads = []
             curr_workload = "workload[" + str(i) + "]"
             workloads = conf[curr_workload].split(';')
             for wIndex in range(0, len(workloads)):
-                workloads[wIndex] = workloads[wIndex].strip()
+                oper = workloads[wIndex].strip()
+                if oper.startswith('pseudorandom', 0):
+                    workloads = pseudorandom(oper);
+                else :
+                    workloads[wIndex] = workloads[wIndex].strip()
             all_workloads[str(list_client[i])] = workloads
-
-        conf["workload"] = all_workloads
+        conf['workload'] = all_workloads
 
         setup(olympus, (list_client, conf))
         setup(list_client, (olympus, conf))
 
         start(olympus)
         start(list_client)
+        await(terminate)
 
 def read_config():
     config = {}
@@ -47,3 +52,31 @@ def read_config():
                     val = val.strip()
                     config[key.strip()] = int(val) if str.isdecimal(val) else val
     return config
+
+def pseudorandom(oper):
+    ind = oper.index(',')
+    ind1 = len(oper) - 1
+    s = int(oper[13:ind])
+    n = int(oper[ind+1 : ind1])
+
+    workloads = []
+    random.seed(s)
+    for i in range(0, n):
+        r = random.randint(0, 10)%4
+        if r == 0: ##put oper
+            key = random.randint(0, 10)
+            val = random.randint(0, 10)
+            workloads.append('put(' + str(key) + ',' + str(val) + ')')
+        elif r == 1: ##get
+            key = random.randint(0, 10)
+            workloads.append('get(' + str(key) + ')')
+        elif r == 2: ##slice oper
+            key = random.randint(0, 10)
+            start = random.randint(0, 10)
+            end = random.randint(0, 10)
+            workloads.append('slice(' + str(key) + ',\'' + str(start) + ':' + str(end) + '\')')
+        elif r == 3: ##append
+            key = random.randint(0, 10)
+            val = random.randint(0, 10)
+            workloads.append('append(' + str(key) + ',' + str(val) + ')')
+    return workloads

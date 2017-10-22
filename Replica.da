@@ -65,7 +65,6 @@ class Replica(process):
                     clientResult['oper'] = order_shuttle['oper']
                     clientResult['result'] = result
                     clientResult['result_proof'] = order_shuttle['result_proof']
-
                     cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
 
                     ## ind is already beyond last replica index. So subtract 2
@@ -130,26 +129,41 @@ class Replica(process):
         ## execute operation on current state
         splits = operation.split("'")
         if(operation[0] == 'p'):
-            core_data[splits[1]] = splits[3]
+            ind = operation.index(',')
+            ind1 = len(operation) - 2
+            key = operation[5:ind]
+            val = operation[ind+1 : ind1]
+            core_data[key] = val
             result = "OK"
         elif(operation[0] == 'g'):
-            if(splits[1] in core_data):
-                result = core_data[splits[1]]
+            ind = operation.index('(')+1
+            ind1 = len(operation) - 1
+            key = operation[ind: ind1]
+            if(key in core_data):
+                result = core_data[key]
             else:
                 result = ""
         elif(operation[0] == 'a'):
-            if(splits[1] in core_data):
-                core_data[splits[1]] = core_data[splits[1]] + splits[3]
+            ind = operation.index(',')
+            ind1 = len(operation) - 1
+            key = operation[8:ind]
+            val = operation[ind+1 : ind1]
+            if(key in core_data):
+                core_data[key] = str(core_data[key]) + str(val)
                 result = "OK"
             else:
                 result = "fail"
         elif(operation[0] == 's'):
-            start_end = splits[3].split(':')
-            if((int(start_end[0]) >= 0) and (int(start_end[1]) <= len(core_data[splits[1]]))):
-                core_data[splits[1]] = core_data[splits[1]][int(start_end[0]):int(start_end[1])]
+            ind = operation.index(',')
+            ind1 = len(operation) - 2
+            key = operation[6:ind]
+            ran = operation[ind+2 : ind1]
+            start_end = ran.split(':')
+            if(key in core_data and (int(start_end[0]) >= 0) and (int(start_end[1]) <= len(core_data[key]))):
+                core_data[key] = core_data[key][int(start_end[0]):int(start_end[1])]
                 result = "OK"
             else:
-                result = "OK"
+                result = "Fail"
         else:
             result = "fail"
         return result
@@ -170,25 +184,18 @@ class Replica(process):
                 for slot in history:
                     stmt = history[slot]
                     if(stmt[1] == command['client'] and stmt[2] == command['seqNo'] and stmt[3] == command['oper']):
-                        FoundSlot = True
-                        break;
+                        foundSlot = True
                 if not foundSlot:
-                    send(('execute', command, 0), to= list_replicas[0])
-                if await(cache_key in cache):
-                    send(('retrans_res', cache[cache_key]), to= command['client'])
-                elif timeout(5):
-                    print('retrans failed, head dint receive result shuttle')
-                    ##send reconfig
+                    send(('execute', command, '0'), to= self.list_replicas[0])
                 ## Start the replica timer for retranmission
             else:
                 ## send retrans to head and wait for result.
-                send(('retrans', command, 0), to= list_replicas[0])
-                if await(cache_key in cache):
+                send(('retrans', command, '0'), to= self.list_replicas[0])
+            if await(cache_key in cache):
                     send(('retrans_res', cache[cache_key]), to= command['client'])
-                elif timeout(5):
-                    print('retrans failed, replica dint receive result shuttle');
+            elif timeout(5):
+                    print('retrans failed, replica dint receive result shuttle')
                     ##send reconfig
-
 
     def run():
         print('Started Replica...waiting for an operations...')
