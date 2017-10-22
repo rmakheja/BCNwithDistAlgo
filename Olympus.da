@@ -74,13 +74,9 @@ class Olympus(process):
 
 
     def run():
-<<<<<<< HEAD
         print('Started Olympus...Initializing variables')
         ## use pynacl lib to initiailze all keys
         ##output('Waiting for an operations...')
-        await(terminate)
-=======
-        print('Started Olympus...Waiting for an operations...')
         await(terminate)
 
     def dict_to_binary(the_dict):
@@ -90,4 +86,3 @@ class Olympus(process):
     def binary_to_dict(the_binary):
         d = pickle.loads(the_binary)
         return d
->>>>>>> 7c9814a556183cf0e36239aa31a8d815d3a229f3
