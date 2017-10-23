@@ -15,7 +15,7 @@ def main():
         output("Selected config file is - " + sys.argv[1])
 
         """
-        logfile = str(datetime.datetime.now())+"_logfile.log"
+        logfile = str(datetime.datetime.now()).replace(':','-') + "_logfile.log"
         for name in ["Client", "Olympus", "Replica"]:
             logger = logging.getLogger(name)
             logger.setLevel(logging.DEBUG)

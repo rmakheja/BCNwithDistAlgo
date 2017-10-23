@@ -4,9 +4,10 @@ import pickle
 import nacl
 from nacl.public import PrivateKey, Box
 import logging
-r = import_da("Replica")
 import nacl.signing
 import nacl.encoding
+
+r = import_da("Replica")
 
 class Olympus(process):
 
