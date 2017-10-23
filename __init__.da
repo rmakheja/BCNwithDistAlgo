@@ -32,16 +32,16 @@ def main():
         no_clients = int(conf['num_clients'])
         #olympus = new(o.Olympus, num=1)
         #olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
-        olympus = new(o.Olympus, num=1, at="OlympusNode@172.24.19.252")
+        olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
 
         #olympus = new(o.Olympus, num=1)
         #client_set = new(c.Client, num=no_clients)
         #client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
-        client_set = new(c.Client, num=no_clients, at="ClientNode@172.24.19.252")
+        client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
 
         #client_set = new(c.Client, num=no_clients)
         list_client = list(client_set)
-
+        print(list_client)
         for i in range(0, no_clients):
             workloads = []
             curr_workload = "workload[" + str(i) + "]"
