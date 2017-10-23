@@ -32,7 +32,7 @@ class Client(process):
         #output("Decrypted result is as below")
         #output(result)
         if self.seqNo == int(result['seqNo']) and result['client'] == self:
-            if is_valid_response(result, sender):
+            if is_valid_response(result):
                 resultList.append(result['result'])
                 successFlag = True
             else:
@@ -107,11 +107,12 @@ class Client(process):
                 return False
 
         for i in range(0, len(res['result_proof'])):
-            if((result_hash == res['result_proof'][i][3]) and (res['result_proof'][i][2] == sys_config['workload'][str(self)][self.seqNo])):
+            if((result_hash == res['result_proof'][i][0][3]) and (res['result_proof'][i][0][2] == sys_config['workload'][str(self)][self.seqNo])):
                 no_of_matches += 1
             if(no_of_matches == (int(sys_config['failures_handled']) + 1)):
                 output("T+1 result hashes matched.")
                 return True
+        output("Less than T+1 result hashes matched...result validation failed!!")
         return False
 
     def execute_retransmission(msg):

@@ -264,9 +264,12 @@ class Replica(process):
             if(each_order_p[0] != order_stmt):
                 output("Order statement mismatch.")
                 return False;
+
+        output('Validation of order proof success...')
         return True
 
     def validate_result_proof(result_proof, result, operation):
+        output('Validating result proof...')
         binary_result = pickle.dumps(result)
         cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
         for i in range(0, len(result_proof)):
@@ -281,6 +284,7 @@ class Replica(process):
             if((res_stmt[0][3] != cur_hash) or (res_stmt[0][2] != operation)):
                 output('Result statement verification failed...!!')
                 return False
+        output('Validation of result proof success...')
         return True
 
     def execute_actual_command(operation):
