@@ -14,12 +14,24 @@ def main():
     else:
         output("Selected config file is - " + sys.argv[1])
 
+        logfile = str(datetime.datetime.now())+"_logfile.log"
+        for name in ["Client", "Olympus", "Replica"]:
+            logger = logging.getLogger(name)
+            logger.setLevel(logging.DEBUG)
+            handler = logging.FileHandler(logfile)
+            handler.setLevel(logging.INFO)
+            formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] : %(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+
         conf = read_config()
         all_workloads = {}
         current_workload_id = sys.argv[1]
         no_clients = int(conf['num_clients'])
         olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
+        #olympus = new(o.Olympus, num=1)
         client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
+        #client_set = new(c.Client, num=no_clients)
         list_client = list(client_set)
 
         for i in range(0, no_clients):

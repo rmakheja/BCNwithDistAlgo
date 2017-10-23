@@ -11,6 +11,7 @@ import nacl.signing
 
 class Replica(process):
     def setup(olympus: Olympus, list_clients: list, list_replicas: list, config: set):
+        self.logger = logging.getLogger(__name__)
         self.history = {}
         self.cache = {}
         self.slot_no = 0
@@ -32,12 +33,19 @@ class Replica(process):
         self.client_public_keys = payload['client_public_keys']
         self.replica_verify_keys = payload['replica_verify_keys']
 
-    def receive(msg=('result_shuttle', payload, replica_index), from_= sender):
+    def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
+        output("Received the Result shuttle...")
+        decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+
         ind = int(replica_index) - 1
         output('Received the result shuttle')
         cache[str(payload['client']) + ' : ' + str(payload['seqNo']) ] = payload
         if(ind >= 0):
-            send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
+            encrypted_result_shuttle = getEncryptedMsg(payload, replica_public_keys[str(list_replicas[ind])])
+            send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
+            #send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
 
     def receive(msg=('test_execute', encrypted_payload, replica_index), from_= sender):
         print('Recevied test_execute')
@@ -50,21 +58,25 @@ class Replica(process):
 
     def receive(msg=('execute', encrypted_payload, replica_index), from_= sender):
 
+        output('RECEIVED normal execution from ' + str(sender))
         #payload = encrypted_payload ## THIS IS USED FOR TEST_EXECUTE (TESTING ENCRYPTION)
+        payload = {}
+        if(str(sender) in client_public_keys):
+            decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+        else:
+            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
 
         ind = int(replica_index) + 1
         if(ind == 1):
             ## HEAD case
             print('head Received request from Client for task execution..')
 
-            decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_payload)
-            payload = pickle.loads(plaintext)
-            print('Decrypted payload at HEAD is - ')
-            print(payload)
-
             ## Verify if this slot is not already occupied and its previous is occupied.
-            if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)) :
+            if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)):
                 result = execute_actual_command(payload['oper'])
                 print("Execution Result at HEAD is - " + result)
                 order_shuttle = payload
@@ -89,15 +101,8 @@ class Replica(process):
             else:
                 output('invalid slot_no... or waiting for previous slot')
         elif(ind == (len(list_replicas))):
-
             #print('In TAIL')
             ## TAIL case
-
-            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_payload)
-            payload = pickle.loads(plaintext)
-            print('Decrypted payload at TAIL is - ')
-            print(payload)
 
             result = ""
             order_shuttle = payload
@@ -125,10 +130,13 @@ class Replica(process):
 
                     ## ind is already beyond last replica index. So subtract 2
                     ind = ind - 2
-                    send(('result_shuttle', clientResult, str(ind)), to= list_replicas[ind])
+                    encrypted_result_shuttle = getEncryptedMsg(clientResult, self.replica_public_keys[str(list_replicas[ind])])
+                    send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
 
                     ## Send Result to client
-                    send(('execution_success', clientResult), to= payload['client'])
+                    encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(payload['client'])])
+                    send(('execution_success', encrypted_msg), to= payload['client'])
+                    #send(('execution_success', clientResult), to= payload['client'])
             else:
                 output('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
@@ -136,12 +144,6 @@ class Replica(process):
         else:
             ## REST of the cases
             #print('In MIDDLE')
-
-            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_payload)
-            payload = pickle.loads(plaintext)
-            print('Decrypted payload in MIDDLE is - ')
-            print(payload)
 
             order_shuttle = payload
             order_stmt = (payload['slot_no'], payload['client'], payload['seqNo'], payload['oper']);
@@ -243,11 +245,24 @@ class Replica(process):
             result = "fail"
         return result
 
-    def receive(msg=('retrans', command, replica_index), from_= sender):
+    def receive(msg=('retrans', encrypted_command, replica_index), from_= sender):
+
+        command = {}
+        if(str(sender) in client_public_keys):
+            decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_command)
+            command = pickle.loads(plaintext)
+        else:
+            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_command)
+            command = pickle.loads(plaintext)
+
         output('Received retransmission...')
         cache_key = str(command['client']) + ' : ' + str(command['seqNo'])
         if(cache_key in cache):
-            send(('retrans_res', cache[cache_key]), to= command['client'])
+            encrypted_cache = getEncryptedMsg(cache[cache_key], self.client_public_keys[str(command['client'])])
+            send(('retrans_res', encrypted_cache), to= command['client'])
+            #send(('retrans_res', cache[cache_key]), to= command['client'])
         elif(self.isImmutable):
             send(('Error - Replica Immutable'), to= command['client'])
         else:
@@ -261,13 +276,21 @@ class Replica(process):
                     if(stmt[1] == command['client'] and stmt[2] == command['seqNo'] and stmt[3] == command['oper']):
                         foundSlot = True
                 if not foundSlot:
-                    send(('execute', command, '0'), to= self.list_replicas[0])
+                    output('HERE biachh...')
+
+                    encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
+                    send(('execute', encrypted_command, '0'), to= self.list_replicas[0])
+                    #send(('execute', command, '0'), to= self.list_replicas[0])
                 ## Start the replica timer for retranmission
             else:
                 ## send retrans to head and wait for result.
-                send(('retrans', command, '0'), to= self.list_replicas[0])
+                encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
+                send(('retrans', encrypted_command, '0'), to= self.list_replicas[0])
+                #send(('retrans', command, '0'), to= self.list_replicas[0])
             if await(cache_key in cache):
-                    send(('retrans_res', cache[cache_key]), to= command['client'])
+                    encrypted_cache = getEncryptedMsg(cache[cache_key], self.client_public_keys[str(command['client'])])
+                    send(('retrans_res', encrypted_cache), to= command['client'])
+                    #send(('retrans_res', cache[cache_key]), to= command['client'])
             elif timeout(5):
                     output('retrans failed, replica dint receive result shuttle')
                     ##send reconfig
