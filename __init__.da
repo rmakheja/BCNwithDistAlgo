@@ -7,40 +7,53 @@ c = import_da("Client")
 o = import_da("Olympus")
 # r = import_da("Replica")
 
+def get_hosts_from_config(hosts_string):
+    hosts = hosts_string.split(";")
+    for i in range(0, len(hosts)):
+        hosts[i] = hosts[i].strip()
+    return hosts
+
 def main():
     terminate = False
     if(len(sys.argv) != 2):
-        output("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
+        print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
     else:
-        output("Selected config file is - " + sys.argv[1])
-
-        """
-        logfile = str(datetime.datetime.now()).replace(':','-') + "_logfile.log"
-        for name in ["Client", "Olympus", "Replica"]:
-            logger = logging.getLogger(name)
-            logger.setLevel(logging.DEBUG)
-            handler = logging.FileHandler(logfile)
-            handler.setLevel(logging.INFO)
-            formatter = logging.Formatter('[%(asctime)s] [%(name)s] [%(levelname)s] : %(message)s')
-            handler.setFormatter(formatter)
-            logger.addHandler(handler)
-        """
+        print("Selected config file is - " + sys.argv[1])
 
         conf = read_config()
         all_workloads = {}
         current_workload_id = sys.argv[1]
+        hosts = get_hosts_from_config(conf['hosts'])
+        client_host_index = get_hosts_from_config(conf['client_hosts'])
+        replica_host_index = get_hosts_from_config(conf['replica_hosts'])
+        replicaHostIPs = []
+        clientHostIPs = []
+        for i in range(0, len(replica_host_index)):
+            replicaHostIPs.append(hosts[int(replica_host_index[i])])
+        conf['replicaHostIPs'] = replicaHostIPs
+        for i in range(0, len(client_host_index)):
+            clientHostIPs.append(hosts[int(client_host_index[i])])
+        olympusHostIP = ""
+        if('olympus_host' in conf):
+            olympusHostIP = hosts[int(conf['olympus_host'])]
+        else:
+            # Else take first host as default olympus
+            olympusHostIP = hosts[0]
         no_clients = int(conf['num_clients'])
         #olympus = new(o.Olympus, num=1)
         #olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
-        olympus = new(o.Olympus, num=1, at="OlympusNode@172.24.19.252")
+        olympus = new(o.Olympus, num=1, at="OlympusNode@"+olympusHostIP)
 
         #olympus = new(o.Olympus, num=1)
         #client_set = new(c.Client, num=no_clients)
         #client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
-        client_set = new(c.Client, num=no_clients, at="ClientNode@172.24.19.252")
+        list_client = []
+        for i in range(0, len(clientHostIPs)):
+            client = new(c.Client, num=1, at="ClientNode@"+clientHostIPs[i])
+            list_client.append(client.pop())
+        #print(list_client)
 
         #client_set = new(c.Client, num=no_clients)
-        list_client = list(client_set)
 
         for i in range(0, no_clients):
             workloads = []

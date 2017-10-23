@@ -10,6 +10,7 @@ import nacl.signing
 
 class Replica(process):
     def setup(olympus: Olympus, list_clients: list, list_replicas: list, config: set):
+        output.log("Setting up the Replica...")
         self.logger = logging.getLogger(__name__)
         self.history = {}
         self.cache = {}
@@ -39,7 +40,7 @@ class Replica(process):
 
 
     def receive(msg=('keys', payload), from_= sender):
-        print('Received all KEYS---')
+        print('Received all KEYS from the Olympus ---')
         self.privateKey = payload['private_key']
         self.publicKey = payload['public_key']
         self.signingKey = payload['signing_key']
@@ -74,18 +75,9 @@ class Replica(process):
             send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
             #send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
 
-    def receive(msg=('test_execute', encrypted_payload, replica_index), from_= sender):
-        print('Recevied test_execute')
-        decrypt_box = Box(self.privateKey, self.client_public_keys[str(sender)])
-        plaintext = decrypt_box.decrypt(encrypted_payload)
-
-        payload = pickle.loads(plaintext)
-        print('Test_execute: Decrypted payload is - ')
-        print(payload)
-
     def receive(msg=('execute', encrypted_payload, replica_index), from_= sender):
 
-        output('RECEIVED normal execution from ' + str(sender))
+        output('Received normal task execution from ' + str(sender))
         #payload = encrypted_payload ## THIS IS USED FOR TEST_EXECUTE (TESTING ENCRYPTION)
         payload = {}
         if(str(sender) in client_public_keys):
@@ -101,22 +93,21 @@ class Replica(process):
         client_id = list_clients.index(payload['client'])
         if(ind == 1):
             ## HEAD case
-            print('head Received request from Client for task execution..')
+            print('HEAD received the execution request...')
 
             ## Verify if this slot is not already occupied and its previous is occupied.
             if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)):
+                output('Slot verification success...!')
                 result = execute_actual_command(payload['oper'])
-                print("Execution Result at HEAD is - " + result)
+                #print("Execution Result at HEAD is - " + result)
                 order_shuttle = payload
                 order_shuttle['type'] = "Order Shuttle"
                 order_shuttle['slot_no'] = self.slot_no
                 order_shuttle['result'] = result
                 order_proof = []
                 result_proof = []
-                print('Creating order stmt...')
+                #print('Creating order stmt...')
                 order_stmt = [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
-
-                print('Processing Order Shuttle')
 
                 if sender != self:
                     check_failures('client_request', client_id)
@@ -125,9 +116,8 @@ class Replica(process):
                     order_stmt[3] = "get('x')"
                     self.ch_oper[client_id] = False
 
+                output('Added order statement to the history and forwarded the shuttle ahead...')
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
-
-                print('Adding to History...')
                 history[order_shuttle['slot_no']] = order_stmt
 
                 encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
@@ -140,6 +130,7 @@ class Replica(process):
         elif(ind == (len(list_replicas))):
             #print('In TAIL')
             ## TAIL case
+            print('TAIL received the execution request...')
 
             result = ""
             order_shuttle = payload
@@ -180,6 +171,7 @@ class Replica(process):
 
                     cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
 
+                    output('Added order statement to the history; added shuttle to cache and forwarded the shuttle to client with result...')
                     ## ind is already beyond last replica index. So subtract 2
                     ind = ind - 2
                     encrypted_result_shuttle = getEncryptedMsg(clientResult, self.replica_public_keys[str(list_replicas[ind])])
@@ -196,6 +188,7 @@ class Replica(process):
         else:
             ## REST of the cases
             #print('In MIDDLE')
+            print('MIDDLE replicas received the execution request...')
 
             order_shuttle = payload
             order_stmt = [payload['slot_no'], payload['client'], payload['seqNo'], payload['oper']];
@@ -214,6 +207,7 @@ class Replica(process):
                         self.ch_oper[client_id] = False
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                     history[order_shuttle['slot_no']] = order_stmt
+                    output('Added order statement to the history and forwarded the shuttle ahead...')
 
                     encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
                     send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
@@ -224,6 +218,8 @@ class Replica(process):
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
+
+        output('Adding order-statement, result statement and there signatures to shuttle')
         binary_order_stmt = pickle.dumps(order_stmt)
         signed_order_stmt = self.signingKey.sign(binary_order_stmt)
 
@@ -232,6 +228,7 @@ class Replica(process):
         order_proof.append([order_stmt, signed_order_stmt])
         order_shuttle['order_proof'] = order_proof
 
+        output('Adding result statement and its signature to shuttle')
         result_stmt = [order_stmt[1], order_stmt[2], order_stmt[3], result_hash]
         binary_result_stmt = pickle.dumps(result_stmt)
         signed_result_stmt = self.signingKey.sign(binary_result_stmt)
@@ -334,6 +331,7 @@ class Replica(process):
                 result = "Fail"
         else:
             result = "fail"
+        output("Operation execution Success...")
         return result
 
     def receive(msg=('retrans', encrypted_command, replica_index), from_= sender):

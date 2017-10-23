@@ -14,6 +14,7 @@ class Olympus(process):
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
 
+        output.log("Setting up the Olympus...")
         ## use pynacl lib to initiailze all keys
         oly_priv_key = PrivateKey.generate()
         self.oly_private_key = oly_priv_key
@@ -29,10 +30,14 @@ class Olympus(process):
 
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
-        replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
+        #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
         #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         #replica_set = new(r.Replica, num=no_replicas)
-        list_replica = list(replica_set)
+        list_replica = []
+        for i in range(0, len(config['replicaHostIPs'])):
+            replica = new(r.Replica, num=1, at="ReplicaNode@"+config['replicaHostIPs'][i])
+            list_replica.append(replica.pop())
+        #list_replica = list(replica_set)
         setup(list_replica, (self, list_clients, list_replica, config))
         start(list_replica)
         self.replica_list = list_replica
@@ -65,10 +70,9 @@ class Olympus(process):
         self.terminate = False
 
     def receive(msg=('current_configuration'), from_= sender):
-
         sender_id = str(sender)
         ##output({'message':"received MSG_CLIENT_INIT_RESPONSE (current configuration) from Olympus", 'name':'sender_id'})
-        output('Received request from' + sender_id + ' for current configuration')
+        output('Olympus Received request from' + sender_id + ' for current configuration')
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
@@ -78,11 +82,11 @@ class Olympus(process):
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
         client_config["replica_verify_keys"] = self.replica_verify_keys
-
+        output('Sending current configuration to the client...')
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):
-        print('Received reconfiguration request from Client')
+        print('Received reconfiguration request from - ' + str(sender))
 
     def run():
         print('Started Olympus...Waiting for an operations...')
