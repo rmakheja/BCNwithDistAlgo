@@ -32,6 +32,9 @@ class Replica(process):
         self.failures = extract_failures()
         self.HASHER = nacl.hash.sha256
         self.replica_verify_keys = {}
+        self.timer = config['nonhead_timeout']
+        if(self == list_replicas[0]):
+            timer = config['head_timeout']
 
 
     def receive(msg=('keys', payload), from_= sender):
@@ -356,6 +359,7 @@ class Replica(process):
                 encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
                 send(('retrans', encrypted_command, '0'), to= self.list_replicas[0])
                 #send(('retrans', command, '0'), to= self.list_replicas[0])
+
             if await(cache_key in cache):
                 clientResult = cache[cache_key]
                 if ch_res[client_id]:
@@ -370,7 +374,7 @@ class Replica(process):
                     encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
                     send(('retrans_res', encrypted_cache), to= command['client'])
                     #send(('retrans_res', cache[cache_key]), to= command['client'])
-            elif timeout(5):
+            elif timeout(self.timer):
                     output('retrans failed, replica dint receive result shuttle')
                     ##send reconfig
 

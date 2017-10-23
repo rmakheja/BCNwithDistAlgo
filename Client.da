@@ -82,7 +82,7 @@ class Client(process):
             if await(successFlag):
                 output('Received successful result...')
                 output(resultList[self.seqNo]);
-            elif timeout(2):
+            elif timeout(sys_config['client_timeout']):
                 output('Timeout...Executing retransmission...')
                 execute_retransmission(msg);
                 await(foundResponse)
@@ -139,12 +139,12 @@ class Client(process):
         output('Terminating...');
         #if await(successFlag):
         #    output('terminating...');
-        #elif timeout(2):
+        #elif timeout(sys_config['client_timeout']):
         #    execute_retransmission();
         #    output('Executed retransmission...')
         #    if await(successFlag):
         #        output('retransmit worked...so did timeout...terminating...', self.ope);
-        #    elif timeout(5):
+        #    elif timeout(sys_config['client_timeout']):
         #        output('retransmit failed...but Timeout worked');
 
 
