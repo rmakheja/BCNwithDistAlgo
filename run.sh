@@ -1,0 +1,1 @@
+python3 -m da -H 10.142.0.3 -n ReplicaNode -f --logfilename logfile.txt --message-buffer-size=$((64*1024)) -D Replica.da
