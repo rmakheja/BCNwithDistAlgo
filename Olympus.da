@@ -28,7 +28,8 @@ class Olympus(process):
 
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
-        replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
+        replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
+        #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         #replica_set = new(r.Replica, num=no_replicas)
         list_replica = list(replica_set)
         setup(list_replica, (self, list_clients, list_replica, config))

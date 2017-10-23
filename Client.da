@@ -15,17 +15,18 @@ class Client(process):
         self.responsesCount = 0
         self.invalidResponses = 0
         self.curr_config = {}
+        self.HASHER = nacl.hash.sha256
 
     def receive(msg=('cur_conf', config), from_= olympus):
+        output("Current Configurations received by client from olympus - " + str(olympus))
         self.curr_config = config
         successFlag = True
 
     def receive(msg=('execution_success', encrypted_result), from_= sender):
+        output("Execution result recevied by client from tail replica - " + str(sender))
         decrypt_box = Box(curr_config['client_private_key'], curr_config['replica_public_keys'][str(sender)])
         plaintext = decrypt_box.decrypt(encrypted_result)
         result = pickle.loads(plaintext)
-        print('Decrypted payload at client is - ')
-        print(result)
 
         if self.seqNo == int(result['seqNo']) and result['client'] == self:
             output('Received result from replica -', result)
@@ -95,9 +96,12 @@ class Client(process):
 
     def is_valid_response(res):
         no_of_matches = 0
+        binary_result = pickle.dumps(res['result'])
+        result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+
         first_result_proof = res['result_proof'][0]
-        for i in range(1, len(res['result_proof'])):
-            if(first_result_proof == res['result_proof'][i]):
+        for i in range(0, len(res['result_proof'])):
+            if((result_hash == res['result_proof'][i][3]) && (res['result_proof'][i][2] == sys_config['workload'][str(self)][seqNo])):
                 no_of_matches += 1
             if(no_of_matches == (int(sys_config['failures_handled']) + 1)):
                 output("T+1 result hashes matched.")

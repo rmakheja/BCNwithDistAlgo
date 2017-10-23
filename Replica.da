@@ -113,7 +113,7 @@ class Replica(process):
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
-                if not validate_result_proof(result_proof, result):
+                if not validate_result_proof(result_proof, result, order_shuttle['oper']):
                     output('invalid result_proof')
                     ## Reconfig request from replica
                 else :
@@ -153,7 +153,7 @@ class Replica(process):
                 order_proof = order_shuttle['order_proof']
                 result_proof = order_shuttle['result_proof']
 
-                if not validate_result_proof(result_proof, result):
+                if not validate_result_proof(result_proof, result, order_shuttle['oper']):
                     output('invalid result_proof')
                     ## Reconfig request from replica
                 else :
@@ -187,12 +187,12 @@ class Replica(process):
                 return False;
         return True
 
-    def validate_result_proof(result_proof, result):
+    def validate_result_proof(result_proof, result, operation):
         binary_result = pickle.dumps(result)
         cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
         for res_stmt in result_proof:
-            if res_stmt[3] != cur_hash:
-                output('FATAL ERROR: SIGNATURE FAILED...!!')
+            if((res_stmt[3] != cur_hash) or (res_stmt[2] != operation)):
+                output('FATAL ERROR: RESULT VALIDATION FAILED...!!')
                 return False
         return True
 
@@ -246,7 +246,6 @@ class Replica(process):
         return result
 
     def receive(msg=('retrans', encrypted_command, replica_index), from_= sender):
-
         command = {}
         if(str(sender) in client_public_keys):
             decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
@@ -276,8 +275,6 @@ class Replica(process):
                     if(stmt[1] == command['client'] and stmt[2] == command['seqNo'] and stmt[3] == command['oper']):
                         foundSlot = True
                 if not foundSlot:
-                    output('HERE biachh...')
-
                     encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
                     send(('execute', encrypted_command, '0'), to= self.list_replicas[0])
                     #send(('execute', command, '0'), to= self.list_replicas[0])
