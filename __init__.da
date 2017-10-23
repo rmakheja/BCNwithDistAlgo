@@ -1,5 +1,6 @@
 import sys
 import random
+import string
 import datetime
 import logging
 
@@ -84,6 +85,10 @@ def read_config():
                 if len(sep) != 0:
                     val = val.strip()
                     config[key.strip()] = int(val) if str.isdecimal(val) else val
+    config['client_timeout'] = config['client_timeout']/1000
+    config['head_timeout'] = config['client_timeout']/1000
+    config['nonhead_timeout'] = config['client_timeout']/1000
+    config['num_replicas'] = 2 * int(config['t']) + 1
     return config
 
 def pseudorandom(oper):
@@ -96,20 +101,58 @@ def pseudorandom(oper):
     random.seed(s)
     for i in range(0, n):
         r = random.randint(0, 10)%4
+        key_type = random.randint(0, 10)%2
+        value_type = random.randint(0, 10)%2
         if r == 0: ##put oper
-            key = random.randint(0, 10)
-            val = random.randint(0, 10)
+            key = "\'"
+            val = "\'"
+            if key_type == 0:
+                for i in range(5):
+                    key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
+            if value_type == 0:
+                for i in range(5):
+                    val += random.choice(string.ascii_letters + string.digits)
+                val += "\'"
+            else :
+                val = random.randint(0, 10)
             workloads.append('put(' + str(key) + ',' + str(val) + ')')
         elif r == 1: ##get
-            key = random.randint(0, 10)
+            key = "\'"
+            if key_type == 0:
+                for i in range(5):
+                        key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
             workloads.append('get(' + str(key) + ')')
         elif r == 2: ##slice oper
-            key = random.randint(0, 10)
+            key = "\'"
+            if key_type == 0:
+                for i in range(5):
+                    key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
             start = random.randint(0, 10)
             end = random.randint(0, 10)
             workloads.append('slice(' + str(key) + ',\'' + str(start) + ':' + str(end) + '\')')
         elif r == 3: ##append
-            key = random.randint(0, 10)
-            val = random.randint(0, 10)
+            key = "\'"
+            val = "\'"
+            if key_type == 0:
+                for i in range(5):
+                    key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
+            if value_type == 0:
+                for i in range(5):
+                    val += random.choice(string.ascii_letters + string.digits)
+                val += "\'"
+            else :
+                val = random.randint(0, 10)
             workloads.append('append(' + str(key) + ',' + str(val) + ')')
     return workloads

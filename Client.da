@@ -24,7 +24,7 @@ class Client(process):
         self.curr_config = config
         successFlag = True
 
-    def receive(msg=('execution_success', encrypted_result), from_= sender):
+    def receive(msg=('result_message', encrypted_result), from_= sender):
         output("Execution result received by client from tail replica - " + str(sender))
         output("Decrypting the encrypted data...")
         decrypt_box = Box(curr_config['client_private_key'], curr_config['replica_public_keys'][str(sender)])
@@ -49,7 +49,7 @@ class Client(process):
         result = pickle.loads(plaintext)
 
         if self.seqNo == int(result['seqNo']) :
-            if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['failures_handled'] + 1:
+            if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['t'] + 1:
                 responsesCount += 1
                 if is_valid_response(result) :
                     resultList.append(result['result'])
@@ -112,7 +112,7 @@ class Client(process):
         for i in range(0, len(res['result_proof'])):
             if((result_hash == res['result_proof'][i][0][3]) and (res['result_proof'][i][0][2] == sys_config['workload'][str(self)][self.seqNo])):
                 no_of_matches += 1
-            if(no_of_matches == (int(sys_config['failures_handled']) + 1)):
+            if(no_of_matches == (int(sys_config['t']) + 1)):
                 output("T+1 result hashes matched.")
                 return True
         output("Less than T+1 result hashes matched...result validation failed!!")

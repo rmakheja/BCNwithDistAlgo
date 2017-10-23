@@ -116,7 +116,7 @@ class Replica(process):
                     order_stmt[3] = "get('x')"
                     self.ch_oper[client_id] = False
 
-                output('Added order statement to the history and forwarded the shuttle ahead...')
+                output('Added order statement to the history and forwarded the shuttle ahead')
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                 history[order_shuttle['slot_no']] = order_stmt
 
@@ -172,15 +172,18 @@ class Replica(process):
                     cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
 
                     output('Added order statement to the history; added shuttle to cache and forwarded the shuttle to client with result...')
+
+                    ## Send Result to client
+                    encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(payload['client'])])
+                    send(('result_message', encrypted_msg), to= payload['client'])
+                    #send(('result_message', clientResult), to= payload['client'])
+
                     ## ind is already beyond last replica index. So subtract 2
                     ind = ind - 2
                     encrypted_result_shuttle = getEncryptedMsg(clientResult, self.replica_public_keys[str(list_replicas[ind])])
                     send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
 
-                    ## Send Result to client
-                    encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(payload['client'])])
-                    send(('execution_success', encrypted_msg), to= payload['client'])
-                    #send(('execution_success', clientResult), to= payload['client'])
+
             else:
                 output('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
