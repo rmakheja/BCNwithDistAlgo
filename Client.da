@@ -81,7 +81,7 @@ class Client(process):
             if await(successFlag):
                 output('Received result successfully verified...Result is')
                 output(resultList[self.seqNo])
-            elif timeout(2):
+            elif timeout(sys_config['client_timeout']):
                 output('Timeout...Executing retransmission...')
                 execute_retransmission(msg);
                 await(foundResponse)

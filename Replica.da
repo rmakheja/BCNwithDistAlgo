@@ -32,6 +32,9 @@ class Replica(process):
         self.failures = extract_failures()
         self.HASHER = nacl.hash.sha256
         self.replica_verify_keys = {}
+        self.timer = config['nonhead_timeout']
+        if(self == list_replicas[0]):
+            timer = config['head_timeout']
 
 
     def receive(msg=('keys', payload), from_= sender):
@@ -150,7 +153,7 @@ class Replica(process):
                     output('invalid result_proof')
                     ## Reconfig request from replica
                 else :
-                    check_failures('forward_request', client_id)
+                    check_failures('shuttle', client_id)
 
                     if self.ch_oper[client_id] :
                         order_stmt[3] = "get('x')"
@@ -300,6 +303,7 @@ class Replica(process):
         return result
 
     def receive(msg=('retrans', encrypted_command, replica_index), from_= sender):
+        ind = int(replica_index)
         command = {}
         if(str(sender) in client_public_keys):
             decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
@@ -318,21 +322,24 @@ class Replica(process):
         else :
             check_failures('forward_request', client_id)
         if(cache_key in cache):
+            clientResult = cache[cache_key]
             if ch_res[client_id]:
-                clientResult['result_proof'][ind][3] = "##THIS IS RESULT HASH of OK ##";
+                binary_result = pickle.dumps('OK')
+                result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+                clientResult['result_proof'][ind][3] = result_hash;
                 ch_res[client_id] = False
             if drop_res[client_id]:
                 clientResult['result_proof'].pop(0)
                 drop_res[client_id] = False
 
-            encrypted_cache = getEncryptedMsg(cache[cache_key], self.client_public_keys[str(command['client'])])
+            encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
             send(('retrans_res', encrypted_cache), to= command['client'])
             #send(('retrans_res', cache[cache_key]), to= command['client'])
 
         elif(self.isImmutable):
             send(('Error - Replica Immutable'), to= command['client'])
         else:
-            ind = int(replica_index) + 1
+            ind += 1
             if(ind == 1):
                 ## HEAD
                 #check if oper in history
@@ -351,19 +358,22 @@ class Replica(process):
                 encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
                 send(('retrans', encrypted_command, '0'), to= self.list_replicas[0])
                 #send(('retrans', command, '0'), to= self.list_replicas[0])
-            if await(cache_key in cache):
 
+            if await(cache_key in cache):
+                clientResult = cache[cache_key]
                 if ch_res[client_id]:
-                    clientResult['result_proof'][ind][3] = "##THIS IS RESULT HASH of OK ##";
+                    binary_result = pickle.dumps('OK')
+                    result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+                    clientResult['result_proof'][ind][3] = result_hash;
                     ch_res[client_id] = False
                 if drop_res[client_id] :
                     clientResult['result_proof'].pop(0)
                     drop_res[client_id] = False
 
-                    encrypted_cache = getEncryptedMsg(cache[cache_key], self.client_public_keys[str(command['client'])])
+                    encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
                     send(('retrans_res', encrypted_cache), to= command['client'])
                     #send(('retrans_res', cache[cache_key]), to= command['client'])
-            elif timeout(5):
+            elif timeout(self.timer):
                     output('retrans failed, replica dint receive result shuttle')
                     ##send reconfig
 
