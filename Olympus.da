@@ -1,13 +1,13 @@
 import sys
 # import nacl.utils
 import pickle
+import nacl
 from nacl.public import PrivateKey, Box
 import logging
-r = import_da("Replica")
+import nacl.signing
+import nacl.encoding
 
-class config():
-    history = []
-    quorom = []
+r = import_da("Replica")
 
 class Olympus(process):
 
@@ -18,6 +18,9 @@ class Olympus(process):
         oly_priv_key = PrivateKey.generate()
         self.oly_private_key = oly_priv_key
         self.oly_public_key = oly_priv_key.public_key
+
+        self.replica_signing_keys = {}
+        self.replica_verify_keys = {}
         self.replica_public_keys = {}
         self.replica_private_keys = {}
         self.client_private_keys = {}
@@ -27,6 +30,7 @@ class Olympus(process):
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
         replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
+        #replica_set = new(r.Replica, num=no_replicas)
         list_replica = list(replica_set)
         setup(list_replica, (self, list_clients, list_replica, config))
         start(list_replica)
@@ -39,8 +43,12 @@ class Olympus(process):
 
         for replica in replica_list:
             priv_key = PrivateKey.generate()
+            signing_key = nacl.signing.SigningKey.generate()
             self.replica_public_keys[str(replica)] = priv_key.public_key
             self.replica_private_keys[str(replica)] = priv_key
+
+            self.replica_signing_keys[str(replica)] = signing_key
+            self.replica_verify_keys[str(replica)] = signing_key.verify_key
 
         for replica in replica_list:
             keysForReplica = {}
@@ -48,6 +56,7 @@ class Olympus(process):
             keysForReplica['public_key'] = self.replica_public_keys[str(replica)]
             keysForReplica['client_public_keys'] = self.client_public_keys
             keysForReplica['replica_public_keys'] = self.replica_public_keys
+            keysForReplica['replica_verify_keys'] = self.replica_verify_keys
             send(('keys', keysForReplica), to= replica)
 
         ## Olympus terminating flag
@@ -66,17 +75,15 @@ class Olympus(process):
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
+        client_config["replica_verify_keys"] = self.replica_verify_keys
 
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):
         print('Received reconfiguration request from Client')
 
-
     def run():
-        print('Started Olympus...Initializing variables')
-        ## use pynacl lib to initiailze all keys
-        ##output('Waiting for an operations...')
+        print('Started Olympus...Waiting for an operations...')
         await(terminate)
 
     def dict_to_binary(the_dict):
