@@ -58,6 +58,7 @@ class Olympus(process):
             keysForReplica['client_public_keys'] = self.client_public_keys
             keysForReplica['replica_public_keys'] = self.replica_public_keys
             keysForReplica['replica_verify_keys'] = self.replica_verify_keys
+            keysForReplica['signing_key'] = self.replica_signing_keys[str(replica)]
             send(('keys', keysForReplica), to= replica)
 
         ## Olympus terminating flag
@@ -67,7 +68,7 @@ class Olympus(process):
 
         sender_id = str(sender)
         ##output({'message':"received MSG_CLIENT_INIT_RESPONSE (current configuration) from Olympus", 'name':'sender_id'})
-        ##output('Received request from' + sender_id + ' for current configuration')
+        output('Received request from' + sender_id + ' for current configuration')
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys

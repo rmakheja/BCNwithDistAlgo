@@ -1,9 +1,8 @@
 import sys
-import pickle
 import nacl
 from nacl.public import PrivateKey, Box
 import logging
-
+import pickle
 import nacl
 import nacl.encoding
 import nacl.hash
@@ -22,6 +21,8 @@ class Replica(process):
         self.client_public_keys = {}
         self.publicKey = "Default"
         self.replica_public_keys = {}
+        self.replica_verify_keys = {}
+        self.signingKey = "Default"
         self.m_client_req = [-1]*config['num_clients']
         self.m_fwd_req = [-1]*config['num_clients']
         self.m_shuttle = [-1]*config['num_clients']
@@ -41,6 +42,7 @@ class Replica(process):
         print('Received all KEYS---')
         self.privateKey = payload['private_key']
         self.publicKey = payload['public_key']
+        self.signingKey = payload['signing_key']
         self.replica_public_keys = payload['replica_public_keys']
         self.client_public_keys = payload['client_public_keys']
         self.replica_verify_keys = payload['replica_verify_keys']
@@ -53,7 +55,6 @@ class Replica(process):
         ind = int(replica_index)
         output('Received the result shuttle')
         client_id = list_clients.index(payload['client'])
-
         check_failures('result_shuttle', client_id)
 
         if ch_res[client_id]:
@@ -223,34 +224,67 @@ class Replica(process):
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
+        binary_order_stmt = pickle.dumps(order_stmt)
+        signed_order_stmt = self.signingKey.sign(binary_order_stmt)
+
         binary_result = pickle.dumps(result)
         result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-        order_proof.append(order_stmt)
+        order_proof.append([order_stmt, signed_order_stmt])
         order_shuttle['order_proof'] = order_proof
 
+        result_stmt = [order_stmt[1], order_stmt[2], order_stmt[3], result_hash]
+        binary_result_stmt = pickle.dumps(result_stmt)
+        signed_result_stmt = self.signingKey.sign(binary_result_stmt)
+
         ##result_proof.append((order_shuttle['client'], order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
-        result_proof.append([order_stmt[1], order_stmt[2], order_stmt[3], result_hash])
+        result_proof.append([result_stmt, signed_result_stmt])
         order_shuttle['result_proof'] = result_proof
         return order_shuttle
 
     def validate_order_proof(order_proof, order_stmt):
-        print(order_proof)
+        output('Validating the order proof ...')
+        # first check if the signature of order proofs are matching
+
         # check if received slot no is not in history and the previous slot is finished
         slot_no = int(order_stmt[0])
         if(slot_no in history):
             return False
+
+        binary_order_stmt = pickle.dumps(order_stmt)
+        signed_order_stmt = self.signingKey.sign(binary_order_stmt)
+        for i in range(0, len(order_proof)):
+            curr_signed_order_p = order_proof[i][1]
+            try:
+                self.replica_verify_keys[str(list_replicas[i])].verify(curr_signed_order_p)
+            except nacl.exceptions.BadSignatureError:
+                output("Signature verification failed for order statement.")
+                return False
+
         for each_order_p in order_proof:
-            if(each_order_p != order_stmt):
+            if(each_order_p[0] != order_stmt):
+                output("Order statement mismatch.")
                 return False;
+
+        output('Validation of order proof success...')
         return True
 
     def validate_result_proof(result_proof, result, operation):
+        output('Validating result proof...')
         binary_result = pickle.dumps(result)
         cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-        for res_stmt in result_proof:
-            if((res_stmt[3] != cur_hash) or (res_stmt[2] != operation)):
-                output('FATAL ERROR: RESULT VALIDATION FAILED...!!')
+        for i in range(0, len(result_proof)):
+            curr_signed_result_p = result_proof[i][1]
+            try:
+                self.replica_verify_keys[str(list_replicas[i])].verify(curr_signed_result_p)
+            except nacl.exceptions.BadSignatureError:
+                output("Signature verification failed for result statement.")
                 return False
+
+        for res_stmt in result_proof:
+            if((res_stmt[0][3] != cur_hash) or (res_stmt[0][2] != operation)):
+                output('Result statement verification failed...!!')
+                return False
+        output('Validation of result proof success...')
         return True
 
     def execute_actual_command(operation):
