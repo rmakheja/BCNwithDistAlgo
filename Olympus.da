@@ -14,7 +14,7 @@ class Olympus(process):
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
 
-        output.log("Setting up the Olympus...")
+        output("Setting up the Olympus...")
         ## use pynacl lib to initiailze all keys
         oly_priv_key = PrivateKey.generate()
         self.oly_private_key = oly_priv_key
@@ -82,7 +82,7 @@ class Olympus(process):
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
         client_config["replica_verify_keys"] = self.replica_verify_keys
-        output('Sending current configuration to the client...')
+        output('Current configuration send to the client...')
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):

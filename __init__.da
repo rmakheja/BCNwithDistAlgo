@@ -54,7 +54,6 @@ def main():
         #print(list_client)
 
         #client_set = new(c.Client, num=no_clients)
-
         for i in range(0, no_clients):
             workloads = []
             curr_workload = "workload[" + str(i) + "]"
