@@ -114,6 +114,8 @@ class Client(process):
         for i in range(0, len(res['result_proof'])):
             if((result_hash == res['result_proof'][i][0][3]) and (res['result_proof'][i][0][2] == sys_config['workload'][str(self)][self.seqNo])):
                 no_of_matches += 1
+                print(result_hash)
+                print(res['result_proof'][i][0][3])
             if(no_of_matches == (int(sys_config['t']) + 1)):
                 output("Result-shuttle validation success for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
                 return True
@@ -159,7 +161,7 @@ class Client(process):
                         if index < len(resultList) :
                             output('Invalid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
                         else :
-                            output('result not received')
+                            output('result not present')
     def execute_actual_command(operation):
         result = ""
         ## execute operation on current state
