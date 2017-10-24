@@ -121,7 +121,7 @@ class Client(process):
         return False
 
     def execute_retransmission(msg):
-        output('Executing retransmission...')
+        output('Executing retransmission for :', str(msg))
         self.foundResponse = False
         self.responsesCount = 0
         self.invalidResponses = 0
@@ -157,7 +157,7 @@ class Client(process):
                     output('o: '+workload[index] + ' res: ', res)
                     if client_id == self_id and (index >= len(resultList) or res != resultList[index]):
                         if index < len(resultList) :
-                            output('Invaid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
+                            output('Invalid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
                         else :
                             output('result not received')
     def execute_actual_command(operation):

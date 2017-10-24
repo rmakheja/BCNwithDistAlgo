@@ -55,18 +55,24 @@ class Replica(process):
         ind = int(replica_index)
         output('Received the result shuttle')
         client_id = list_clients.index(payload['client'])
+        print('Till check failures....')
         check_failures('result_shuttle', client_id)
+        print('After check failures...')
 
+        print(client_id)
         if ch_res[client_id]:
+            print('inside first if')
             binary_result = pickle.dumps('OK')
             result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
             payload['result_proof'][ind][3] = result_hash
             ch_res[client_id] = False
+            print('out first if')
         if drop_res[client_id] :
-            #print('dropping..',len(payload['result_proof']))
+            print('dropping..',len(payload['result_proof']))
             payload['result_proof'].pop(0)
-            #print('dropped..',len(payload['result_proof']))
+            print('dropped..',len(payload['result_proof']))
             drop_res[client_id] = False
+
         cache[str(payload['client']) + ' : ' + str(payload['seqNo']) ] = payload
         ind -= 1
         if(ind >= 0):
@@ -114,7 +120,7 @@ class Replica(process):
                     order_stmt[3] = "get('x')"
                     self.ch_oper[client_id] = False
 
-                #output('Added order statement to the history and forwarded the shuttle ahead')
+                #output('Addeding order statement to the history and forwarded the shuttle ahead ORDER_STMT: ' + str(order_stmt))
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                 history[order_shuttle['slot_no']] = order_stmt
 
@@ -221,7 +227,7 @@ class Replica(process):
                 ## Reconfig request from replica
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
-        output('Adding order-statement, result statement and there signatures to shuttle')
+        output('Adding order-statement, result statement and there signatures to shuttle - ORDER_STMT: ' + str(order_stmt))
         binary_order_stmt = pickle.dumps(order_stmt)
         signed_order_stmt = self.signingKey.sign(binary_order_stmt)
 
@@ -459,7 +465,8 @@ class Replica(process):
                     self.drop_res[client_id] = True
 
     def extract_failures() :
-        failures = {}
+        #print("in extract failures ---")
+        t_failures = {}
         key = 'failures[0,' + str(list_replicas.index(self)) + ']'
         if key in config:
             str_fail = config[key]
@@ -467,12 +474,13 @@ class Replica(process):
             for trig_fail in splits:
                 trig_fail = trig_fail.strip()
                 ind = trig_fail.index(')') + 1
-                trig_key = failures[trig_fail[0:ind]]
+                trig_key = trig_fail[0:ind]
                 val = trig_fail[ind+1 : len(trig_fail)].split()[0]
-                if trig_key in failures:
-                    failures[trig_key].append(val)
+                #print("trig key => " + trig_key + " trig val => " + val)
+                if trig_key in t_failures:
+                    t_failures[trig_key].append(val)
                 else:
-                    failures[trig_key] = [val]
+                    t_failures[trig_key] = [val]
         #print(failures)
-        return failures
+        return t_failures
 
