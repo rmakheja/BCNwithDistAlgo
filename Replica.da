@@ -462,7 +462,7 @@ class Replica(process):
             for trig_fail in splits:
                 trig_fail = trig_fail.strip()
                 ind = trig_fail.index(')') + 1
-                key = failures[trig_fail[0:ind]]
+                key = trig_fail[0:ind]
                 val = trig_fail[ind+1 : len(trig_fail)].split()[0]
                 if key in failures:
                     failures[key].append(val)
