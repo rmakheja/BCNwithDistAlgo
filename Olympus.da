@@ -67,6 +67,8 @@ class Olympus(process):
             output('Message type: [Keys] sending to ' + str(replica))
             send(('keys', keysForReplica), to= replica)
 
+        output("Replica List: " + str(replica_list))
+        output("Client List: " + str(list_clients))
         ## Olympus terminating flag
         self.terminate = False
 
