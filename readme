@@ -1,0 +1,61 @@
+
+
+
+PLATFORM.  describe the software platform(s) used in your testing, including DistAlgo version, Python implementation (normally CPython) and version, operating system, and types of hosts (e.g., laptop (without any VMs), VMs running on VMWare Workstation Player on a laptop, VMs on Google Cloud Compute Engine, VMs on Amazon Web Services EC2).  for testcases involving multiple hosts, specify the platform for each host.  [2017-10-05 added this]
+
+INSTRUCTIONS.  instructions to build and run your system.  the instructions should not rely on an IDE.  provide a detailed sequence of commands, a shell script, or something similar.  include a specific example of the command(s) to run a selected test case.
+
+WORKLOAD GENERATION:
+The pseudorandom workload genrator generates a mixed workload. It supports both integer and string values. Every parameter is generated randomly, thus giving a good diversity. It can generate both success cases (where 'put' for some 'key' happens before any other operation on that 'key') and also failure cases (where 'get'/'slice'/'append' can happen before a 'put' on some 'key' or 'slice' operation can have invalid 'start'/'end' indices). the random string values generated are then surrounded by '' to replicate the input from config file. The algorithm used is as follows:
+
+1)using seed, generate random numbers
+2)Generate n operations as :
+	i)	Get a random integer and use 'modulus 4' to get the type of operation to be performed
+	ii) Randomly decide the type of keys and values i.e. integer or string(for string, the length of key/value is limited to 5)
+	iii)For put and append operations, generate two random values based on their type.
+			if the type == 0 : random.randint(0,10) ##to get int value
+			if the type == 1 : ## get a random string of length 5
+	            key ="\'""
+	            for i in range(5): 
+	                key += random.choice(string.ascii_letters + string.digits) 
+	            key += "'"
+		For get and slice operations, generate a key based on the type
+
+		For slice, get two more random integers for start and end index.
+	iv) add these n operations to a list 
+
+
+BUGS AND LIMITATIONS.  a list of all known bugs in and limitations of your code.
+
+CONTRIBUTIONS.  
+
+
+
+MAIN FILES.  
+
+__init__.da ==> main file that starts the client and olympus. It also parses the config file, generate the pseudorandom workloads.
+Olympus.da ==> olympus code, also starts replicas
+Replica.da ==> Replica code
+Client.da ==> Client code
+
+
+CODE SIZE.  
+
+__init__.da ==>  Algorithm - 127 Other - 20 Total - 147
+Olympus.da 	==>	 Algorithm - 20 Other -65 Total - 85
+Replica.da  ==>  Algorithm -  Other - Total - 412
+Client.da 	==>  Algorithm -  Other - Total - 183
+
+Used CLOC https://github.com/AlDanial/cloc) to get the lines of code. Manually calculated the 'other' lines
+
+Roughly 80% of the "algorithm" code is for the algorithm itself
+
+LANGUAGE FEATURE USAGE. 
+
+list comprehensions  			==>  12
+dictionary comprehensions		==>  13
+set comprehensions				==> 4
+Aggregations					==> None
+Quantifications					==> None
+
+OTHER COMMENTS

@@ -450,13 +450,13 @@ class Replica(process):
             failure_key =  type + '(' + str(client_id) + ',' + str(self.m_shuttle[client_id]) + ')'
 
         if failure_key in failures :
-            failure = failures[failure_key]
-            if failure == 'change_operation()':
-                self.ch_oper[client_id] = True
-            elif failure == 'change_result()':
-                self.ch_res[client_id] = True
-            elif failure == 'drop_result_stmt()':
-                self.drop_res[client_id] = True
+            for failure in failures[failure_key]:
+                if failure == 'change_operation()':
+                    self.ch_oper[client_id] = True
+                elif failure == 'change_result()':
+                    self.ch_res[client_id] = True
+                elif failure == 'drop_result_stmt()':
+                    self.drop_res[client_id] = True
 
     def extract_failures() :
         failures = {}
@@ -467,7 +467,12 @@ class Replica(process):
             for trig_fail in splits:
                 trig_fail = trig_fail.strip()
                 ind = trig_fail.index(')') + 1
-                failures[trig_fail[0:ind]] = trig_fail[ind+1 : len(trig_fail)].split()[0]
+                key = failures[trig_fail[0:ind]]
+                val = trig_fail[ind+1 : len(trig_fail)].split()[0]
+                if key in failures:
+                    failures.append(val)
+                else:
+                    failures[key] = [val]
         #print(failures)
         return failures
 
