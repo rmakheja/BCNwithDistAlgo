@@ -29,6 +29,29 @@ BUGS AND LIMITATIONS.  a list of all known bugs in and limitations of your code.
 
 CONTRIBUTIONS.  
 
+Sanket Dige
+
+1) Logging	
+2) Multi-host execution
+3) Encryption and decryption of messages
+4) Hashing of result
+5) (Replica)Dictionary object: support put, get, slice, append
+6) Failure free flow of messages 
+7) Workload extraction from config file
+
+
+Rashmi Makheja
+
+1) Retransmission flow(Client and Replica)
+2) Pseudorandom workload generation
+3) Failure injection (triggers and failures)
+4) Timeout
+5) (Client) Generate request sequence from workload
+6) (Client) Validating test case :check that dictionary contains expected content at end of test case
+7) Documentation and test case generation
+
+
+
 
 
 MAIN FILES.  

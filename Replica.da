@@ -474,6 +474,7 @@ class Replica(process):
             for trig_fail in splits:
                 trig_fail = trig_fail.strip()
                 ind = trig_fail.index(')') + 1
+                key = trig_fail[0:ind]
                 trig_key = trig_fail[0:ind]
                 val = trig_fail[ind+1 : len(trig_fail)].split()[0]
                 #print("trig key => " + trig_key + " trig val => " + val)
