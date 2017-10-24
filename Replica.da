@@ -470,7 +470,7 @@ class Replica(process):
                 key = failures[trig_fail[0:ind]]
                 val = trig_fail[ind+1 : len(trig_fail)].split()[0]
                 if key in failures:
-                    failures.append(val)
+                    failures[key].append(val)
                 else:
                     failures[key] = [val]
         #print(failures)
