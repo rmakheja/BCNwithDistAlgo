@@ -64,15 +64,18 @@ class Olympus(process):
             keysForReplica['replica_public_keys'] = self.replica_public_keys
             keysForReplica['replica_verify_keys'] = self.replica_verify_keys
             keysForReplica['signing_key'] = self.replica_signing_keys[str(replica)]
+            output('Message type: [Keys] sending to ' + str(replica))
             send(('keys', keysForReplica), to= replica)
 
+        output("Replica List: " + str(replica_list))
+        output("Client List: " + str(list_clients))
         ## Olympus terminating flag
         self.terminate = False
 
     def receive(msg=('current_configuration'), from_= sender):
         sender_id = str(sender)
         ##output({'message':"received MSG_CLIENT_INIT_RESPONSE (current configuration) from Olympus", 'name':'sender_id'})
-        output('Olympus Received request from' + sender_id + ' for current configuration')
+        output('Message type: [current_configuration] Received from: ' + sender_id)
         client_config = {}
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
@@ -82,14 +85,14 @@ class Olympus(process):
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
         client_config["replica_verify_keys"] = self.replica_verify_keys
-        output('Current configuration send to the client...')
+        output('Message type: [cur_conf] Sending to: ' + sender_id)
         send(('cur_conf', client_config), to= sender)
 
     def receive(msg=('reconfigure'), from_= sender):
-        print('Received reconfiguration request from - ' + str(sender))
+        output('Message type: [reconfigure] Received from: ' + str(sender))
 
     def run():
-        print('Started Olympus...Waiting for an operations...')
+        output('Started Olympus...Waiting for an operations...')
         await(terminate)
 
     def dict_to_binary(the_dict):

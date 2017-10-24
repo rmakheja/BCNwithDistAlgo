@@ -9,6 +9,8 @@ o = import_da("Olympus")
 # r = import_da("Replica")
 
 def get_hosts_from_config(hosts_string):
+    if(type(hosts_string) == type(1)):
+        return [hosts_string]
     hosts = hosts_string.split(";")
     for i in range(0, len(hosts)):
         hosts[i] = hosts[i].strip()
@@ -55,7 +57,7 @@ def main():
         #print(list_client)
 
         #client_set = new(c.Client, num=no_clients)
-        for i in range(0, no_clients):
+        for i in range(0, len(list_client)):
             workloads = []
             curr_workload = "workload[" + str(i) + "]"
             workloads = conf[curr_workload].split(';')

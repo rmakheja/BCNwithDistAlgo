@@ -20,13 +20,12 @@ class Client(process):
         self.core_data = {}
 
     def receive(msg=('cur_conf', config), from_= olympus):
-        output("Current Configurations received by client from olympus - " + str(olympus))
+        output('Message type: [cur_conf] Received from: ' + str(olympus))
         self.curr_config = config
         successFlag = True
 
     def receive(msg=('result_message', encrypted_result), from_= sender):
-        output("Execution result received by client from tail replica - " + str(sender))
-        output("Decrypting the encrypted data...")
+        output('Message type: [result_message] Received from: ' + str(sender))
         decrypt_box = Box(curr_config['client_private_key'], curr_config['replica_public_keys'][str(sender)])
         plaintext = decrypt_box.decrypt(encrypted_result)
         result = pickle.loads(plaintext)
@@ -35,14 +34,14 @@ class Client(process):
         #output(result)
         if self.seqNo == int(result['seqNo']) and result['client'] == self:
             if is_valid_response(result):
+                output('Received valid result: ' + str(result["result"]) + ' for operation: ' + str(result["oper"]))
                 resultList.append(result['result'])
                 successFlag = True
             else:
-                output('Result validation falied...ask for reconfig...received invalid result')
+                output('Result Validation falied for seqNo: ' + result["seqNo"] + ' oper: ' + result["oper"] + '...Ask for reconfig.')
 
     def receive(msg=('retrans_res', encrypted_result), from_= sender):
-        output("Retransmission result received by client from replica - " + str(sender))
-        output("Decrypting the encrypted data...")
+        output('Message type: [retrans_res] Received from: ' + str(sender))
 
         decrypt_box = Box(curr_config['client_private_key'], curr_config['replica_public_keys'][str(sender)])
         plaintext = decrypt_box.decrypt(encrypted_result)
@@ -60,7 +59,7 @@ class Client(process):
     def receive(msg=(('Error - Replica Immutable')), from_= sender):
         ## validate with encription if valid sender has send this error msg
         ## if so retrive latest configuration and try again
-        output('Recevied Error - Replica Immutable from - ' + str(sender))
+        output('Message type: [Error - Replica Immutable] Received from: ' + str(sender))
 
     def getEncryptedMsg(msg, receiverPubKey):
         box = Box(curr_config['client_private_key'], receiverPubKey)
@@ -70,33 +69,36 @@ class Client(process):
 
     def execute_operation():
         operations = sys_config['workload'][str(self)]
-        output('Sending operations.....')
-        output(operations)
+        #output('Sending operations: ')
+        #output(operations)
         for oper in operations:
             seqNo += 1;
             successFlag = False;
             msg = {'seqNo': self.seqNo, 'oper': oper, 'client': self}
             encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['head_replica'])])
 
+            output('Message type: [execute] Sending to: ' + str(self.curr_config['head_replica']))
             send(('execute', encrypted_msg, 0), to= self.curr_config['head_replica'])
             #send(('execute', msg, 0), to= self.curr_config['head_replica'])
             if await(successFlag):
-                output('Received result successfully verified...Result is')
-                output(resultList[self.seqNo])
+                print('SuccessFlag is set True')
+                #output('Received result successfully verified...Result is')
+                #output(resultList[self.seqNo])
             elif timeout(sys_config['client_timeout']):
                 output('Timeout...Executing retransmission...')
                 execute_retransmission(msg);
                 if await(foundResponse):
-                    output('Received result successfully verified...Result is')
-                    output(resultList[self.seqNo])
+                    print('foundResponse set True')
+                    #output('Received result successfully verified...Result is')
+                    #output(resultList[self.seqNo])
                 elif timeout(sys_config['client_timeout']):
                     return
     def fetch_config():
-        output('Fetching current configuration request to Olympus')
+        output('Message type: [current_configuration] Sending to: ' + str(olympus))
         send(('current_configuration'), to= olympus)
 
     def is_valid_response(res):
-        output("Validating the result...")
+        #output("Validating the result-shuttle...")
         no_of_matches = 0
         binary_result = pickle.dumps(res['result'])
         result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
@@ -106,25 +108,26 @@ class Client(process):
             try:
                 curr_config['replica_verify_keys'][str(curr_config['replicas'][i])].verify(curr_signed_result_p)
             except nacl.exceptions.BadSignatureError:
-                output("Signature verification failed for result statement.")
+                output("Signature verification failed for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
                 return False
 
         for i in range(0, len(res['result_proof'])):
             if((result_hash == res['result_proof'][i][0][3]) and (res['result_proof'][i][0][2] == sys_config['workload'][str(self)][self.seqNo])):
                 no_of_matches += 1
             if(no_of_matches == (int(sys_config['t']) + 1)):
-                output("T+1 result hashes matched.")
+                output("Result-shuttle validation success for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
                 return True
-        output("Less than T+1 result hashes matched...result validation failed!!")
+        output("Result validation failed....Less than T+1 result hashes matched for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
         return False
 
     def execute_retransmission(msg):
-        output('Executing retransmission...')
+        output('Executing retransmission for :', str(msg))
         self.foundResponse = False
         self.responsesCount = 0
         self.invalidResponses = 0
         for i in range(0, len(curr_config['replicas'])):
             encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['replicas'][i])])
+            output('Message type: [retrans] Sending to: ' + str(curr_config['replicas'][i]))
             send(('retrans', encrypted_msg, str(i)), to= curr_config['replicas'][i])
 
     def run():
@@ -151,10 +154,10 @@ class Client(process):
                 workload = workloads[client_id]
                 if index < len(workload):
                     res = execute_actual_command(workload[index])
-                    print('o: '+workload[index] + ' res: ', res)
+                    output('o: '+workload[index] + ' res: ', res)
                     if client_id == self_id and (index >= len(resultList) or res != resultList[index]):
                         if index < len(resultList) :
-                            output('Invaid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
+                            output('Invalid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
                         else :
                             output('result not received')
     def execute_actual_command(operation):
