@@ -1,0 +1,294 @@
+[2017-10-23 23:40:20,421] da.endpoint.TransportManager<MainProcess>:DEBUG: Initializing with key None...
+[2017-10-23 23:40:20,421] da.endpoint.TransportManager<MainProcess>:DEBUG: Failed to initialize transport <UdpTransport(127.0.0.1:15000)>: BindingException('Failed to bind to an available port.',)
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 289, in initialize
+    self.conn.bind(address)
+OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 108, in initialize
+    transport.initialize(pipe=pipe, **params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 363, in initialize
+    raise e
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 358, in initialize
+    super().initialize(**params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 301, in initialize
+    "Failed to bind to an available port.") from e
+da.endpoint.BindingException: Failed to bind to an available port.
+[2017-10-23 23:40:20,421] da.endpoint.TransportManager<MainProcess>:DEBUG: Failed to initialize transport <TcpTransport(127.0.0.1:15000)>: BindingException('Failed to bind to an available port.',)
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 289, in initialize
+    self.conn.bind(address)
+OSError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 108, in initialize
+    transport.initialize(pipe=pipe, **params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 563, in initialize
+    raise e
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 558, in initialize
+    super().initialize(strict=strict, **params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 301, in initialize
+    "Failed to bind to an available port.") from e
+da.endpoint.BindingException: Failed to bind to an available port.
+[2017-10-23 23:40:20,421] da.api<MainProcess>:DEBUG: Binding attempt to port 15000 failed: TransportException('Initialization failed for 2/2 transports.',)
+[2017-10-23 23:40:20,421] da.endpoint.TransportManager<MainProcess>:DEBUG: Stopping...
+[2017-10-23 23:40:20,421] da.endpoint.UdpTransport<MainProcess>:DEBUG: Already stopped.
+[2017-10-23 23:40:20,421] da.endpoint.UdpTransport<MainProcess>:DEBUG: Transport stopped.
+[2017-10-23 23:40:20,421] da.endpoint.TcpTransport<MainProcess>:DEBUG: Already stopped.
+[2017-10-23 23:40:20,421] da.endpoint.TcpTransport<MainProcess>:DEBUG: Transport stopped.
+[2017-10-23 23:40:20,421] da.endpoint.TransportManager<MainProcess>:DEBUG: 2/2 transports stopped.
+[2017-10-23 23:40:20,421] da.endpoint.TransportManager<MainProcess>:DEBUG: Initializing with key None...
+[2017-10-23 23:40:20,421] da.endpoint.UdpTransport<MainProcess>:DEBUG: Transport initialized at address ('127.0.0.1', 15001)
+[2017-10-23 23:40:20,421] da.endpoint.TcpTransport<MainProcess>:DEBUG: Transport initialized at address ('127.0.0.1', 15001)
+[2017-10-23 23:40:20,421] da.api<MainProcess>:INFO: <Node_:MasterNode> initialized at 127.0.0.1:(UdpTransport=15001, TcpTransport=15001).
+[2017-10-23 23:40:20,421] da.api<MainProcess>:INFO: Starting program <module '__init__' from 'C:\\Users\\rashm\\Desktop\\async project\\BCN\\BCNwithDistAlgo\\__init__.py'>...
+[2017-10-23 23:40:20,421] da.api<MainProcess>:INFO: Running iteration 1 ...
+[2017-10-23 23:40:20,437] da.endpoint.TransportManager<MainProcess>:DEBUG: Starting...
+[2017-10-23 23:40:20,437] da.api<MainProcess>:INFO: Waiting for remaining child processes to terminate...(Press "Ctrl-C" to force kill)
+[2017-10-23 23:40:20,437] da.endpoint.UdpTransport<MainProcess>:DEBUG: Transport started.
+[2017-10-23 23:40:20,437] da.endpoint.TcpTransport<MainProcess>:DEBUG: Transport started.
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: Process <Node_:MasterNode> registered.
+[2017-10-23 23:40:20,437] da.sim.OSThreadContainer<MainProcess>:DEBUG: Process object initialized.
+[2017-10-23 23:40:20,437] __init__.Node_<Node_:MasterNode>:INFO: Waiting to resolve name 'OlympusNode@127.0.0.1'...
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: Local forward from <Node_:MasterNode> to <Node_:MasterNode>: (<Command.Resolve: 7>, (('OlympusNode', 'OlympusNode'), '127.0.0.1', None, 5357569))
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: boostrap_node to 127.0.0.1:15000...
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: Dummy id: <DistProcess:00000>
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: Attempting bootstrap using <da.endpoint.UdpTransport object at 0x000001F5F285E2B0>...
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<RouterCommands.HELLO: 1>, [<Node_:MasterNode>]) to <DistProcess:00000> with flags=8
+[2017-10-23 23:40:20,437] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<RouterCommands.HELLO: 1>, [<Node_:MasterNode>])(156 bytes) to <DistProcess:00000> with flags=8 using <UdpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51284).
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: 259/131072 bytes received from ('127.0.0.1', 51284).
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:20,452] da.sim.Router<MainProcess>:INFO: Bootstrap succeeded using <UdpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:20,452] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.NodeJoin: 8>, ([<Node_:MasterNode>, <NodeProcess:ClientNode>], 5357570)) to <NodeProcess:ClientNode> with flags=3
+[2017-10-23 23:40:20,452] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.NodeJoin: 8>, ([<Node_:MasterNode>, <NodeProcess:ClientNode>], 5357570))(249 bytes) to <NodeProcess:ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 15000).
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 15000) established.
+[2017-10-23 23:40:20,452] da.endpoint.TcpTransport<MainProcess>:DEBUG: 353/131072 bytes received from ('127.0.0.1', 51284).
+[2017-10-23 23:40:20,468] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:20,468] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:ClientNode> to <Node_:MasterNode>: (<Command.NodeAck: 18>, (5357570, (set(), [<Node_:MasterNode>, <NodeProcess:ClientNode>])))
+[2017-10-23 23:40:20,468] __init__.Node_<Node_:MasterNode>:DEBUG: Bootstrap success.
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: Initializing with key None...
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: Failed to initialize transport <UdpTransport(127.0.0.1:15000)>: BindingException('Failed to bind to an available port.',)
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 289, in initialize
+    self.conn.bind(address)
+OSError: [WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 108, in initialize
+    transport.initialize(pipe=pipe, **params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 363, in initialize
+    raise e
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 358, in initialize
+    super().initialize(**params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 301, in initialize
+    "Failed to bind to an available port.") from e
+da.endpoint.BindingException: Failed to bind to an available port.
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: Failed to initialize transport <TcpTransport(127.0.0.1:15000)>: BindingException('Failed to bind to an available port.',)
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 289, in initialize
+    self.conn.bind(address)
+OSError: [WinError 10013] An attempt was made to access a socket in a way forbidden by its access permissions
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 108, in initialize
+    transport.initialize(pipe=pipe, **params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 563, in initialize
+    raise e
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 558, in initialize
+    super().initialize(strict=strict, **params)
+  File "C:\Users\rashm\Anaconda3\lib\site-packages\da\endpoint.py", line 301, in initialize
+    "Failed to bind to an available port.") from e
+da.endpoint.BindingException: Failed to bind to an available port.
+[2017-10-23 23:40:28,967] da.api<MainProcess>:DEBUG: Binding attempt to port 15000 failed: TransportException('Initialization failed for 2/2 transports.',)
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: Stopping...
+[2017-10-23 23:40:28,967] da.endpoint.UdpTransport<MainProcess>:DEBUG: Already stopped.
+[2017-10-23 23:40:28,967] da.endpoint.UdpTransport<MainProcess>:DEBUG: Transport stopped.
+[2017-10-23 23:40:28,967] da.endpoint.TcpTransport<MainProcess>:DEBUG: Already stopped.
+[2017-10-23 23:40:28,967] da.endpoint.TcpTransport<MainProcess>:DEBUG: Transport stopped.
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: 2/2 transports stopped.
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: Initializing with key None...
+[2017-10-23 23:40:28,967] da.endpoint.UdpTransport<MainProcess>:DEBUG: Transport initialized at address ('127.0.0.1', 15001)
+[2017-10-23 23:40:28,967] da.endpoint.TcpTransport<MainProcess>:DEBUG: Transport initialized at address ('127.0.0.1', 15001)
+[2017-10-23 23:40:28,967] da.api<MainProcess>:INFO: <Node_:MasterNode> initialized at 127.0.0.1:(UdpTransport=15001, TcpTransport=15001).
+[2017-10-23 23:40:28,967] da.api<MainProcess>:INFO: Starting program <module '__init__' from 'C:\\Users\\rashm\\Desktop\\async project\\BCN\\BCNwithDistAlgo\\__init__.py'>...
+[2017-10-23 23:40:28,967] da.api<MainProcess>:INFO: Running iteration 1 ...
+[2017-10-23 23:40:28,967] da.endpoint.TransportManager<MainProcess>:DEBUG: Starting...
+[2017-10-23 23:40:28,967] da.api<MainProcess>:INFO: Waiting for remaining child processes to terminate...(Press "Ctrl-C" to force kill)
+[2017-10-23 23:40:28,967] da.endpoint.UdpTransport<MainProcess>:DEBUG: Transport started.
+[2017-10-23 23:40:28,967] da.endpoint.TcpTransport<MainProcess>:DEBUG: Transport started.
+[2017-10-23 23:40:28,967] da.sim.Router<MainProcess>:DEBUG: Process <Node_:MasterNode> registered.
+[2017-10-23 23:40:28,967] da.sim.OSThreadContainer<MainProcess>:DEBUG: Process object initialized.
+[2017-10-23 23:40:28,983] __init__.Node_<Node_:MasterNode>:INFO: Waiting to resolve name 'OlympusNode@127.0.0.1'...
+[2017-10-23 23:40:28,983] da.sim.Router<MainProcess>:DEBUG: Local forward from <Node_:MasterNode> to <Node_:MasterNode>: (<Command.Resolve: 7>, (('OlympusNode', 'OlympusNode'), '127.0.0.1', None, 13164545))
+[2017-10-23 23:40:28,983] da.sim.Router<MainProcess>:DEBUG: boostrap_node to 127.0.0.1:15000...
+[2017-10-23 23:40:28,983] da.sim.Router<MainProcess>:DEBUG: Dummy id: <DistProcess:00000>
+[2017-10-23 23:40:28,983] da.sim.Router<MainProcess>:DEBUG: Attempting bootstrap using <da.endpoint.UdpTransport object at 0x000001DE8CEBB860>...
+[2017-10-23 23:40:28,983] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<RouterCommands.HELLO: 1>, [<Node_:MasterNode>]) to <DistProcess:00000> with flags=8
+[2017-10-23 23:40:28,983] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<RouterCommands.HELLO: 1>, [<Node_:MasterNode>])(156 bytes) to <DistProcess:00000> with flags=8 using <UdpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:28,983] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51289).
+[2017-10-23 23:40:28,999] da.endpoint.TcpTransport<MainProcess>:DEBUG: 401/131072 bytes received from ('127.0.0.1', 51289).
+[2017-10-23 23:40:28,999] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:28,999] da.sim.Router<MainProcess>:DEBUG: Local forward from <Node_:MasterNode> to <Node_:MasterNode>: (<Command.ResolveAck: 17>, (13164545, <NodeProcess:OlympusNode>))
+[2017-10-23 23:40:32,002] da.sim.Router<MainProcess>:INFO: Bootstrap succeeded using <UdpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:32,002] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.NodeJoin: 8>, ([<NodeProcess:OlympusNode>, <NodeProcess:ReplicaNode>, <Node_:MasterNode>, <NodeProcess:ClientNode>], 13164546)) to <NodeProcess:ClientNode> with flags=3
+[2017-10-23 23:40:32,002] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.NodeJoin: 8>, ([<NodeProcess:OlympusNode>, <NodeProcess:ReplicaNode>, <Node_:MasterNode>, <NodeProcess:ClientNode>], 13164546))(391 bytes) to <NodeProcess:ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:32,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 15000).
+[2017-10-23 23:40:32,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:32,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 15000) established.
+[2017-10-23 23:40:32,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: 495/131072 bytes received from ('127.0.0.1', 51289).
+[2017-10-23 23:40:32,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,002] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:ClientNode> to <Node_:MasterNode>: (<Command.NodeAck: 18>, (13164546, (set(), [<NodeProcess:ClientNode>, <Node_:MasterNode>, <NodeProcess:ReplicaNode>, <NodeProcess:OlympusNode>])))
+[2017-10-23 23:40:32,002] __init__.Node_<Node_:MasterNode>:DEBUG: Bootstrap success.
+[2017-10-23 23:40:32,002] __init__.Node_<Node_:MasterNode>:DEBUG: 'OlympusNode@127.0.0.1' successfully resolved to <NodeProcess:OlympusNode>.
+[2017-10-23 23:40:32,002] __init__.Node_<Node_:MasterNode>:DEBUG: Creating instances of <class 'Olympus.Olympus'> using 'process'
+[2017-10-23 23:40:32,002] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.New: 6>, (<class 'Olympus.Olympus'>, range(0, 1), 'process', 13164547, {})) to <NodeProcess:OlympusNode> with flags=3
+[2017-10-23 23:40:32,002] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.New: 6>, (<class 'Olympus.Olympus'>, range(0, 1), 'process', 13164547, {}))(308 bytes) to <NodeProcess:OlympusNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:32,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 23236).
+[2017-10-23 23:40:32,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:32,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 23236) established.
+[2017-10-23 23:40:32,268] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51292).
+[2017-10-23 23:40:32,268] da.endpoint.TcpTransport<MainProcess>:DEBUG: 316/131072 bytes received from ('127.0.0.1', 51292).
+[2017-10-23 23:40:32,268] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,268] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:OlympusNode> to <Node_:MasterNode>: (<Command.RPCReply: 31>, (13164547, [<Olympus:45002#OlympusNode>]))
+[2017-10-23 23:40:32,268] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51293).
+[2017-10-23 23:40:32,268] da.endpoint.TcpTransport<MainProcess>:DEBUG: 252/131072 bytes received from ('127.0.0.1', 51293).
+[2017-10-23 23:40:32,268] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,268] da.sim.Router<MainProcess>:DEBUG: Local forward from <Olympus:45002#OlympusNode> to <Node_:MasterNode>: (<Command.NewAck: 16>, (13164547, None))
+[2017-10-23 23:40:32,268] __init__.Node_<Node_:MasterNode>:DEBUG: 1 instances of <class 'Olympus.Olympus'> created.
+[2017-10-23 23:40:32,268] __init__.Node_<Node_:MasterNode>:DEBUG: Creating instances of <class 'Client.Client'> using 'process'
+[2017-10-23 23:40:32,268] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164548, {})) to <NodeProcess:ClientNode> with flags=3
+[2017-10-23 23:40:32,268] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164548, {}))(305 bytes) to <NodeProcess:ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:32,471] da.endpoint.TcpTransport<MainProcess>:DEBUG: 313/131072 bytes received from ('127.0.0.1', 51289).
+[2017-10-23 23:40:32,471] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,471] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:ClientNode> to <Node_:MasterNode>: (<Command.RPCReply: 31>, (13164548, [<Client:27002#ClientNode>]))
+[2017-10-23 23:40:32,471] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51294).
+[2017-10-23 23:40:32,471] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51294).
+[2017-10-23 23:40:32,471] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,471] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27002#ClientNode> to <Node_:MasterNode>: (<Command.NewAck: 16>, (13164548, None))
+[2017-10-23 23:40:32,471] __init__.Node_<Node_:MasterNode>:DEBUG: 1 instances of <class 'Client.Client'> created.
+[2017-10-23 23:40:32,471] __init__.Node_<Node_:MasterNode>:DEBUG: Creating instances of <class 'Client.Client'> using 'process'
+[2017-10-23 23:40:32,471] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164549, {})) to <NodeProcess:ClientNode> with flags=3
+[2017-10-23 23:40:32,471] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164549, {}))(305 bytes) to <NodeProcess:ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:32,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 313/131072 bytes received from ('127.0.0.1', 51289).
+[2017-10-23 23:40:32,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,643] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:ClientNode> to <Node_:MasterNode>: (<Command.RPCReply: 31>, (13164549, [<Client:27003#ClientNode>]))
+[2017-10-23 23:40:32,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51295).
+[2017-10-23 23:40:32,658] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51295).
+[2017-10-23 23:40:32,658] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,658] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27003#ClientNode> to <Node_:MasterNode>: (<Command.NewAck: 16>, (13164549, None))
+[2017-10-23 23:40:32,658] __init__.Node_<Node_:MasterNode>:DEBUG: 1 instances of <class 'Client.Client'> created.
+[2017-10-23 23:40:32,658] __init__.Node_<Node_:MasterNode>:DEBUG: Creating instances of <class 'Client.Client'> using 'process'
+[2017-10-23 23:40:32,658] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164550, {})) to <NodeProcess:ClientNode> with flags=3
+[2017-10-23 23:40:32,658] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164550, {}))(305 bytes) to <NodeProcess:ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:32,830] da.endpoint.TcpTransport<MainProcess>:DEBUG: 313/131072 bytes received from ('127.0.0.1', 51289).
+[2017-10-23 23:40:32,830] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,830] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:ClientNode> to <Node_:MasterNode>: (<Command.RPCReply: 31>, (13164550, [<Client:27004#ClientNode>]))
+[2017-10-23 23:40:32,830] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51296).
+[2017-10-23 23:40:32,830] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51296).
+[2017-10-23 23:40:32,830] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:32,830] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27004#ClientNode> to <Node_:MasterNode>: (<Command.NewAck: 16>, (13164550, None))
+[2017-10-23 23:40:32,830] __init__.Node_<Node_:MasterNode>:DEBUG: 1 instances of <class 'Client.Client'> created.
+[2017-10-23 23:40:32,830] __init__.Node_<Node_:MasterNode>:DEBUG: Creating instances of <class 'Client.Client'> using 'process'
+[2017-10-23 23:40:32,830] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164551, {})) to <NodeProcess:ClientNode> with flags=3
+[2017-10-23 23:40:32,830] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.New: 6>, (<class 'Client.Client'>, range(0, 1), 'process', 13164551, {}))(305 bytes) to <NodeProcess:ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: 313/131072 bytes received from ('127.0.0.1', 51289).
+[2017-10-23 23:40:33,002] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,002] da.sim.Router<MainProcess>:DEBUG: Local forward from <NodeProcess:ClientNode> to <Node_:MasterNode>: (<Command.RPCReply: 31>, (13164551, [<Client:27005#ClientNode>]))
+[2017-10-23 23:40:33,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: Accepted connection from ('127.0.0.1', 51297).
+[2017-10-23 23:40:33,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51297).
+[2017-10-23 23:40:33,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,018] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27005#ClientNode> to <Node_:MasterNode>: (<Command.NewAck: 16>, (13164551, None))
+[2017-10-23 23:40:33,018] __init__.Node_<Node_:MasterNode>:DEBUG: 1 instances of <class 'Client.Client'> created.
+[2017-10-23 23:40:33,018] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Setup: 2>, (13164552, ([<Client:27002#ClientNode>, <Client:27003#ClientNode>, <Client:27004#ClientNode>, <Client:27005#ClientNode>], {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'}))) to <Olympus:45002#OlympusNode> with flags=3
+[2017-10-23 23:40:33,018] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Setup: 2>, (13164552, ([<Client:27002#ClientNode>, <Client:27003#ClientNode>, <Client:27004#ClientNode>, <Client:27005#ClientNode>], {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'})))(1991 bytes) to <Olympus:45002#OlympusNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 26569).
+[2017-10-23 23:40:33,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:33,018] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 26569) established.
+[2017-10-23 23:40:33,612] da.endpoint.TcpTransport<MainProcess>:DEBUG: 252/131072 bytes received from ('127.0.0.1', 51293).
+[2017-10-23 23:40:33,612] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,612] da.sim.Router<MainProcess>:DEBUG: Local forward from <Olympus:45002#OlympusNode> to <Node_:MasterNode>: (<Command.SetupAck: 12>, (13164552, True))
+[2017-10-23 23:40:33,612] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'}))) to <Client:27002#ClientNode> with flags=3
+[2017-10-23 23:40:33,612] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'})))(1802 bytes) to <Client:27002#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,612] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 24042).
+[2017-10-23 23:40:33,612] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 24042) established.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'}))) to <Client:27003#ClientNode> with flags=3
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'})))(1802 bytes) to <Client:27003#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 30273).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 30273) established.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'}))) to <Client:27004#ClientNode> with flags=3
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51294).
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'})))(1802 bytes) to <Client:27004#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27002#ClientNode> to <Node_:MasterNode>: (<Command.SetupAck: 12>, (13164553, True))
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 26259).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51295).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27003#ClientNode> to <Node_:MasterNode>: (<Command.SetupAck: 12>, (13164553, True))
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 26259) established.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'}))) to <Client:27005#ClientNode> with flags=3
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Setup: 2>, (13164553, ({<Olympus:45002#OlympusNode>}, {'workload[3]': "put('class','async'); append('class','chronous systems'); slice('planet','0:5'); slice('class','0:5')", 'workload[1]': "put('planet','earth'); append('planet',' mercury'); put('movie','trek'); slice('movie','5:9'); get('movie')", 'test_case_name': 'change_result_at_tail', 'client_hosts': '0; 0; 0; 0', 'replica_hosts': '0; 0; 0', 'head_timeout': 0.003, 't': 1, 'workload': {'<Client:27003#ClientNode>': ["put('planet','earth')", "append('planet',' mercury')", "put('movie','trek')", "slice('movie','5:9')", "get('movie')"], '<Client:27004#ClientNode>': ["slice('HoZ2E','8:3')", 'get(3)', "put(3,'MTToV')"], '<Client:27005#ClientNode>': ["put('class','async')", "append('class','chronous systems')", "slice('planet','0:5')", "slice('class','0:5')"], '<Client:27002#ClientNode>': ["put('movie','star')", "append('movie',' wars')", "slice('movie','5:9')", "get('planet')"]}, 'olympus_host': 0, 'nonhead_timeout': 0.003, 'workload[2]': 'pseudorandom(233,3)', 'workload[0]': "put('movie','star'); append('movie',' wars'); slice('movie','5:9'); get('planet')", 'hosts': '127.0.0.1; 127.0.0.2; 127.0.0.3; 127.0.0.4', 'num_replicas': 3, 'num_clients': 4, 'client_timeout': 3.0, 'replicaHostIPs': ['127.0.0.1', '127.0.0.1', '127.0.0.1'], 'failures[0,2]': 'shuttle(1,4), change_result()'})))(1802 bytes) to <Client:27005#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Initiating connection to ('127.0.0.1', 27084).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: =========answering b'#VR#\x01\x00\t\x00'
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51296).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: Connection to ('127.0.0.1', 27084) established.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27004#ClientNode> to <Node_:MasterNode>: (<Command.SetupAck: 12>, (13164553, True))
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51297).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27005#ClientNode> to <Node_:MasterNode>: (<Command.SetupAck: 12>, (13164553, True))
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Start: 1>, 13164554) to <Olympus:45002#OlympusNode> with flags=3
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Start: 1>, 13164554)(240 bytes) to <Olympus:45002#OlympusNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 252/131072 bytes received from ('127.0.0.1', 51293).
+[2017-10-23 23:40:33,627] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,627] da.sim.Router<MainProcess>:DEBUG: Local forward from <Olympus:45002#OlympusNode> to <Node_:MasterNode>: (<Command.StartAck: 11>, (13164554, None))
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Start: 1>, 13164555) to <Client:27002#ClientNode> with flags=3
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Start: 1>, 13164555)(237 bytes) to <Client:27002#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Start: 1>, 13164555) to <Client:27003#ClientNode> with flags=3
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Start: 1>, 13164555)(237 bytes) to <Client:27003#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Start: 1>, 13164555) to <Client:27004#ClientNode> with flags=3
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Start: 1>, 13164555)(237 bytes) to <Client:27004#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: * Received forwarding request: (<Command.Start: 1>, 13164555) to <Client:27005#ClientNode> with flags=3
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: ** Forwarding (<Command.Start: 1>, 13164555)(237 bytes) to <Client:27005#ClientNode> with flags=3 using <TcpTransport(127.0.0.1:15001)>.
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51294).
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27002#ClientNode> to <Node_:MasterNode>: (<Command.StartAck: 11>, (13164555, None))
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51295).
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51296).
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 249/131072 bytes received from ('127.0.0.1', 51297).
+[2017-10-23 23:40:33,643] da.endpoint.TcpTransport<MainProcess>:DEBUG: 1 message(s) received.
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27003#ClientNode> to <Node_:MasterNode>: (<Command.StartAck: 11>, (13164555, None))
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27004#ClientNode> to <Node_:MasterNode>: (<Command.StartAck: 11>, (13164555, None))
+[2017-10-23 23:40:33,643] da.sim.Router<MainProcess>:DEBUG: Local forward from <Client:27005#ClientNode> to <Node_:MasterNode>: (<Command.StartAck: 11>, (13164555, None))
+[2017-10-23 23:40:34,174] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 26259): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:34,174] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 26259).
+[2017-10-23 23:40:34,174] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 51296): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:34,174] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 51296).
+[2017-10-23 23:40:34,237] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 27084): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:34,237] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 27084).
+[2017-10-23 23:40:34,237] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 51297): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:34,237] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 51297).
+[2017-10-23 23:40:34,299] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 51294): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:34,299] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 51294).
+[2017-10-23 23:40:34,299] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 24042): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:34,299] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 24042).
+[2017-10-23 23:40:40,378] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 51295): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:40,378] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 51295).
+[2017-10-23 23:40:40,378] da.endpoint.TcpTransport<MainProcess>:DEBUG: socket.error when receiving from ('127.0.0.1', 30273): ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)
+[2017-10-23 23:40:40,378] da.endpoint.TcpTransport<MainProcess>:DEBUG: Cleanup connection to ('127.0.0.1', 30273).
