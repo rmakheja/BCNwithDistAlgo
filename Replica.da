@@ -119,6 +119,7 @@ class Replica(process):
                 if sender != self:
                     check_failures('client_request', client_id)
 
+
                 if self.ch_oper[client_id] :
                     order_stmt[3] = "get('x')"
                     self.ch_oper[client_id] = False
@@ -126,6 +127,18 @@ class Replica(process):
                 output('Adding order stmt :' + str(order_stmt))
 
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+
+                if self.ch_res[client_id]:
+                        binary_result = pickle.dumps('OK')
+                        result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+                        order_shuttle['result_proof'][ind][0][3] = result_hash
+                        self.ch_res[client_id] = False
+                if self.drop_res[client_id] :
+                    order_shuttle['result_proof'].pop(0)
+                    print('dropped ', len(result_proof) )
+                    self.drop_res[client_id] = False
+
+
                 history[order_shuttle['slot_no']] = order_stmt
 
                 encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
@@ -219,17 +232,18 @@ class Replica(process):
                         order_stmt[3] = "get('x')"
                         self.ch_oper[client_id] = False
 
+                    order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+
                     if self.ch_res[client_id]:
                         binary_result = pickle.dumps('OK')
                         result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                        clientResult['result_proof'][ind][0][3] = result_hash
+                        order_shuttle['result_proof'][ind-1][0][3] = result_hash
                         self.ch_res[client_id] = False
                     if self.drop_res[client_id] :
-                        clientResult['result_proof'].pop(0)
+                        order_shuttle['result_proof'].pop(0)
                         print('dropped ', len(result_proof) )
                         self.drop_res[client_id] = False
 
-                    order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                     history[order_shuttle['slot_no']] = order_stmt
                     #output('Added order statement to the history and forwarded the shuttle ahead...')
 

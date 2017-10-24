@@ -152,7 +152,7 @@ File name : case10_system.conf
 	test_case_name = change_result_replica2
 	t = 1
 	num_clients = 4
-	failures[0,1] = shuttle(1,3), change_result();
+	failures[0,1] = shuttle(1,4), change_result();
 
 	Scenario tested : 
 			Pseudorandom workload is generated. Result at second replica is changed due to failure trigger on shuttle. Retransmission of reuqest happens due to invalid result proof received at tail
