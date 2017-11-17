@@ -1,0 +1,104 @@
+import sys
+# import nacl.utils
+import pickle
+import nacl
+from nacl.public import PrivateKey, Box
+import logging
+import nacl.signing
+import nacl.encoding
+
+r = import_da("Replica")
+
+class Olympus(process):
+
+    def setup(list_clients: list, config: set):
+        self.logger = logging.getLogger(__name__)
+
+        output("Setting up the Olympus...")
+        ## use pynacl lib to initiailze all keys
+        oly_priv_key = PrivateKey.generate()
+        self.oly_private_key = oly_priv_key
+        self.oly_public_key = oly_priv_key.public_key
+
+        self.replica_signing_keys = {}
+        self.replica_verify_keys = {}
+        self.replica_public_keys = {}
+        self.replica_private_keys = {}
+        self.client_private_keys = {}
+        self.client_public_keys = {}
+        self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
+
+        ## Create replica processes here
+        no_replicas = int(config["num_replicas"])
+        #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
+        #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
+        #replica_set = new(r.Replica, num=no_replicas)
+        list_replica = []
+        for i in range(0, len(config['replicaHostIPs'])):
+            replica = new(r.Replica, num=1, at="ReplicaNode@"+config['replicaHostIPs'][i])
+            list_replica.append(replica.pop())
+        #list_replica = list(replica_set)
+        setup(list_replica, (self, list_clients, list_replica, config))
+        start(list_replica)
+        self.replica_list = list_replica
+
+        for client in list_clients:
+            priv_key = PrivateKey.generate()
+            self.client_public_keys[str(client)] = priv_key.public_key
+            self.client_private_keys[str(client)] = priv_key
+
+        for replica in replica_list:
+            priv_key = PrivateKey.generate()
+            signing_key = nacl.signing.SigningKey.generate()
+            self.replica_public_keys[str(replica)] = priv_key.public_key
+            self.replica_private_keys[str(replica)] = priv_key
+
+            self.replica_signing_keys[str(replica)] = signing_key
+            self.replica_verify_keys[str(replica)] = signing_key.verify_key
+
+        for replica in replica_list:
+            keysForReplica = {}
+            keysForReplica['private_key'] = self.replica_private_keys[str(replica)]
+            keysForReplica['public_key'] = self.replica_public_keys[str(replica)]
+            keysForReplica['client_public_keys'] = self.client_public_keys
+            keysForReplica['replica_public_keys'] = self.replica_public_keys
+            keysForReplica['replica_verify_keys'] = self.replica_verify_keys
+            keysForReplica['signing_key'] = self.replica_signing_keys[str(replica)]
+            output('Message type: [Keys] sending to ' + str(replica))
+            send(('keys', keysForReplica), to= replica)
+
+        output("Replica List: " + str(replica_list))
+        output("Client List: " + str(list_clients))
+        ## Olympus terminating flag
+        self.terminate = False
+
+    def receive(msg=('current_configuration'), from_= sender):
+        sender_id = str(sender)
+        ##output({'message':"received MSG_CLIENT_INIT_RESPONSE (current configuration) from Olympus", 'name':'sender_id'})
+        output('Message type: [current_configuration] Received from: ' + sender_id)
+        client_config = {}
+        client_config["oly_public_key"] = self.oly_public_key
+        client_config["replica_public_keys"] = self.replica_public_keys
+        client_config["client_public_key"] = self.client_public_keys[sender_id]
+        client_config["client_private_key"] = self.client_private_keys[sender_id]
+        client_config["head_replica"] = self.replica_list[0]
+        client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
+        client_config["replicas"] = self.replica_list
+        client_config["replica_verify_keys"] = self.replica_verify_keys
+        output('Message type: [cur_conf] Sending to: ' + sender_id)
+        send(('cur_conf', client_config), to= sender)
+
+    def receive(msg=('reconfigure'), from_= sender):
+        output('Message type: [reconfigure] Received from: ' + str(sender))
+
+    def run():
+        output('Started Olympus...Waiting for an operations...')
+        await(terminate)
+
+    def dict_to_binary(the_dict):
+        binary = pickle.dumps(the_dict)
+        return binary
+
+    def binary_to_dict(the_binary):
+        d = pickle.loads(the_binary)
+        return d

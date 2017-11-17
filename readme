@@ -1,9 +1,31 @@
 
-
-
 PLATFORM.  describe the software platform(s) used in your testing, including DistAlgo version, Python implementation (normally CPython) and version, operating system, and types of hosts (e.g., laptop (without any VMs), VMs running on VMWare Workstation Player on a laptop, VMs on Google Cloud Compute Engine, VMs on Amazon Web Services EC2).  for testcases involving multiple hosts, specify the platform for each host.  [2017-10-05 added this]
+We are using python version 3.5.2 with DistAlgo version 1.0.9.
+We are using python-library PyNaCl for computing digital signatures, computing hashes and sending encrypted messages
+between different node processes. We have used VMs on Google Cloud Platform for testing on multiple hosts.
+Operating system used on local laptops were Darwin Kernel Version 16.4.0.
+Operating system used on Google Clound platform VMs were Linux instance-4 4.9.0-3-amd64 SMP Debian 4.9.30-2+deb9u5 (2017-09-19) x86_64 GNU/Linux
 
 INSTRUCTIONS.  instructions to build and run your system.  the instructions should not rely on an IDE.  provide a detailed sequence of commands, a shell script, or something similar.  include a specific example of the command(s) to run a selected test case.
+First, we start all the slave nodes with -D flag.
+Once all slave nodes are up and running, we start the masterNode that creates and assigns all the processes to those slave nodes.
+
+e.g. Start OlympusNode, ReplicaNode and ClientNode as slave nodes as follows
+python3 -m da -H 127.0.0.1 --message-buffer-size=$((64*1024)) -f --logfilename case0.log -n OlympusNode -D Olympus.da
+python3 -m da -H 127.0.0.1 --message-buffer-size=$((64*1024)) -f --logfilename case0.log -n ReplicaNode -D Replica.da
+python3 -m da -H 127.0.0.1 -f --logfilename case0.log --message-buffer-size=$((64*1024)) -n ClientNode -D Client.da
+
+Once all slaves are start, start the master as follows -
+python3 -m da -H 127.0.0.1 --message-buffer-size=$((64*1024)) -n MainNode  --master __init__.da case3_system.conf
+
+We can test the same working on multiple hosts by providing the host IPs while initializing these processes and in __init__.da while creating these process.
+We have tested the multiple hosts working on following GCP VMs -
+python3 -m da -H 10.142.0.2 --message-buffer-size=$((64*1024)) -f --logfilename case0.log -n OlympusNode -D Olympus.da
+python3 -m da -H 10.142.0.3 --message-buffer-size=$((64*1024)) -f --logfilename case0.log -n ReplicaNode -D Replica.da
+python3 -m da -H 10.142.0.4 -f --logfilename case0.log --message-buffer-size=$((64*1024)) -n ClientNode -D Client.da
+
+python3 -m da -H 10.142.0.5 --message-buffer-size=$((64*1024)) -n MainNode  --master __init__.da case3_system.conf
+
 
 WORKLOAD GENERATION:
 The pseudorandom workload genrator generates a mixed workload. It supports both integer and string values. Every parameter is generated randomly, thus giving a good diversity. It can generate both success cases (where 'put' for some 'key' happens before any other operation on that 'key') and also failure cases (where 'get'/'slice'/'append' can happen before a 'put' on some 'key' or 'slice' operation can have invalid 'start'/'end' indices). the random string values generated are then surrounded by '' to replicate the input from config file. The algorithm used is as follows:

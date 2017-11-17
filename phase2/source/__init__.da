@@ -1,0 +1,160 @@
+import sys
+import random
+import string
+import datetime
+import logging
+
+c = import_da("Client")
+o = import_da("Olympus")
+# r = import_da("Replica")
+
+def get_hosts_from_config(hosts_string):
+    if(type(hosts_string) == type(1)):
+        return [hosts_string]
+    hosts = hosts_string.split(";")
+    for i in range(0, len(hosts)):
+        hosts[i] = hosts[i].strip()
+    return hosts
+
+def main():
+    terminate = False
+    if(len(sys.argv) != 2):
+        print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
+    else:
+        print("Selected config file is - " + sys.argv[1])
+
+        conf = read_config()
+        all_workloads = {}
+        current_workload_id = sys.argv[1]
+        hosts = get_hosts_from_config(conf['hosts'])
+        client_host_index = get_hosts_from_config(conf['client_hosts'])
+        replica_host_index = get_hosts_from_config(conf['replica_hosts'])
+        replicaHostIPs = []
+        clientHostIPs = []
+        for i in range(0, len(replica_host_index)):
+            replicaHostIPs.append(hosts[int(replica_host_index[i])])
+        conf['replicaHostIPs'] = replicaHostIPs
+        for i in range(0, len(client_host_index)):
+            clientHostIPs.append(hosts[int(client_host_index[i])])
+        olympusHostIP = ""
+        if('olympus_host' in conf):
+            olympusHostIP = hosts[int(conf['olympus_host'])]
+        else:
+            # Else take first host as default olympus
+            olympusHostIP = hosts[0]
+        no_clients = int(conf['num_clients'])
+        #olympus = new(o.Olympus, num=1)
+        #olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
+        olympus = new(o.Olympus, num=1, at="OlympusNode@"+olympusHostIP)
+
+        #olympus = new(o.Olympus, num=1)
+        #client_set = new(c.Client, num=no_clients)
+        #client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
+        list_client = []
+        for i in range(0, len(clientHostIPs)):
+            client = new(c.Client, num=1, at="ClientNode@"+clientHostIPs[i])
+            list_client.append(client.pop())
+        #print(list_client)
+
+        #client_set = new(c.Client, num=no_clients)
+        for i in range(0, len(list_client)):
+            workloads = []
+            curr_workload = "workload[" + str(i) + "]"
+            workloads = conf[curr_workload].split(';')
+            for wIndex in range(0, len(workloads)):
+                oper = workloads[wIndex].strip()
+                if oper.startswith('pseudorandom', 0):
+                    workloads = pseudorandom(oper);
+                else :
+                    workloads[wIndex] = oper
+            all_workloads[str(list_client[i])] = workloads
+        conf['workload'] = all_workloads
+
+        setup(olympus, (list_client, conf))
+        setup(list_client, (olympus, conf))
+
+        start(olympus)
+        start(list_client)
+        await(terminate)
+
+def read_config():
+    config = {}
+    with open(sys.argv[1], 'r') as f:
+        for line in f:
+            if line[0] != '#':
+                (key,sep,val) = line.partition('=')
+                # if the line does not contain '=', it is invalid and hence ignored
+                if len(sep) != 0:
+                    val = val.strip()
+                    config[key.strip()] = int(val) if str.isdecimal(val) else val
+    config['client_timeout'] = config['client_timeout']/1000
+    config['head_timeout'] = config['client_timeout']/1000
+    config['nonhead_timeout'] = config['client_timeout']/1000
+    config['num_replicas'] = 2 * int(config['t']) + 1
+    return config
+
+def pseudorandom(oper):
+    ind = oper.index(',')
+    ind1 = len(oper) - 1
+    s = int(oper[13:ind])
+    n = int(oper[ind+1 : ind1])
+
+    workloads = []
+    random.seed(s)
+    for i in range(0, n):
+        r = random.randint(0, 10)%4
+        key_type = random.randint(0, 10)%2
+        value_type = random.randint(0, 10)%2
+        if r == 0: ##put oper
+            key = "\'"
+            val = "\'"
+            if key_type == 0:
+                for i in range(5):
+                    key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
+            if value_type == 0:
+                for i in range(5):
+                    val += random.choice(string.ascii_letters + string.digits)
+                val += "\'"
+            else :
+                val = random.randint(0, 10)
+            workloads.append('put(' + str(key) + ',' + str(val) + ')')
+        elif r == 1: ##get
+            key = "\'"
+            if key_type == 0:
+                for i in range(5):
+                        key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
+            workloads.append('get(' + str(key) + ')')
+        elif r == 2: ##slice oper
+            key = "\'"
+            if key_type == 0:
+                for i in range(5):
+                    key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
+            start = random.randint(0, 10)
+            end = random.randint(0, 10)
+            workloads.append('slice(' + str(key) + ',\'' + str(start) + ':' + str(end) + '\')')
+        elif r == 3: ##append
+            key = "\'"
+            val = "\'"
+            if key_type == 0:
+                for i in range(5):
+                    key += random.choice(string.ascii_letters + string.digits)
+                key += "\'"
+            else :
+                key = random.randint(0, 10)
+            if value_type == 0:
+                for i in range(5):
+                    val += random.choice(string.ascii_letters + string.digits)
+                val += "\'"
+            else :
+                val = random.randint(0, 10)
+            workloads.append('append(' + str(key) + ',' + str(val) + ')')
+    return workloads
