@@ -3,6 +3,7 @@ import random
 import string
 import datetime
 import logging
+# import threading
 
 c = import_da("Client")
 o = import_da("Olympus")
@@ -15,6 +16,17 @@ def get_hosts_from_config(hosts_string):
     for i in range(0, len(hosts)):
         hosts[i] = hosts[i].strip()
     return hosts
+
+'''
+def periodic_function():
+    threading.Timer(5.0, periodic_function).start()
+    print("Hello, World!")
+
+def main1():
+    terminate = False
+    periodic_function()
+    await(terminate)
+'''
 
 def main():
     terminate = False

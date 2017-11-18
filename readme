@@ -24,7 +24,7 @@ python3 -m da -H 10.142.0.2 --message-buffer-size=$((64*1024)) -f --logfilename 
 python3 -m da -H 10.142.0.3 --message-buffer-size=$((64*1024)) -f --logfilename case0.log -n ReplicaNode -D Replica.da
 python3 -m da -H 10.142.0.4 -f --logfilename case0.log --message-buffer-size=$((64*1024)) -n ClientNode -D Client.da
 
-python3 -m da -H 10.142.0.5 --message-buffer-size=$((64*1024)) -n MainNode  --master __init__.da case3_system.conf
+python3 -m da -H 10.142.0.5 --message-buffer-size=$((64*1024)) -n MainNode  --master __init__.da <CONFIG_FILE_NAME>
 
 
 WORKLOAD GENERATION:
@@ -86,10 +86,10 @@ Client.da ==> Client code
 
 CODE SIZE.  
 
-__init__.da ==>  Algorithm - 127 Other - 20 Total - 147
-Olympus.da 	==>	 Algorithm - 20 Other -65 Total - 85
-Replica.da  ==>  Algorithm -  Other - Total - 412
-Client.da 	==>  Algorithm -  Other - Total - 183
+__init__.da ==>  Algorithm - 127 Other - 22 Total - 149
+Olympus.da 	==>	 Algorithm - 20 Other - 68 Total - 88
+Replica.da  ==>  Algorithm - 230 Other - 217 Total - 447
+Client.da 	==>  Algorithm - 80 Other 108 - Total - 188
 
 Used CLOC https://github.com/AlDanial/cloc) to get the lines of code. Manually calculated the 'other' lines
 
