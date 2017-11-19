@@ -38,8 +38,7 @@ class Client(process):
                 resultList.append(result['result'])
                 successFlag = True
             else:
-                output('Result Validation falied for seqNo: ' + result["seqNo"] + ' oper: ' + result["oper"] + '...Ask for reconfig.')
-
+                output('Result Validation falied for seqNo: ' + str(result["seqNo"]) + ' oper: ' + result["oper"] + '...Ask for reconfig.')
     def receive(msg=('retrans_res', encrypted_result), from_= sender):
         output('Message type: [retrans_res] Received from: ' + str(sender))
 
