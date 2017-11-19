@@ -51,8 +51,20 @@ class Replica(process):
         self.oly_public_key = payload['oly_public_key']
         self.olympus_verify_key = payload['olympus_verify_key']
 
-    def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
+    def receive(msg=('wedge', signed_wedge), from_= sender):
+        output('Message type: [wedge] Received from: ' + str(sender))
+        try:
+            self.olympus_verify_key.verify(signed_wedge)
+            ## BECOME IMMUTABLE
+            self.isImmutable = True
+            wedged_response = {}
+            wedged_response['History'] = self.history
+            encrypted_msg = getEncryptedMsg(wedged_response, self.oly_public_key)
+            send(('wedged', encrypted_msg), to= olympus)
+        except nacl.exceptions.BadSignatureError:
+            output("Signature verification failed for WEDGE request.")
 
+    def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
         decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
@@ -79,7 +91,6 @@ class Replica(process):
             #send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
 
     def receive(msg=('execute', encrypted_payload, replica_index), from_= sender):
-
         payload = {}
         if(str(sender) in client_public_keys):
             decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
@@ -195,7 +206,6 @@ class Replica(process):
 
                     ## Send Result to client
                     encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(payload['client'])])
-
                     send(('result_message', encrypted_msg), to= payload['client'])
 
                     ## ind is already beyond last replica index. So subtract 2

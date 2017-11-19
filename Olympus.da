@@ -6,6 +6,7 @@ from nacl.public import PrivateKey, Box
 import logging
 import nacl.signing
 import nacl.encoding
+import numpy
 
 r = import_da("Replica")
 
@@ -20,10 +21,14 @@ class Olympus(process):
         oly_priv_key = PrivateKey.generate()
         self.oly_private_key = oly_priv_key
         self.oly_public_key = oly_priv_key.public_key
+        self.reconfig_in_progress = False
+        self.wedged_from_all = {}
+        self.wedged_from_quorum = []
 
         self.olympus_signing_key = nacl.signing.SigningKey.generate()
         self.olympus_verify_key = self.olympus_signing_key.verify_key
 
+        output('Till here....')
         self.replica_signing_keys = {}
         self.replica_verify_keys = {}
         self.replica_public_keys = {}
@@ -32,19 +37,26 @@ class Olympus(process):
         self.client_public_keys = {}
         self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
 
+        output('Till here 1....')
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
         #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
         #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         #replica_set = new(r.Replica, num=no_replicas)
         list_replica = []
+        list_replica_str = []
         for i in range(0, len(config['replicaHostIPs'])):
             replica = new(r.Replica, num=1, at="ReplicaNode@"+config['replicaHostIPs'][i])
-            list_replica.append(replica.pop())
-        #list_replica = list(replica_set)
+            replica_obj = replica.pop()
+            list_replica.append(replica_obj)
+            list_replica_str.append(str(replica_obj))
+        output('Till here 2....')
+        self.quorum_replicas = list(numpy.random.choice(list_replica_str, size=(int(config['t']) + 1)))
+        output('Till here 3....')
         setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
         start(list_replica)
         self.replica_list = list_replica
+        output('Till here 4....')
 
         for client in list_clients:
             priv_key = PrivateKey.generate()
@@ -95,31 +107,62 @@ class Olympus(process):
         output('Message type: [cur_conf] Sending to: ' + sender_id)
         send(('cur_conf', client_config), to= sender)
 
+    def getWedgedFromQuorum():
+        wedged_from_quorum = []
+        for each_replica in self.quorum_replicas:
+            wedged_from_quorum.append(self.wedged_from_all[str(each_replica)])
+        return wedged_from_quorum
+
+    def checkConsistantHistory(wedged_from_quorum):
+        return True
+
+    def receive(msg=('wedged', encrypted_payload), from_= sender):
+        output('Message type: [wedged] Received from: ' + str(sender))
+        decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+
+        self.wedged_from_all[str(sender)] = payload['History']
+        if((str(sender)) in self.quorum_replicas):
+            print('Adding quorum wedged response')
+            self.wedged_from_quorum.append(payload['History'])
+
+        if(len(self.wedged_from_quorum) == len(self.quorum_replicas)):
+            print('Received all quorum wedged replies')
+            # Received al the wedged replies from quorum. Start computing history now.
+            if(checkConsistantHistory(wedged_from_quorum)):
+                output('Consistent history received from quorum')
+            else:
+                # Choose new quorum and call wedge again
+                output('Choosing a new quorum...Inconsistent history')
+                wedged_from_quorum = []
+                self.quorum_replicas = list(numpy.random.choice(self.replica_list, size=(int(config['t']) + 1)))
+
     def receive(msg=('reconfigure', encrypted_payload), from_= sender):
         output('Message type: [reconfigure] Received from: ' + str(sender))
-        '''
-        payload = {}
-        if(str(sender) in client_public_keys):
-            decrypt_box = Box(self.oly_private_key, client_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_payload)
-            payload = pickle.loads(plaintext)
-        else:
-            decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_payload)
-            payload = pickle.loads(plaintext)
-            if(validateReplicaReconfigRequest(payload)):
-                output("Valid Reconfiguration request")
-                #binary_wedge_stmt = pickle.dumps('WEDGE')
-                #signed_wedge_stmt = self.olympus_signing_key.sign(binary_wedge_stmt)
-                #for replica in replica_list:
-                #    output('Message type: [Wedge] sending to ' + str(replica))
-                #    send(('Wedge', signed_wedge_stmt), to= replica)
+        if(self.reconfig_in_progress == False):
+            self.reconfig_in_progress = True
+            payload = {}
+            if(str(sender) in client_public_keys):
+                decrypt_box = Box(self.oly_private_key, client_public_keys[str(sender)])
+                plaintext = decrypt_box.decrypt(encrypted_payload)
+                payload = pickle.loads(plaintext)
             else:
-                output("Invalid Reconfiguration Request")
-        '''
+                decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
+                plaintext = decrypt_box.decrypt(encrypted_payload)
+                payload = pickle.loads(plaintext)
+                if(validateReplicaReconfigRequest(payload)):
+                    output("Valid Reconfiguration request")
+                    binary_wedge_stmt = pickle.dumps('WEDGE')
+                    signed_wedge_stmt = self.olympus_signing_key.sign(binary_wedge_stmt)
+                    for replica in replica_list:
+                        output('Message type: [Wedge] sending to ' + str(replica))
+                        send(('wedge', signed_wedge_stmt), to= replica)
+                else:
+                    output("Invalid Reconfiguration Request")
 
     def validateReplicaReconfigRequest(payload):
-        if(payload('replicaConfigSeqNo') == self.currConfigSeqNo):
+        if(payload['replicaConfigSeqNo'] == self.currConfigSeqNo):
             return True
         else:
             return False
