@@ -103,19 +103,17 @@ class Client(process):
         binary_result = pickle.dumps(res['result'])
         result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
 
-        for i in range(0, len(res['result_proof'])):
-            curr_signed_result_p = res['result_proof'][i][1]
+        for replicaName, result_proof_i in res['result_proof'].items():
+            curr_signed_result_p = result_proof_i[1]
             try:
-                curr_config['replica_verify_keys'][str(curr_config['replicas'][i])].verify(curr_signed_result_p)
+                curr_config['replica_verify_keys'][replicaName].verify(curr_signed_result_p)
             except nacl.exceptions.BadSignatureError:
                 output("Signature verification failed for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
                 return False
 
-        for i in range(0, len(res['result_proof'])):
-            if((result_hash == res['result_proof'][i][0][3]) and (res['result_proof'][i][0][2] == sys_config['workload'][str(self)][self.seqNo])):
+        for replicaName, result_proof_i in res['result_proof'].items():
+            if((result_hash == result_proof_i[0][3]) and (result_proof_i[0][2] == sys_config['workload'][str(self)][self.seqNo])):
                 no_of_matches += 1
-                print(result_hash)
-                print(res['result_proof'][i][0][3])
             if(no_of_matches == (int(sys_config['t']) + 1)):
                 output("Result-shuttle validation success for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
                 return True

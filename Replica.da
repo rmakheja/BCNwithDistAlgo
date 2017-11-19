@@ -136,10 +136,10 @@ class Replica(process):
                 order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
 
                 if self.ch_res[client_id]:
-                    binary_result = pickle.dumps('OK')
-                    result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                    order_shuttle['result_proof'][ind-1][0][3] = result_hash
-                    self.ch_res[client_id] = False
+                        binary_result = pickle.dumps('OK')
+                        result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+                        order_shuttle['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
+                        self.ch_res[client_id] = False
                 if self.drop_res[client_id] :
                     order_shuttle['result_proof'].pop(str(list_replicas[0]))
                     self.drop_res[client_id] = False
@@ -194,7 +194,6 @@ class Replica(process):
                         binary_result = pickle.dumps('OK')
                         result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
                         clientResult['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
-
                         self.ch_res[client_id] = False
                     if self.drop_res[client_id] :
                         clientResult['result_proof'].pop(str(list_replicas[0]))
