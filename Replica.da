@@ -39,6 +39,9 @@ class Replica(process):
         self.timer = config['nonhead_timeout']
         if(self == list_replicas[0]):
             timer = config['head_timeout']
+        self.checkpoint_len = 5
+        self.checkpoints = []
+        self.checkpoint_complete = True
 
     def receive(msg=('keys', payload), from_= sender):
         output('Message type: [keys] Received from: ' + str(sender))
@@ -62,7 +65,7 @@ class Replica(process):
             encrypted_msg = getEncryptedMsg(wedged_response, self.oly_public_key)
             send(('wedged', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
-            output("Signature verification failed for WEDGE request.")
+             output("Signature verification failed for WEDGE request.")
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
         decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
@@ -108,11 +111,11 @@ class Replica(process):
         client_id = list_clients.index(payload['client'])
         if(ind == 1):
             ## HEAD case
-            output('HEAD received the execution request...')
+            ## output('HEAD received the execution request...')
 
             ## Verify if this slot is not already occupied and its previous is occupied.
             if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)):
-                #output('Slot verification success...!')
+                ### output('Slot verification success...!')
                 result = execute_actual_command(payload['oper'])
                 #print("Execution Result at HEAD is - " + result)
                 order_shuttle = payload
@@ -151,6 +154,12 @@ class Replica(process):
                 send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
                 # send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
                 self.slot_no +=1
+                hist_len = len(self.history)
+                if(hist_len != 1 and (hist_len % self.checkpoint_len) == 1):
+                    await(self.checkpoint_complete)
+                    self.checkpoint_complete = False
+                    sendCheckpoint(1, [], hist_len - 1)
+                print(hist_len)
             else:
                 output('invalid slot_no... or waiting for previous slot')
         elif(ind == (len(list_replicas))):
@@ -167,10 +176,7 @@ class Replica(process):
 
                 if not validate_result_proof(result_proof, result, order_shuttle['oper']):
                     output('Invalid result_proof...Reconfig required')
-                    ReconfigRequest = {}
-                    ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
-                    encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
-                    send(('reconfigure', encrypted_msg), to= olympus)
+                    sendReconfigReq()
                     ## Reconfig request from replica
                 else :
                     check_failures('shuttle', client_id)
@@ -179,7 +185,7 @@ class Replica(process):
                         order_stmt[3] = "get('x')"
                         self.ch_oper[client_id] = False
 
-                    output('Order_stmt: '+ str(order_stmt))
+                    ## output('Order_stmt: '+ str(order_stmt))
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
                     history[order_shuttle['slot_no']] = order_stmt
 
@@ -200,9 +206,9 @@ class Replica(process):
                         self.drop_res[client_id] = False
 
 
-                    output('Storing result in cache at TAIL')
+                    ## output('Storing result in cache at TAIL')
                     cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
-                    output('Message type: [result_message] Sending to: ' + str(payload['client']) + 'Oper: ' + payload['oper'])
+                    ## output('Message type: [result_message] Sending to: ' + str(payload['client']) + 'Oper: ' + payload['oper'])
 
                     ## Send Result to client
                     encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(payload['client'])])
@@ -218,11 +224,7 @@ class Replica(process):
 
             else:
                 output('Some error in order proof validation. Reconfigure the system...')
-                ReconfigRequest = {}
-                ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
-                encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
-                send(('reconfigure', encrypted_msg), to= olympus)
-                ## Reconfig request from replica
+                sendReconfigReq()
 
         else:
             ## REST of the cases
@@ -237,12 +239,9 @@ class Replica(process):
                 result_proof = order_shuttle['result_proof']
                 check_failures('shuttle', client_id)
                 if not validate_result_proof(result_proof, result, order_shuttle['oper']):
-                    output('invalid result_proof')
+                    ## output('invalid result_proof')
                     ## Reconfig request from replica
-                    ReconfigRequest = {}
-                    ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
-                    encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
-                    send(('reconfigure', encrypted_msg), to= olympus)
+                    sendReconfigReq()
                 else :
                     if self.ch_oper[client_id] :
                         order_stmt[3] = "get('x')"
@@ -260,7 +259,7 @@ class Replica(process):
                         self.drop_res[client_id] = False
 
                     history[order_shuttle['slot_no']] = order_stmt
-                    #output('Added order statement to the history and forwarded the shuttle ahead...')
+                    ### output('Added order statement to the history and forwarded the shuttle ahead...')
 
                     encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
                     output('Message type: [execute] Sending to: ' + str(list_replicas[ind]))
@@ -269,10 +268,7 @@ class Replica(process):
             else:
                 output('Some error in order proof validation. Reconfigure the system...')
                 ## Reconfig request from replica
-                ReconfigRequest = {}
-                ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
-                encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
-                send(('reconfigure', encrypted_msg), to= olympus)
+                sendReconfigReq()
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
         output('Adding order-statement, result statement and there signatures to shuttle - ORDER_STMT: ' + str(order_stmt))
@@ -295,7 +291,7 @@ class Replica(process):
         return order_shuttle
 
     def validate_order_proof(order_proof, order_stmt):
-        # output('Validating the order proof ...')
+        # ## output('Validating the order proof ...')
         # first check if the signature of order proofs are matching
 
         # check if received slot no is not in history and the previous slot is finished
@@ -323,7 +319,7 @@ class Replica(process):
         return True
 
     def validate_result_proof(result_proof, result, operation):
-        # output('Validating result proof...')
+        # ## output('Validating result proof...')
         binary_result = pickle.dumps(result)
         cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
         for replicaName, result_proof_i in result_proof.items():
@@ -470,10 +466,7 @@ class Replica(process):
                     #send(('retrans_res', cache[cache_key]), to= command['client'])
             elif timeout(self.timer):
                     output('retrans failed, replica dint receive result shuttle')
-                    ReconfigRequest = {}
-                    ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
-                    encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
-                    send(('reconfigure', encrypted_msg), to= olympus)
+                    sendReconfigReq()
                     ##send reconfig
 
     def getEncryptedMsg(msg, receiverPubKey):
@@ -492,7 +485,10 @@ class Replica(process):
 
     def run():
         output('Started Replica...waiting for an operations...')
+        ##if(self == self.list_replicas[0]):
+            ##startCheckpoint()
         await(terminate)
+
 
     def check_failures(type, client_id):
         failure_key = ''
@@ -538,3 +534,60 @@ class Replica(process):
                     t_failures[trig_key] = [val]
         return t_failures
 
+
+    def receive(msg=('checkpoint_shuttle', encrypted_payload, replica_index), from_= sender):
+        decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+        ind = int(replica_index) +  1
+        sendCheckpoint(ind, payload[1], payload[0])
+
+    def receive(msg=('checkpoint_proof', encrypted_payload, replica_index), from_= sender):
+        decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+        ind = int(replica_index) -  1
+        chkpnt_len = payload[0]
+        proof = payload[1]
+        truncateHistory(0, chkpnt_len)
+        self.checkpoints.append([chkpnt_len, proof])
+        self.checkpoint_complete = True
+        if ind >= 0 :
+            encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind])])
+            send(('checkpoint_proof', encrypted_checkpoint, ind), to= self.list_replicas[ind])
+
+    def validCheckpointProof(chkpnt_len, proof, slice_hash):
+        for [len, hash] in proof :
+            if slice_hash != hash or len != chkpnt_len:
+                return False
+        return True
+
+    def truncateHistory(startInd, endInd):
+        keys = [k for k in sorted(self.history.keys())[startInd:endInd]]
+        for k in keys:
+            self.history.pop(k, None)
+
+    def sendCheckpoint(ind, proof, chkpnt_len):
+        await(len(self.history) > self.checkpoint_len)
+        slice =  {k: self.history[k] for k in sorted(self.history.keys())[:chkpnt_len]}
+        binary_slice = pickle.dumps(slice)
+        slice_hash = self.HASHER(binary_slice, encoder=nacl.encoding.HexEncoder)
+        if validCheckpointProof(chkpnt_len, proof, slice_hash) == False:
+            sendReconfigReq()
+            return
+        proof.append([chkpnt_len, slice_hash])
+        if(ind == (len(self.list_replicas))):
+            truncateHistory(0, chkpnt_len)
+            self.checkpoints.append([chkpnt_len, proof])
+            encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind-2])])
+            send(('checkpoint_proof', encrypted_checkpoint, ind-2), to= self.list_replicas[ind-2])
+
+        else :
+            encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind])])
+            send(('checkpoint_shuttle', encrypted_checkpoint, ind), to= self.list_replicas[ind])
+
+    def sendReconfigReq():
+        ReconfigRequest = {}
+        ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
+        encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
+        send(('reconfigure', encrypted_msg), to= olympus)
