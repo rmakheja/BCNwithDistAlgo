@@ -30,6 +30,12 @@ class Replica(process):
         self.m_fwd_req = [-1]*config['num_clients']
         self.m_shuttle = [-1]*config['num_clients']
         self.m_r_shuttle = [-1]*config['num_clients']
+        self.m_wedge_request = -1
+        self.m_new_conf = -1
+        self.m_chkpnt = -1
+        self.m_chkpnt_completed = -1
+        self.m_running_state = -1
+        self.m_catch_up = -1
         self.ch_oper = [False]*config['num_clients']
         self.ch_res = [False]*config['num_clients']
         self.drop_res = [False]*config['num_clients']
@@ -370,20 +376,28 @@ class Replica(process):
     def receive(msg=('checkpoint_shuttle', encrypted_payload, replica_index), from_= sender):
         payload = decrypt(encrypted_payload, sender)
         ind = int(replica_index) +  1
-        output('R: [checkpoint_shuttle] F: ' + getSenderId(sender) + 'T: Replica ' + getSelfId() + ' I: current history len' + str(len(self.history)))
+        output('R: [checkpoint_shuttle] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId() + ' I: current history len ' + str(len(self.history)))
         sendCheckpoint(ind, payload[1], payload[0])
 
     def receive(msg=('checkpoint_proof', encrypted_payload, replica_index), from_= sender):
         payload = decrypt(encrypted_payload, sender)
         ind = int(replica_index) -  1
         chkpnt_len = payload[0]
-        output('R: [checkpoint_proof] F: ' + getSenderId(sender) + 'T: Replica ' + getSelfId() + ' I: current history len' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
+        output('R: [checkpoint_proof] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId() + ' I: current history len ' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
         proof = payload[1]
+        slice =  {k: self.history[k] for k in sorted(self.history.keys())[:chkpnt_len]}
+        binary_slice = pickle.dumps(slice)
+        slice_hash = self.HASHER(binary_slice, encoder=nacl.encoding.HexEncoder)
+        if validCheckpointProof(chkpnt_len, proof, slice_hash) == False:
+            output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: Error in checkpoint proof validation')
+            sendReconfigReq()
+            return
+
         truncateHistory(0, chkpnt_len)
         self.checkpoints.append([chkpnt_len, proof])
         self.checkpoint_complete = True
         if ind >= 0 :
-            output('S: [checkpoint_proof] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind) +  + ' I: current history len' +  str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
+            output('S: [checkpoint_proof] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind) + ' I: current history len ' +  str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
 
             encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind])])
             send(('checkpoint_proof', encrypted_checkpoint, ind), to= self.list_replicas[ind])
@@ -391,7 +405,7 @@ class Replica(process):
     def validCheckpointProof(chkpnt_len, proof, slice_hash):
         for [len, hash] in proof :
             if slice_hash != hash or len != chkpnt_len:
-                ouput("E: [FAILL] [checkpoint proof] [Replica "+ getSelfId() + "]")
+                output("E: [FAILL] [checkpoint proof] [Replica "+ getSelfId() + "]")
                 return False
         return True
 
@@ -413,12 +427,12 @@ class Replica(process):
         if(ind == (len(self.list_replicas))):
             truncateHistory(0, chkpnt_len)
             self.checkpoints.append([chkpnt_len, proof])
-            output('S: [checkpoint_proof] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
+            output('S: [checkpoint_proof] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len ' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
             encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind-2])])
             send(('checkpoint_proof', encrypted_checkpoint, ind-2), to= self.list_replicas[ind-2])
 
         else :
-            output('S: [checkpoint_shuttle] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
+            output('S: [checkpoint_shuttle] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len ' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
             encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind])])
             send(('checkpoint_shuttle', encrypted_checkpoint, ind), to= self.list_replicas[ind])
 
