@@ -224,8 +224,13 @@ class Olympus(process):
             print('Received all quorum wedged replies')
             # Received al the wedged replies from quorum. Start computing history now.
             history = checkConsistency_n_getLongestHistory()
-            print('Till here 5')
 
+            # SEND ABORT MSG to old replicas
+            binary_abort_stmt = pickle.dumps('ABORT')
+            signed_abort_stmt = self.olympus_signing_key.sign(binary_abort_stmt)
+            for each_replica in self.replica_list:
+                output('Message type: [Abort] sending to ' + str(each_replica))
+                send(('abort', signed_abort_stmt), to= each_replica)
 
     def receive(msg=('reconfigure', encrypted_payload), from_= sender):
         output('Message type: [reconfigure] Received from: ' + str(sender))
