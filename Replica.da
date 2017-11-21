@@ -10,7 +10,7 @@ import nacl.signing
 
 class Replica(process):
     def setup(olympus: Olympus, list_clients: list, list_replicas: list, config: set, currConfigSeqNo: int):
-        output("Setting up the Replica...")
+        output("R: [Setup] Replica " + getSelfId() + " : " + str(self))
         self.logger = logging.getLogger(__name__)
         self.history = {}
         self.cache = {}
@@ -43,8 +43,9 @@ class Replica(process):
         self.checkpoints = []
         self.checkpoint_complete = True
 
+
     def receive(msg=('keys', payload), from_= sender):
-        output('Message type: [keys] Received from: ' + str(sender))
+        output('R: [keys] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
         self.privateKey = payload['private_key']
         self.publicKey = payload['public_key']
         self.signingKey = payload['signing_key']
@@ -55,237 +56,97 @@ class Replica(process):
         self.olympus_verify_key = payload['olympus_verify_key']
 
     def receive(msg=('abort', signed_abort), from_= sender):
-        output('Message type: [abort] Received from: ' + str(sender))
+        output('R: [abort] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
         try:
             self.olympus_verify_key.verify(signed_abort)
-            ## SET TERMINATE TRUE
             self.terminate = True
         except:
-            output('Signature verification failed for ABORT request.')
+            output('I: Signature verification failed for ABORT request at Replica ' + getSelfId())
 
     def receive(msg=('wedge', signed_wedge), from_= sender):
-        output('Message type: [wedge] Received from: ' + str(sender))
+        output('R: [wedge] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
         try:
             self.olympus_verify_key.verify(signed_wedge)
-            ## BECOME IMMUTABLE
             self.isImmutable = True
             wedged_response = {}
             wedged_response['History'] = self.history
+
+            output('S: [wedged] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: history len - ' + len(self.history))
+
             encrypted_msg = getEncryptedMsg(wedged_response, self.oly_public_key)
             send(('wedged', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
-             output("Signature verification failed for WEDGE request.")
+            output('I: Signature verification failed for WEDGE request at Replica ' + getSelfId())
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
-
-        decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
-        plaintext = decrypt_box.decrypt(encrypted_payload)
-        payload = pickle.loads(plaintext)
+        payload = decrypt(encrypted_payload, sender)
         ind = int(replica_index)
-        output('Type: [result_shuttle] From: ' + str(sender) + 'for : ' + payload['oper'])
         client_id = list_clients.index(payload['client'])
+        output('R: [result_shuttle] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId() + 'I: client Id - '+ str(client_id) + ' seqNo - '+ str(payload['seqNo']) +' oper-' + payload['oper'])
+
         check_failures('result_shuttle', client_id)
+        injectFailure(client_id, payload, 'sendRes', ind)
 
-        if self.ch_res[client_id]:
-            binary_result = pickle.dumps('OK')
-            result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-            payload['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
-            self.ch_res[client_id] = False
-        if drop_res[client_id] :
-            payload['result_proof'].pop(str(list_replicas[0]))
-            drop_res[client_id] = False
-
-        cache[str(payload['client']) + ' : ' + str(payload['seqNo']) ] = payload
+        cache[str(payload['client']) + ' : ' + str(payload['seqNo'])] = payload
         ind -= 1
         if(ind >= 0):
             encrypted_result_shuttle = getEncryptedMsg(payload, replica_public_keys[str(list_replicas[ind])])
-            output('Type: [result_shuttle] To: ' + str(list_replicas[ind]) + 'for : ' + payload['oper'])
+
+            output('S: [result_shuttle] F: Replica ' + getSelfId() + ' T: Replica' + str(ind) + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(payload['seqNo']) +' oper-' + payload['oper'])
+
             send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
-            #send(('result_shuttle', payload, str(ind)), to= list_replicas[ind])
 
     def receive(msg=('execute', encrypted_payload, replica_index), from_= sender):
 
         if(self.isImmutable):
-            output('Message type: [Error - Replica Immutable] Sending to: ' + str(sender))
+            output('R: [execute] F: ' + getSenderId(sender) + ' T : Replica ' + getSelfId() + 'I: ReplicaImmutable')
+            output('S: [Error - Replica Immutable] F: Replica '+ getSelfId() + ' T: ' + getSenderId(sender) + ' I: execute request')
             send(('Error - Replica Immutable'), to= sender)
         else:
-            payload = {}
-            if(str(sender) in client_public_keys):
-                decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
-                plaintext = decrypt_box.decrypt(encrypted_payload)
-                payload = pickle.loads(plaintext)
-            else:
-                decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
-                plaintext = decrypt_box.decrypt(encrypted_payload)
-                payload = pickle.loads(plaintext)
-
-            output('Type: [execute] From: ' + str(sender) + 'for : ' + payload['oper'])
+            order_shuttle = decrypt(encrypted_payload, sender)
 
             ind = int(replica_index) + 1
-            client_id = list_clients.index(payload['client'])
+            client_id = list_clients.index(order_shuttle['client'])
+            output('R: [execute] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId() + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(order_shuttle['seqNo']) +' oper-' + order_shuttle['oper'])
+            result = execute_actual_command(order_shuttle['oper'])
+            triggerType = 'shuttle'
             if(ind == 1):
-                ## HEAD case
-                ## output('HEAD received the execution request...')
-
-                ## Verify if this slot is not already occupied and its previous is occupied.
-                if(self.slot_no not in history and ( self.slot_no == 0 or (self.slot_no - 1) in history)):
-                    ### output('Slot verification success...!')
-                    result = execute_actual_command(payload['oper'])
-                    #print("Execution Result at HEAD is - " + result)
-                    order_shuttle = payload
+                if(self.slot_no not in history and (self.slot_no == 0 or (self.slot_no - 1) in history)):
                     order_shuttle['type'] = "Order Shuttle"
                     order_shuttle['slot_no'] = self.slot_no
                     order_shuttle['result'] = result
-                    order_proof = {}
-                    result_proof = {}
-                    #print('Creating order stmt...')
-                    order_stmt = [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
 
-                    if sender != self:
-                        check_failures('client_request', client_id)
+                    output('I: Head assigned slot : ' + str(self.slot_no) + ' for : client Id - ' + str(client_id) + ' seqNo - '+ str(order_shuttle['seqNo']) +' oper -' + order_shuttle['oper'])
 
-                    if self.ch_oper[client_id] :
-                        order_stmt[3] = "get('x')"
-                        self.ch_oper[client_id] = False
-
-                    output('Adding order stmt :' + str(order_stmt))
-
-                    order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
-
-                    if self.ch_res[client_id]:
-                            binary_result = pickle.dumps('OK')
-                            result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                            order_shuttle['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
-                            self.ch_res[client_id] = False
-                    if self.drop_res[client_id] :
-                        order_shuttle['result_proof'].pop(str(list_replicas[0]))
-                        self.drop_res[client_id] = False
-
-                    history[order_shuttle['slot_no']] = order_stmt
-
-                    encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
-                    output('Type: [execute] To: ' + str(list_replicas[ind]) + 'for : ' + payload['oper'])
-                    send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
-                    # send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
                     self.slot_no +=1
-                    hist_len = len(self.history)
-                    if(hist_len != 1 and (hist_len % self.checkpoint_len) == 1):
-                        await(self.checkpoint_complete)
-                        self.checkpoint_complete = False
-                        sendCheckpoint(1, [], hist_len - 1)
-                    print(hist_len)
-                else:
-                    output('invalid slot_no... or waiting for previous slot')
-            elif(ind == (len(list_replicas))):
-                #print('In TAIL')
-                ## TAIL case
+                    triggerType = 'client_request'
+                else :
+                    output('I: invalid slot_no... or waiting for previous slot at head')
 
-                result = ""
-                order_shuttle = payload
-                order_stmt = [payload['slot_no'],  payload['client'], payload['seqNo'], payload['oper']];
-                if(validate_order_proof(order_shuttle["order_proof"], order_stmt)):
-                    result = execute_actual_command(order_shuttle['oper'])
-                    order_proof = order_shuttle['order_proof']
-                    result_proof = order_shuttle['result_proof']
+            order_stmt = [order_shuttle['slot_no'],  order_shuttle['client'], order_shuttle['seqNo'], order_shuttle['oper']];
+            order_proof = {} if ind == 1 else order_shuttle['order_proof']
+            result_proof =  {} if ind == 1 else order_shuttle['result_proof']
 
-                    if not validate_result_proof(result_proof, result, order_shuttle['oper']):
-                        output('Invalid result_proof...Reconfig required')
-                        sendReconfigReq()
-                        ## Reconfig request from replica
-                    else :
-                        check_failures('shuttle', client_id)
+            if sender != self:
+               check_failures(triggerType, client_id)
+            if ind == 1 or (validate_order_proof(order_shuttle["order_proof"], order_stmt) and validate_result_proof(result_proof, result, order_shuttle['oper'])):
+                injectFailure(client_id, order_stmt, 'recOper', ind)
 
-                        if self.ch_oper[client_id] :
-                            order_stmt[3] = "get('x')"
-                            self.ch_oper[client_id] = False
-
-                        ## output('Order_stmt: '+ str(order_stmt))
-                        order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
-                        self.history[order_shuttle['slot_no']] = order_stmt
-
-                        clientResult = {}
-                        clientResult['seqNo'] = order_shuttle['seqNo']
-                        clientResult['client'] = order_shuttle['client']
-                        clientResult['oper'] = order_shuttle['oper']
-                        clientResult['result'] = result
-                        clientResult['result_proof'] = order_shuttle['result_proof']
-
-                        if self.ch_res[client_id]:
-                            binary_result = pickle.dumps('OK')
-                            result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                            clientResult['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
-                            self.ch_res[client_id] = False
-                        if self.drop_res[client_id] :
-                            clientResult['result_proof'].pop(str(list_replicas[0]))
-                            self.drop_res[client_id] = False
-
-
-                        ## output('Storing result in cache at TAIL')
-                        cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
-                        ## output('Message type: [result_message] Sending to: ' + str(payload['client']) + 'Oper: ' + payload['oper'])
-
-                        ## Send Result to client
-                        encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(payload['client'])])
-                        send(('result_message', encrypted_msg), to= payload['client'])
-
-                        ## ind is already beyond last replica index. So subtract 2
-                        ind = ind - 2
-                        output('Message type: [result_shuttle] Sending to: ' + str(list_replicas[ind]) + 'Oper: ' + payload['oper'])
-
-                        encrypted_result_shuttle = getEncryptedMsg(clientResult, self.replica_public_keys[str(list_replicas[ind])])
-                        send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
-
-
-                else:
-                    output('Some error in order proof validation. Reconfigure the system...')
-                    sendReconfigReq()
-
+                order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
+                self.history[order_shuttle['slot_no']] = order_stmt
+                forwardOrderShuttle(order_shuttle, ind)
+                hist_len = len(self.history)
+                if(ind == 1 and hist_len != 1 and (hist_len % self.checkpoint_len) == 1):
+                    await(self.checkpoint_complete)
+                    self.checkpoint_complete = False
+                    sendCheckpoint(1, [], hist_len - 1)
             else:
-                ## REST of the cases
-                #print('In MIDDLE')
-                output('MIDDLE replicas received the execution request...')
+                output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: Error in order proof or result proof validation')
+                sendReconfigReq()
 
-                order_shuttle = payload
-                order_stmt = [payload['slot_no'], payload['client'], payload['seqNo'], payload['oper']];
-                if(validate_order_proof(order_shuttle["order_proof"], order_stmt)):
-                    result = execute_actual_command(order_shuttle['oper'])
-                    order_proof = order_shuttle['order_proof']
-                    result_proof = order_shuttle['result_proof']
-                    check_failures('shuttle', client_id)
-                    if not validate_result_proof(result_proof, result, order_shuttle['oper']):
-                        ## output('invalid result_proof')
-                        ## Reconfig request from replica
-                        sendReconfigReq()
-                    else :
-                        if self.ch_oper[client_id] :
-                            order_stmt[3] = "get('x')"
-                            self.ch_oper[client_id] = False
-
-                        order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
-
-                        if self.ch_res[client_id]:
-                            binary_result = pickle.dumps('OK')
-                            result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                            order_shuttle['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
-                            self.ch_res[client_id] = False
-                        if self.drop_res[client_id] :
-                            order_shuttle['result_proof'].pop(str(list_replicas[0]))
-                            self.drop_res[client_id] = False
-
-                        self.history[order_shuttle['slot_no']] = order_stmt
-                        #output('Added order statement to the history and forwarded the shuttle ahead...')
-
-                        encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
-                        output('Message type: [execute] Sending to: ' + str(list_replicas[ind]))
-                        send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
-                        #send(('execute', order_shuttle, str(ind)), to= list_replicas[ind])
-                else:
-                    output('Some error in order proof validation. Reconfigure the system...')
-                    ## Reconfig request from replica
-                    sendReconfigReq()
 
     def process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result):
-        output('Adding order-statement, result statement and there signatures to shuttle - ORDER_STMT: ' + str(order_stmt))
+        output('I: adding order stmt : ' + str(order_stmt) + ' at Replica ' + getSelfId())
         binary_order_stmt = pickle.dumps(order_stmt)
         signed_order_stmt = self.signingKey.sign(binary_order_stmt)
 
@@ -294,24 +155,22 @@ class Replica(process):
         order_proof[str(self)] = ([order_stmt, signed_order_stmt])
         order_shuttle['order_proof'] = order_proof
 
-        output('Adding result statement and its signature to shuttle')
+
         result_stmt = [order_stmt[1], order_stmt[2], order_stmt[3], result_hash]
         binary_result_stmt = pickle.dumps(result_stmt)
         signed_result_stmt = self.signingKey.sign(binary_result_stmt)
 
-        ##result_proof.append((order_shuttle['client'], order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
+        output('I: adding result stmt : ' + str(result_stmt) + ' at Replica ' + getSelfId())
+
         result_proof[str(self)] = ([result_stmt, signed_result_stmt])
         order_shuttle['result_proof'] = result_proof
         return order_shuttle
 
     def validate_order_proof(order_proof, order_stmt):
-        # ## output('Validating the order proof ...')
-        # first check if the signature of order proofs are matching
 
-        # check if received slot no is not in history and the previous slot is finished
         slot_no = int(order_stmt[0])
         if(slot_no in self.history):
-            output('Order Proof Validation failed: Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+            output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +']- Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
             return False
 
         binary_order_stmt = pickle.dumps(order_stmt)
@@ -321,19 +180,19 @@ class Replica(process):
             try:
                 self.replica_verify_keys[replicaName].verify(curr_signed_order_p)
             except nacl.exceptions.BadSignatureError:
-                output('Order Proof Validation failed: Signature verification failed for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+                output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
                 return False
 
         for replicaName, each_order_p in order_proof.items():
             if(each_order_p[0] != order_stmt):
-                output('Order Proof Validation failed: Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+                output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
                 return False;
 
-        output('Order Proof Validation Successful: operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+        output('I: [SUCCESS] [Order Proof Validation] [Replica ' + getSelfId() +'] - operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
         return True
 
     def validate_result_proof(result_proof, result, operation):
-        # ## output('Validating result proof...')
+
         binary_result = pickle.dumps(result)
         cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
         for replicaName, result_proof_i in result_proof.items():
@@ -341,38 +200,42 @@ class Replica(process):
             try:
                 self.replica_verify_keys[replicaName].verify(curr_signed_result_p)
             except nacl.exceptions.BadSignatureError:
-                output('Result Proof Validation failed: Signature verification failed for operation: ' + operation )
+                output('E: [FAIL] [Result Proof Validation] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + operation )
                 return False
 
         for replicaName, res_stmt in result_proof.items():
-            if((res_stmt[0][3] != cur_hash) or (res_stmt[0][2] != operation)):
-                output('Result Proof Validation failed: Result statement mismatch for operation: ' + operation )
+            if(res_stmt[0][3] != cur_hash):
+                output('E: [FAIL] [Result Proof Validation] [Replica ' + getSelfId() +'] - result hash mismatch for operation: ' + operation)
                 return False
-        output('Result Proof Validation Successful: operation: ' + operation )
+            elif (res_stmt[0][2] != operation):
+                output('E: [FAIL] [Result Proof Validation] [Replica ' + getSelfId() +'] - operation mismatch for operation: ' + operation + ' received operation : '+ res_stmt[0][2])
+                return False
+        output('I: [SUCCESS] [Result Proof Validation] [Replica ' + getSelfId() +'] - for operation: ' + operation )
         return True
 
     def execute_actual_command(operation):
-        output('Executing actual operation command ...' + operation)
+        output('I: [Execute Command] [Replica ' + getSelfId() +'] - command : ' + operation )
         result = ""
-        ## execute operation on current state
+
         splits = operation.split("'")
         if(operation[0] == 'p'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
             key = operation[4:ind].strip('\'').strip()
             val = operation[ind+1 : ind1].strip('\'')
-            #print(key, ' => ', val)
+
             core_data[key] = val
             result = "OK"
+
         elif(operation[0] == 'g'):
             ind = operation.index('(')+1
             ind1 = len(operation) - 1
             key = operation[ind: ind1].strip('\'').strip()
-            #print(key)
             if(key in core_data):
                 result = core_data[key]
             else:
                 result = ""
+
         elif(operation[0] == 'a'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
@@ -383,126 +246,81 @@ class Replica(process):
                 result = "OK"
             else:
                 result = "fail"
-            #print(key, ' => ', val)
+
         elif(operation[0] == 's'):
             ind = operation.index(',')
             ind1 = len(operation) - 2
             key = operation[6:ind].strip('\'').strip()
             ran = operation[ind+2 : ind1]
             start_end = ran.split(':')
-            #print(key, ' => ', start_end)
+
             if(key in core_data and (int(start_end[0]) >= 0) and (int(start_end[1]) <= len(core_data[key]))):
                 core_data[key] = core_data[key][int(start_end[0]):int(start_end[1])]
                 result = "OK"
             else:
                 result = "Fail"
+
         else:
             result = "fail"
-        output("Execution result for Operation: " + operation + " Result: " + result)
+        output('I: [SUCCESS] [Execute Command] [Replica ' + getSelfId() +'] - command: ' + operation + ' result : '+ result)
         return result
 
     def receive(msg=('retrans', encrypted_command, replica_index), from_= sender):
-        output('Message type: [retrans] Received from: ' + str(sender))
         ind = int(replica_index)
-        command = {}
-        if(str(sender) in client_public_keys):
-            decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_command)
-            command = pickle.loads(plaintext)
-        else:
-            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
-            plaintext = decrypt_box.decrypt(encrypted_command)
-            command = pickle.loads(plaintext)
+        command = decrypt(encrypted_command, sender)
 
         cache_key = str(command['client']) + ' : ' + str(command['seqNo'])
         client_id = list_clients.index(command['client'])
+
+        output('R: [retrans] F: ' + getSenderId(sender) + 'T: Replica ' + getSelfId() + 'I: client Id - '+ str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
+
         if sender == command['client']:
             check_failures('client_request', client_id)
         else :
             check_failures('forward_request', client_id)
+
         if(cache_key in cache):
             clientResult = cache[cache_key]
-            if self.ch_res[client_id]:
-                binary_result = pickle.dumps('OK')
-                result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                clientResult['result_proof'][str(list_replicas[ind])][0][3] = result_hash;
-                self.ch_res[client_id] = False
-            if self.drop_res[client_id]:
-                ### CONFIRM WITH RAHSMI IF POP(0) WILL BE SAME AS THIS OR IS CHANGE ACCEPTABLE??
-                clientResult['result_proof'].pop(str(list_replicas[0]))
-                self.drop_res[client_id] = False
+            injectFailure(client_id, clientResult, 'sendRes', ind)
 
             encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
-            output('Message type: [retrans_res] Sending to: ' + str(command['client']))
+
+            output('S: [retrans_res] [cache hit] F: Replica ' + getSelfId() + ' T: Client ' + str(client_id) + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
+
             send(('retrans_res', encrypted_cache), to= command['client'])
-            #send(('retrans_res', cache[cache_key]), to= command['client'])
 
         elif(self.isImmutable):
-            output('Message type: [Error - Replica Immutable] Sending to: ' + str(command['client']))
+            output('S: [Error - Replica Immutable] F: Replica '+ getSelfId() + ' T: Client ' + str(client_id) + 'I: Retrans req, Client ' + str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
             send(('Error - Replica Immutable'), to= command['client'])
         else:
             ind += 1
             if(ind == 1):
-                ## HEAD
-                #check if oper in history
                 foundSlot = False
                 for slot in self.history:
                     stmt = self.history[slot]
                     if(stmt[1] == command['client'] and stmt[2] == command['seqNo']):
                         foundSlot = True
                 if not foundSlot:
+                    output('S: [execute] F: Replica '+ getSelfId() + ' T: Head I: Retrans req, Client ' + str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper -' + command['oper'])
+
                     encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
-                    output('Message type: [execute] Sending to HEAD : ' + str(self.list_replicas[0]))
                     send(('execute', encrypted_command, '0'), to= self.list_replicas[0])
-                    #send(('execute', command, '0'), to= self.list_replicas[0])
-                ## Start the replica timer for retranmission
             else:
-                ## send retrans to head and wait for result.
+                output('S: [retrans] F: Replica '+ getSelfId() + ' T: Head I: Retrans req, Client ' + str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper -' + command['oper'])
                 encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
-                output('Message type: [retrans] Sending to HEAD : ' + str(self.list_replicas[0]))
                 send(('retrans', encrypted_command, '0'), to= self.list_replicas[0])
-                #send(('retrans', command, '0'), to= self.list_replicas[0])
 
             if await(cache_key in cache):
                 clientResult = cache[cache_key]
-                if self.ch_res[client_id]:
-                    binary_result = pickle.dumps('OK')
-                    result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-                    clientResult['result_proof'][str(list_replicas[ind])][0][3] = result_hash;
-                    self.ch_res[client_id] = False
-                if self.drop_res[client_id] :
-                    clientResult['result_proof'].pop(str(list_replicas[0]))
-                    self.drop_res[client_id] = False
+                injectFailure(client_id, clientResult, 'sendRes', ind)
+                encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
 
-                    encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
-                    output('Message type: [retrans_res] Sending to : ' + str(command['client']))
-                    send(('retrans_res', encrypted_cache), to= command['client'])
-                    #send(('retrans_res', cache[cache_key]), to= command['client'])
+                output('S: [retrans_res] [received shuttle] F: Replica ' + getSelfId() + ' T: Client ' + str(client_id) + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
+
+                send(('retrans_res', encrypted_cache), to= command['client'])
             elif timeout(self.timer):
-                    output('retrans failed, replica dint receive result shuttle')
+                    output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: [timer expired] Retransmission Failed for client Id - '+ str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
                     sendReconfigReq()
-                    ##send reconfig
-
-    def getEncryptedMsg(msg, receiverPubKey):
-        box = Box(self.privateKey, receiverPubKey)
-        binary_msg = pickle.dumps(msg)
-        encrypted_msg = box.encrypt(binary_msg)
-        return encrypted_msg
-
-    def dict_to_binary(the_dict):
-        binary = pickle.dumps(the_dict)
-        return binary
-
-    def binary_to_dict(the_binary):
-        d = pickle.loads(the_binary)
-        return d
-
-    def run():
-        output('Started Replica...waiting for an operations...')
-        ##if(self == self.list_replicas[0]):
-            ##startCheckpoint()
-        await(terminate)
-        output('Terminating Replica successfully...!')
 
     def check_failures(type, client_id):
         failure_key = ''
@@ -520,7 +338,8 @@ class Replica(process):
             failure_key =  type + '(' + str(client_id) + ',' + str(self.m_shuttle[client_id]) + ')'
 
         if failure_key in self.failures :
-            for failure in  self.failures[failure_key]:
+            output('I: [failure Trigger] [Replica ' +getSelfId() + '] trigger : ' + failure_key + 'failure ' + str(self.failures[failure_key]))
+            for failure in self.failures[failure_key]:
                 if failure == 'change_operation()':
                     self.ch_oper[client_id] = True
                 elif failure == 'change_result()':
@@ -529,9 +348,9 @@ class Replica(process):
                     self.drop_res[client_id] = True
 
     def extract_failures() :
-        #print("in extract failures ---")
+
         t_failures = {}
-        key = 'failures[0,' + str(list_replicas.index(self)) + ']'
+        key = 'failures[' + str(self.currConfigSeqNo) + ',' + str(list_replicas.index(self)) + ']'
         if key in config:
             str_fail = config[key]
             splits = str_fail.split(';')
@@ -541,38 +360,38 @@ class Replica(process):
                 key = trig_fail[0:ind]
                 trig_key = trig_fail[0:ind]
                 val = trig_fail[ind+1 : len(trig_fail)].split()[0]
-                #print("trig key => " + trig_key + " trig val => " + val)
+
                 if trig_key in t_failures:
                     t_failures[trig_key].append(val)
                 else:
                     t_failures[trig_key] = [val]
         return t_failures
 
-
     def receive(msg=('checkpoint_shuttle', encrypted_payload, replica_index), from_= sender):
-        decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
-        plaintext = decrypt_box.decrypt(encrypted_payload)
-        payload = pickle.loads(plaintext)
+        payload = decrypt(encrypted_payload, sender)
         ind = int(replica_index) +  1
+        output('R: [checkpoint_shuttle] F: ' + getSenderId(sender) + 'T: Replica ' + getSelfId() + ' I: current history len' + str(len(self.history)))
         sendCheckpoint(ind, payload[1], payload[0])
 
     def receive(msg=('checkpoint_proof', encrypted_payload, replica_index), from_= sender):
-        decrypt_box = Box(self.privateKey, self.replica_public_keys[str(sender)])
-        plaintext = decrypt_box.decrypt(encrypted_payload)
-        payload = pickle.loads(plaintext)
+        payload = decrypt(encrypted_payload, sender)
         ind = int(replica_index) -  1
         chkpnt_len = payload[0]
+        output('R: [checkpoint_proof] F: ' + getSenderId(sender) + 'T: Replica ' + getSelfId() + ' I: current history len' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
         proof = payload[1]
         truncateHistory(0, chkpnt_len)
         self.checkpoints.append([chkpnt_len, proof])
         self.checkpoint_complete = True
         if ind >= 0 :
+            output('S: [checkpoint_proof] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind) +  + ' I: current history len' +  str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
+
             encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind])])
             send(('checkpoint_proof', encrypted_checkpoint, ind), to= self.list_replicas[ind])
 
     def validCheckpointProof(chkpnt_len, proof, slice_hash):
         for [len, hash] in proof :
             if slice_hash != hash or len != chkpnt_len:
+                ouput("E: [FAILL] [checkpoint proof] [Replica "+ getSelfId() + "]")
                 return False
         return True
 
@@ -587,16 +406,19 @@ class Replica(process):
         binary_slice = pickle.dumps(slice)
         slice_hash = self.HASHER(binary_slice, encoder=nacl.encoding.HexEncoder)
         if validCheckpointProof(chkpnt_len, proof, slice_hash) == False:
+            output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: Error in checkpoint proof validation')
             sendReconfigReq()
             return
         proof.append([chkpnt_len, slice_hash])
         if(ind == (len(self.list_replicas))):
             truncateHistory(0, chkpnt_len)
             self.checkpoints.append([chkpnt_len, proof])
+            output('S: [checkpoint_proof] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
             encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind-2])])
             send(('checkpoint_proof', encrypted_checkpoint, ind-2), to= self.list_replicas[ind-2])
 
         else :
+            output('S: [checkpoint_shuttle] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
             encrypted_checkpoint = getEncryptedMsg([chkpnt_len, proof], self.replica_public_keys[str(list_replicas[ind])])
             send(('checkpoint_shuttle', encrypted_checkpoint, ind), to= self.list_replicas[ind])
 
@@ -605,3 +427,91 @@ class Replica(process):
         ReconfigRequest['replicaConfigSeqNo'] = currConfigSeqNo
         encrypted_msg = getEncryptedMsg(ReconfigRequest, self.oly_public_key)
         send(('reconfigure', encrypted_msg), to= olympus)
+
+    def decrypt(encrypted_payload, sender):
+        if(str(sender) in client_public_keys):
+            decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+        else:
+            decrypt_box = Box(self.privateKey, replica_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+        return payload
+
+    def forwardOrderShuttle(order_shuttle, ind):
+        client_id = list_clients.index(order_shuttle['client'])
+        if(ind == (len(list_replicas))):
+
+            clientResult = {}
+            clientResult['seqNo'] = order_shuttle['seqNo']
+            clientResult['client'] = order_shuttle['client']
+            clientResult['oper'] = order_shuttle['oper']
+            clientResult['result'] = order_shuttle['result']
+            clientResult['result_proof'] = order_shuttle['result_proof']
+
+            injectFailure(client_id, clientResult, 'sendRes', ind)
+
+            cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
+
+            output('S: [result_message] F: Replica ' + getSelfId() + ' T: Client' + str(client_id) + ' I: client Id - ' + str(client_id) + ' seqNo - '+ str(order_shuttle['seqNo']) +' oper-' + order_shuttle['oper'])
+            encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(order_shuttle['client'])])
+            send(('result_message', encrypted_msg), to= order_shuttle['client'])
+
+            ## ind is already beyond last replica index. So subtract 2
+            ind = ind - 2
+            output('S: [result_shuttle] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind) + ' I: client Id - ' + str(client_id) + ' seqNo - '+ str(order_shuttle['seqNo']) +' oper-' + order_shuttle['oper'])
+
+            encrypted_result_shuttle = getEncryptedMsg(clientResult, self.replica_public_keys[str(list_replicas[ind])])
+            send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
+        else :
+            output('S: [execute] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind) + ' I: client Id - ' + str(client_id) + ' seqNo - '+ str(order_shuttle['seqNo']) +' oper-' + order_shuttle['oper'])
+            encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
+
+            send(('execute', encrypted_msg, str(ind)), to= list_replicas[ind])
+
+    def injectFailure(client_id, dataStr, type, ind):
+        if type == 'sendRes':
+            if self.ch_res[client_id]:
+                output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [change result] client ' + str(client_id))
+                binary_result = pickle.dumps('OK')
+                result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+                dataStr['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
+                self.ch_res[client_id] = False
+            if self.drop_res[client_id] :
+                output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [drop result] client ' + str(client_id))
+                dataStr['result_proof'].pop(str(list_replicas[0]))
+                self.drop_res[client_id] = False
+        if type == 'recOper' and self.ch_oper[client_id] :
+            output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [change operation] I: client ' + str(client_id) + ' order_stmt - ' + str(dataStr))
+            dataStr[3] = "get('x')"
+            self.ch_oper[client_id] = False
+
+    def getSelfId():
+        return str(self.list_replicas.index(self))
+
+    def getSenderId(sender):
+        if sender in self.list_replicas:
+            return 'Replica ' + str(self.list_replicas.index(sender))
+        elif sender in self.list_clients:
+            return 'Client ' + str(self.list_clients.index(sender))
+        else :
+            return 'Olympus ' + str(sender)
+
+    def getEncryptedMsg(msg, receiverPubKey):
+        box = Box(self.privateKey, receiverPubKey)
+        binary_msg = pickle.dumps(msg)
+        encrypted_msg = box.encrypt(binary_msg)
+        return encrypted_msg
+
+    def dict_to_binary(the_dict):
+        binary = pickle.dumps(the_dict)
+        return binary
+
+    def binary_to_dict(the_binary):
+        d = pickle.loads(the_binary)
+        return d
+
+    def run():
+        await(terminate)
+        output('I: [Terminated] Replica ' + getSelfId())

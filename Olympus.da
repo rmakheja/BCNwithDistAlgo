@@ -15,7 +15,7 @@ class Olympus(process):
 
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
-        self.currConfigSeqNo = 1
+        self.currConfigSeqNo = 0
 
         output("Setting up the Olympus...")
         ## use pynacl lib to initiailze all keys
