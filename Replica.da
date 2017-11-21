@@ -181,7 +181,7 @@ class Replica(process):
 
                     output('Order_stmt: '+ str(order_stmt))
                     order_shuttle = process_order_shuttle(order_shuttle, order_proof, result_proof, order_stmt, result)
-                    history[order_shuttle['slot_no']] = order_stmt
+                    self.history[order_shuttle['slot_no']] = order_stmt
 
                     clientResult = {}
                     clientResult['seqNo'] = order_shuttle['seqNo']
@@ -259,7 +259,7 @@ class Replica(process):
                         order_shuttle['result_proof'].pop(str(list_replicas[0]))
                         self.drop_res[client_id] = False
 
-                    history[order_shuttle['slot_no']] = order_stmt
+                    self.history[order_shuttle['slot_no']] = order_stmt
                     #output('Added order statement to the history and forwarded the shuttle ahead...')
 
                     encrypted_msg = getEncryptedMsg(order_shuttle, replica_public_keys[str(list_replicas[ind])])
@@ -300,7 +300,7 @@ class Replica(process):
 
         # check if received slot no is not in history and the previous slot is finished
         slot_no = int(order_stmt[0])
-        if(slot_no in history):
+        if(slot_no in self.history):
             output('Order Proof Validation failed: Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
             return False
 
@@ -436,8 +436,8 @@ class Replica(process):
                 ## HEAD
                 #check if oper in history
                 foundSlot = False
-                for slot in history:
-                    stmt = history[slot]
+                for slot in self.history:
+                    stmt = self.history[slot]
                     if(stmt[1] == command['client'] and stmt[2] == command['seqNo']):
                         foundSlot = True
                 if not foundSlot:

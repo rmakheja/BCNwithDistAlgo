@@ -7,6 +7,7 @@ import logging
 import nacl.signing
 import nacl.encoding
 import numpy
+from collections import Counter
 
 r = import_da("Replica")
 
@@ -23,7 +24,8 @@ class Olympus(process):
         self.oly_public_key = oly_priv_key.public_key
         self.reconfig_in_progress = False
         self.wedged_from_all = {}
-        self.wedged_from_quorum = []
+        self.wedged_from_quorum = {}
+        self.checkpoint_slot_no = 0
 
         self.olympus_signing_key = nacl.signing.SigningKey.generate()
         self.olympus_verify_key = self.olympus_signing_key.verify_key
@@ -37,26 +39,36 @@ class Olympus(process):
         self.client_public_keys = {}
         self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
 
-        output('Till here 1....')
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
         #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
         #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
         #replica_set = new(r.Replica, num=no_replicas)
         list_replica = []
-        list_replica_str = []
+        list_replica_for_quorum_select_t = []
         for i in range(0, len(config['replicaHostIPs'])):
             replica = new(r.Replica, num=1, at="ReplicaNode@"+config['replicaHostIPs'][i])
             replica_obj = replica.pop()
             list_replica.append(replica_obj)
-            list_replica_str.append(str(replica_obj))
-        output('Till here 2....')
-        self.quorum_replicas = list(numpy.random.choice(list_replica_str, size=(int(config['t']) + 1)))
-        output('Till here 3....')
+            list_replica_for_quorum_select_t.append(str(replica_obj))
+        print('REPLICA SELECT BEFORE - ')
+        print(list_replica_for_quorum_select_t)
+        print('ACTUAL REPLICA LIST - ')
+        print(list_replica)
+        self.quorum_replicas = list(numpy.random.choice(list_replica_for_quorum_select_t, size=(int(config['t']) + 1), replace=False))
+        # Delete the current quorum_replicas from list_replica for future use
+        for each_quorum_r in self.quorum_replicas:
+            if(each_quorum_r in list_replica_for_quorum_select_t):
+                list_replica_for_quorum_select_t.remove(each_quorum_r)
+
+        print('QUORUM_REPLICA - ')
+        print(self.quorum_replicas)
+        print('REPLICS_FOR_QUORUM_SELECT - ')
+        print(list_replica_for_quorum_select_t)
+        self.list_replica_for_quorum_select = list_replica_for_quorum_select_t
         setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
         start(list_replica)
         self.replica_list = list_replica
-        output('Till here 4....')
 
         for client in list_clients:
             priv_key = PrivateKey.generate()
@@ -107,14 +119,95 @@ class Olympus(process):
         output('Message type: [cur_conf] Sending to: ' + sender_id)
         send(('cur_conf', client_config), to= sender)
 
-    def getWedgedFromQuorum():
-        wedged_from_quorum = []
-        for each_replica in self.quorum_replicas:
-            wedged_from_quorum.append(self.wedged_from_all[str(each_replica)])
-        return wedged_from_quorum
+    def getLongestHistory1():
+        slot_seqNo_dict = {}
+        longest_history = []
+        for replica_key, each_wedged in self.wedged_from_quorum.items():
+            sample_history = each_wedged
+            for key_slot_no, each_order_stmt in sample_history.items():
+                # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
+                if(key_slot_no in slot_seqNo_dict):
+                    curr_seq_no = each_order_stmt[2]
+                    slot_seqNo_dict[key_slot_no].append(curr_seq_no)
+                else:
+                    # Till this point is the longest valid history - use this one
+                    slot_seqNo_dict[key_slot_no] = []
+                    slot_seqNo_dict[key_slot_no].append(each_order_stmt[2])
+        for each_slot, list_seq in slot_seqNo_dict.items():
+            cnt = Counter(list_seq)
+            most_common_seq_no = cnt.most_common(1)[0][0]
+            longest_history.append([each_slot, most_common_seq_no])
 
-    def checkConsistantHistory(wedged_from_quorum):
-        return True
+        ## Now sort the history entries based on slot_no
+        longest_history.sort(key=lambda tup: tup[0])
+
+    def getLongestHistory():
+        slot_seqNo_dict = {}
+        longest_history = []
+        final_history_dict = {}
+        inconsistent_replicas = []
+        for replica_key, each_wedged in self.wedged_from_quorum.items():
+            sample_history = each_wedged
+            for key_slot_no, each_order_stmt in sample_history.items():
+                # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
+                if(key_slot_no in slot_seqNo_dict):
+                    curr_seq_no = each_order_stmt[2]
+                    slot_seqNo_dict[key_slot_no].append(curr_seq_no)
+                else:
+                    # Till this point is the longest valid history - use this one
+                    slot_seqNo_dict[key_slot_no] = []
+                    slot_seqNo_dict[key_slot_no].append(each_order_stmt[2])
+
+        print('Till here 1')
+        for each_slot, list_seq in slot_seqNo_dict.items():
+            cnt = Counter(list_seq)
+            most_common_seq_no = cnt.most_common(1)[0][0]
+            longest_history.append([each_slot, most_common_seq_no])
+            final_history_dict[each_slot] = most_common_seq_no
+
+        print('Till here 2')
+        for replica_key, each_wedged in self.wedged_from_quorum.items():
+            sample_history = each_wedged
+            for key_slot_no, each_order_stmt in sample_history.items():
+                curr_seq_no = each_order_stmt[2]
+                if(curr_seq_no != final_history_dict[key_slot_no]):
+                    inconsistent_replicas.append(replica_key)
+                    break;
+
+        print('Till here 3')
+        output = {}
+        output['inconsistent_replicas'] = inconsistent_replicas
+        output['longest_history'] = longest_history
+        return output
+
+    def checkConsistency_n_getLongestHistory():
+
+        output = getLongestHistory();
+        inconsistent_replicas = output['inconsistent_replicas']
+        longest_history = output['longest_history']
+
+        while(len(inconsistent_replicas) > 0):
+            output('Inconsistent replicas FOUND...Choosing new quorum')
+            for each_inconsistent_replica in inconsistent_replicas:
+                self.wedged_from_quorum.pop(each_inconsistent_replica)
+                self.quorum_replicas.remove(each_inconsistent_replica)
+                self.list_replica_for_quorum_select.remove(each_inconsistent_replica)
+                new_replacing_replica = numpy.random.choice(self.list_replica_for_quorum_select, size=1)[0]
+                self.list_replica_for_quorum_select.remove(new_replacing_replica)
+                self.quorum_replicas.append(new_replacing_replica)
+                self.wedged_from_quorum[new_replacing_replica] = self.wedged_from_all[new_replacing_replica]
+
+            new_output = getLongestHistory();
+            inconsistent_replicas = new_output['inconsistent_replicas']
+            longest_history = new_output['longest_history']
+
+        print('Till here 4')
+        ## Now sort the history entries based on slot_no
+        longest_history.sort(key=lambda tup: tup[0])
+        output('Longest history is - ')
+        output(longest_history)
+        return longest_history
+
 
     def receive(msg=('wedged', encrypted_payload), from_= sender):
         output('Message type: [wedged] Received from: ' + str(sender))
@@ -125,18 +218,14 @@ class Olympus(process):
         self.wedged_from_all[str(sender)] = payload['History']
         if((str(sender)) in self.quorum_replicas):
             print('Adding quorum wedged response')
-            self.wedged_from_quorum.append(payload['History'])
+            self.wedged_from_quorum[str(sender)] = payload['History']
 
         if(len(self.wedged_from_quorum) == len(self.quorum_replicas)):
             print('Received all quorum wedged replies')
             # Received al the wedged replies from quorum. Start computing history now.
-            if(checkConsistantHistory(wedged_from_quorum)):
-                output('Consistent history received from quorum')
-            else:
-                # Choose new quorum and call wedge again
-                output('Choosing a new quorum...Inconsistent history')
-                wedged_from_quorum = []
-                self.quorum_replicas = list(numpy.random.choice(self.replica_list, size=(int(config['t']) + 1)))
+            history = checkConsistency_n_getLongestHistory()
+            print('Till here 5')
+
 
     def receive(msg=('reconfigure', encrypted_payload), from_= sender):
         output('Message type: [reconfigure] Received from: ' + str(sender))
