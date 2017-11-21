@@ -71,7 +71,7 @@ class Replica(process):
             wedged_response = {}
             wedged_response['History'] = self.history
 
-            output('S: [wedged] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: history len - ' + len(self.history))
+            output('S: [wedged] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: history len - ' + str(len(self.history)))
 
             encrypted_msg = getEncryptedMsg(wedged_response, self.oly_public_key)
             send(('wedged', encrypted_msg), to= olympus)
