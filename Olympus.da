@@ -6,6 +6,7 @@ from nacl.public import PrivateKey, Box
 import logging
 import nacl.signing
 import nacl.encoding
+import nacl.hash
 import numpy
 from collections import Counter
 
@@ -15,35 +16,41 @@ class Olympus(process):
 
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
-        self.currConfigSeqNo = 1
+        self.HASHER = nacl.hash.sha256
+        self.currConfigSeqNo = 0
+
+        ## RECONFIG VARIABLES - start
+        self.reconfig_in_progress = False
+        self.wedged_from_all = {}
+        self.wedged_from_quorum = {}
+        self.longest_history_slot_operation_map = {}
+        self.get_running_state_send = False
+        self.quorum_replicas = []
+        self.list_replica_for_quorum_select = []
+        self.recent_result_shuttle_for_every_client = {}
+        ## RECONFIG VARIABLES - end
+
 
         output("Setting up the Olympus...")
         ## use pynacl lib to initiailze all keys
         oly_priv_key = PrivateKey.generate()
         self.oly_private_key = oly_priv_key
         self.oly_public_key = oly_priv_key.public_key
-        self.reconfig_in_progress = False
-        self.wedged_from_all = {}
-        self.wedged_from_quorum = {}
         self.checkpoint_slot_no = 0
 
         self.olympus_signing_key = nacl.signing.SigningKey.generate()
         self.olympus_verify_key = self.olympus_signing_key.verify_key
 
-        output('Till here....')
         self.replica_signing_keys = {}
         self.replica_verify_keys = {}
         self.replica_public_keys = {}
         self.replica_private_keys = {}
         self.client_private_keys = {}
         self.client_public_keys = {}
-        self.caughtupMessageHash = 'some_caughtUpMsg_VALUE'
+        self.caughtupMessageHash = "DEFAULT"
 
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
-        #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@172.24.19.252")
-        #replica_set = new(r.Replica, num=no_replicas, at="ReplicaNode@127.0.0.1")
-        #replica_set = new(r.Replica, num=no_replicas)
         list_replica = []
         list_replica_for_quorum_select_t = []
         for i in range(0, len(config['replicaHostIPs'])):
@@ -51,20 +58,14 @@ class Olympus(process):
             replica_obj = replica.pop()
             list_replica.append(replica_obj)
             list_replica_for_quorum_select_t.append(str(replica_obj))
-        print('REPLICA SELECT BEFORE - ')
-        print(list_replica_for_quorum_select_t)
-        print('ACTUAL REPLICA LIST - ')
-        print(list_replica)
+
         self.quorum_replicas = list(numpy.random.choice(list_replica_for_quorum_select_t, size=(int(config['t']) + 1), replace=False))
         # Delete the current quorum_replicas from list_replica for future use
         for each_quorum_r in self.quorum_replicas:
             if(each_quorum_r in list_replica_for_quorum_select_t):
                 list_replica_for_quorum_select_t.remove(each_quorum_r)
 
-        print('QUORUM_REPLICA - ')
-        print(self.quorum_replicas)
-        print('REPLICS_FOR_QUORUM_SELECT - ')
-        print(list_replica_for_quorum_select_t)
+
         self.list_replica_for_quorum_select = list_replica_for_quorum_select_t
         setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
         start(list_replica)
@@ -119,33 +120,12 @@ class Olympus(process):
         output('Message type: [cur_conf] Sending to: ' + sender_id)
         send(('cur_conf', client_config), to= sender)
 
-    def getLongestHistory1():
-        slot_seqNo_dict = {}
-        longest_history = []
-        for replica_key, each_wedged in self.wedged_from_quorum.items():
-            sample_history = each_wedged
-            for key_slot_no, each_order_stmt in sample_history.items():
-                # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
-                if(key_slot_no in slot_seqNo_dict):
-                    curr_seq_no = each_order_stmt[2]
-                    slot_seqNo_dict[key_slot_no].append(curr_seq_no)
-                else:
-                    # Till this point is the longest valid history - use this one
-                    slot_seqNo_dict[key_slot_no] = []
-                    slot_seqNo_dict[key_slot_no].append(each_order_stmt[2])
-        for each_slot, list_seq in slot_seqNo_dict.items():
-            cnt = Counter(list_seq)
-            most_common_seq_no = cnt.most_common(1)[0][0]
-            longest_history.append([each_slot, most_common_seq_no])
-
-        ## Now sort the history entries based on slot_no
-        longest_history.sort(key=lambda tup: tup[0])
-
     def getLongestHistory():
         slot_seqNo_dict = {}
         longest_history = []
         final_history_dict = {}
         inconsistent_replicas = []
+        slot_orderstatement_map = {}
         for replica_key, each_wedged in self.wedged_from_quorum.items():
             sample_history = each_wedged
             for key_slot_no, each_order_stmt in sample_history.items():
@@ -173,6 +153,11 @@ class Olympus(process):
                 if(curr_seq_no != final_history_dict[key_slot_no]):
                     inconsistent_replicas.append(replica_key)
                     break;
+                else:
+                    if(key_slot_no not in slot_orderstatement_map):
+                        slot_orderstatement_map[key_slot_no] = each_order_stmt
+
+        self.longest_history_slot_orderstatement_map = slot_orderstatement_map
 
         print('Till here 3')
         output = {}
@@ -208,6 +193,82 @@ class Olympus(process):
         output(longest_history)
         return longest_history
 
+    def cleanReconfigVariables():
+        self.reconfig_in_progress = False
+        self.wedged_from_all = {}
+        self.wedged_from_quorum = {}
+        self.longest_history_slot_operation_map = {}
+        self.get_running_state_send = False
+        self.quorum_replicas = []
+        self.list_replica_for_quorum_select = []
+        self.recent_result_shuttle_for_every_client = {}
+
+    def receive(msg=('running_state', encrypted_payload), from_= sender):
+        output('Message type: [running_state] Received from: ' + str(sender))
+        decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+
+        binary_current_state = pickle.dump(payload['core_data'])
+        hash_current_state = HASHER(binary_current_state, encoder=nacl.encoding.HexEncoder)
+
+        if(hash_current_state == self.caughtupMessageHash):
+            for each_replica in self.replica_list:
+                self.currConfigSeqNo = self.currConfigSeqNo + 1
+                cleanReconfigVariables()
+                inithist_msg = {}
+                inithist_msg['current_state'] = payload['core_data']
+                encrypted_msg = getEncryptedMsg(inithist_msg, self.replica_public_keys[str(each_replica)])
+                output('Message type: [inithist] Sending to: ' + str(each_replica))
+                send(('inithist', encrypted_msg), to= each_replica)
+        else:
+            new_selected_replica_str = numpy.random.choice(quorum_replicas, size=1)
+            new_selected_replica = getReplicaFromName(new_selected_replica_str)
+            binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
+            signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
+            output('Message type: [get_running_state] sending to ' + str(new_selected_replica))
+            send(('get_running_state', signed_get_running_state_msg), to= new_selected_replica)
+
+    def receive(msg=('caughtup', encrypted_payload), from_= sender):
+        output('Message type: [caughtup] Received from: ' + str(sender))
+        decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+
+        if(self.caughtupMessageHash == "DEFAULT"):
+            self.caughtupMessageHash = payload['hash_current_state']
+        else:
+            if(self.get_running_state_send == False)
+                self.get_running_state_send = True
+                binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
+                signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
+                output('Message type: [get_running_state] sending to ' + str(sender))
+                send(('get_running_state', signed_get_running_state_msg), to= sender)
+
+        res_proof = payload['recent_result_proof_for_every_client']
+        client_name = res_proof[0][0]
+        result_shuttle = {}
+        if(client_name in self.recent_result_shuttle_for_every_client):
+            result_shuttle = recent_result_shuttle_for_every_client[client_name]
+
+        result_shuttle[str(sender)] = res_proof
+        self.recent_result_shuttle_for_every_client[client_name] = result_shuttle
+
+        if(len(self.recent_result_shuttle_for_every_client[client_name]) == len(quorum_replicas)):
+            ## Received all result proofs from quorum of replicas and
+            seq_no = res_proof[0][1]
+            operation_name = res_proof[0][2]
+            result_c = res_proof[0][4]
+            clientResult = {}
+            clientResult['seqNo'] = seq_no
+            clientResult['client'] = client_name
+            clientResult['oper'] = operation_name
+            clientResult['result'] = result_c
+            clientResult['result_proof'] = self.recent_result_shuttle_for_every_client[client_name]
+
+            client_from_name = getClientFromName(client_name)
+            encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[client_from_name])
+            send(('result_message_from_olympus', encrypted_msg), to= client_from_name)
 
     def receive(msg=('wedged', encrypted_payload), from_= sender):
         output('Message type: [wedged] Received from: ' + str(sender))
@@ -223,7 +284,7 @@ class Olympus(process):
         if(len(self.wedged_from_quorum) == len(self.quorum_replicas)):
             print('Received all quorum wedged replies')
             # Received al the wedged replies from quorum. Start computing history now.
-            history = checkConsistency_n_getLongestHistory()
+            new_history = checkConsistency_n_getLongestHistory()
 
             # SEND ABORT MSG to old replicas
             binary_abort_stmt = pickle.dumps('ABORT')
@@ -231,6 +292,41 @@ class Olympus(process):
             for each_replica in self.replica_list:
                 output('Message type: [Abort] sending to ' + str(each_replica))
                 send(('abort', signed_abort_stmt), to= each_replica)
+
+            computeAndSendCatchUp(new_history)
+
+    def computeAndSendCatchUp(new_history):
+        for replica_key, each_wedged_history in self.wedged_from_quorum.items():
+            operations_to_catchup = []
+            for each_order in new_history:
+                sample_slot_no = each_order[0]
+                if(sample_slot_no not in each_wedged_history):
+                    # Add entire order_Stmt to catchup operations
+                    # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
+                    operations_to_catchup.append(self.longest_history_slot_orderstatement_map[sample_slot_no])
+
+            catchup_msg = {}
+            catchup_msg['catchup_order_statements'] = operations_to_catchup
+            encrypted_msg = getEncryptedMsg(catchup_msg, self.replica_public_keys[replica_key])
+            replica_to_send = getReplicaFromName(replica_key)
+            output('Message type: [catchup] Sending to: ' + str(replica_to_send))
+            send(('catchup', encrypted_msg), to= replica_to_send)
+
+    def getReplicaFromName(replica_key):
+        for each_replica in self.replica_list:
+            if(str(each_replica) == replica_key):
+                return each_replica
+
+    def getClientFromName(client_name):
+        for each_client in list_clients:
+            if(str(each_client) == client_name)
+                return each_client
+
+    def getEncryptedMsg(msg, receiverPubKey):
+        box = Box(self.oly_private_key, receiverPubKey)
+        binary_msg = pickle.dumps(msg)
+        encrypted_msg = box.encrypt(binary_msg)
+        return encrypted_msg
 
     def receive(msg=('reconfigure', encrypted_payload), from_= sender):
         output('Message type: [reconfigure] Received from: ' + str(sender))

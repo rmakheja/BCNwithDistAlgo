@@ -42,6 +42,37 @@ class Replica(process):
         self.checkpoint_len = 5
         self.checkpoints = []
         self.checkpoint_complete = True
+        self.recent_result_proof_for_every_client = {}
+
+
+    def receive(msg=('inithist', payload), from_= sender):
+        output('Message type: [inithist] Received from: ' + str(sender))
+        decrypt_box = Box(self.privateKey, self.oly_public_key)
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+
+        self.history = {}
+        self.cache = {}
+        self.slot_no = 0
+        self.core_data = payload['current_state']
+        self.isImmutable = False
+        self.m_client_req = [-1]*config['num_clients']
+        self.m_fwd_req = [-1]*config['num_clients']
+        self.m_shuttle = [-1]*config['num_clients']
+        self.m_r_shuttle = [-1]*config['num_clients']
+        self.ch_oper = [False]*config['num_clients']
+        self.ch_res = [False]*config['num_clients']
+        self.drop_res = [False]*config['num_clients']
+        self.failures = extract_failures()
+        self.HASHER = nacl.hash.sha256
+        self.replica_verify_keys = {}
+        self.timer = config['nonhead_timeout']
+        if(self == list_replicas[0]):
+            timer = config['head_timeout']
+        self.checkpoint_len = 5
+        self.checkpoints = []
+        self.checkpoint_complete = True
+        self.recent_result_proof_for_every_client = {}
 
     def receive(msg=('keys', payload), from_= sender):
         output('Message type: [keys] Received from: ' + str(sender))
@@ -75,6 +106,51 @@ class Replica(process):
             send(('wedged', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
              output("Signature verification failed for WEDGE request.")
+
+    def receive(msg=('get_running_state', signed_get_running_state_msg), from_= sender):
+        output('Message type: [get_running_state] Received from: ' + str(sender))
+        try:
+            self.olympus_verify_key.verify(signed_get_running_state_msg)
+            ## give the running state i.e. core_data
+            reply_msg = {}
+            reply_msg['running_state'] = self.core_data
+            encrypted_msg = getEncryptedMsg(reply_msg, self.oly_public_key)
+            send(('running_state', encrypted_msg), to= olympus)
+        except nacl.exceptions.BadSignatureError:
+             output("Signature verification failed for GET_RUNNING_STATE request.")
+
+    def receive(msg=('catchup', encrypted_payload), from_= sender):
+        output('Message type: [catchup] Received from: ' + str(sender))
+        decrypt_box = Box(self.privateKey, self.oly_public_key)
+        plaintext = decrypt_box.decrypt(encrypted_payload)
+        payload = pickle.loads(plaintext)
+
+        for each_order_stmt in payload['catchup_order_statements']:
+            operation = each_order_stmt[3]
+            result = execute_actual_command(operation)
+            self.history[each_order_stmt[0]] = each_order_stmt
+
+            binary_result = pickle.dumps(result)
+            result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+
+            output('Adding result statement to recent_result_proof_for_every_client')
+            result_stmt = [each_order_stmt[1], each_order_stmt[2], each_order_stmt[3], result_hash, result]
+            binary_result_stmt = pickle.dumps(result_stmt)
+            signed_result_stmt = self.signingKey.sign(binary_result_stmt)
+
+            recent_result_proof_for_c = [result_stmt, signed_result_stmt]
+            clientName = each_order_stmt[1]
+            self.recent_result_proof_for_every_client[clientName] = recent_result_proof_for_c
+
+
+        binary_current_state = pickle.dump(self.core_data)
+        hash_current_state = HASHER(binary_current_state, encoder=nacl.encoding.HexEncoder)
+
+        caughtup_msg = {}
+        caughtup_msg['hash_current_state'] = hash_current_state
+        caughtup_msg['recent_result_proof_for_every_client'] = self.recent_result_proof_for_every_client
+        encrypted_msg = getEncryptedMsg(caughtup_msg, self.oly_public_key)
+        send(('caughtup', encrypted_msg), to= olympus)
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
 
@@ -295,12 +371,14 @@ class Replica(process):
         order_shuttle['order_proof'] = order_proof
 
         output('Adding result statement and its signature to shuttle')
-        result_stmt = [order_stmt[1], order_stmt[2], order_stmt[3], result_hash]
+        result_stmt = [order_stmt[1], order_stmt[2], order_stmt[3], result_hash, result]
         binary_result_stmt = pickle.dumps(result_stmt)
         signed_result_stmt = self.signingKey.sign(binary_result_stmt)
 
-        ##result_proof.append((order_shuttle['client'], order_shuttle['seqNo'], order_shuttle['oper'], result_hash))
         result_proof[str(self)] = ([result_stmt, signed_result_stmt])
+        clientName = order_stmt[1]
+        self.recent_result_proof_for_every_client[clientName] = result_proof[str(self)]
+
         order_shuttle['result_proof'] = result_proof
         return order_shuttle
 
