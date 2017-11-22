@@ -56,27 +56,7 @@ class Replica(process):
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
-        self.history = {}
-        self.cache = {}
-        self.slot_no = 0
         self.core_data = payload['current_state']
-        self.isImmutable = False
-        self.m_client_req = [-1]*config['num_clients']
-        self.m_fwd_req = [-1]*config['num_clients']
-        self.m_shuttle = [-1]*config['num_clients']
-        self.m_r_shuttle = [-1]*config['num_clients']
-        self.ch_oper = [False]*config['num_clients']
-        self.ch_res = [False]*config['num_clients']
-        self.drop_res = [False]*config['num_clients']
-        self.failures = extract_failures()
-        self.HASHER = nacl.hash.sha256
-        self.timer = config['nonhead_timeout']
-        if(self == list_replicas[0]):
-            timer = config['head_timeout']
-        self.checkpoint_len = 5
-        self.checkpoints = []
-        self.checkpoint_complete = True
-        self.recent_result_proof_for_every_client = {}
 
 
     def receive(msg=('keys', payload), from_= sender):
@@ -258,8 +238,6 @@ class Replica(process):
             output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +']- Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
             return False
 
-        binary_order_stmt = pickle.dumps(order_stmt)
-        signed_order_stmt = self.signingKey.sign(binary_order_stmt)
         for replicaName, each_order_p in order_proof.items():
             curr_signed_order_p = each_order_p[1]
             try:
