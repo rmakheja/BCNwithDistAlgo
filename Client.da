@@ -16,8 +16,14 @@ class Client(process):
         self.responsesCount = 0
         self.invalidResponses = 0
         self.curr_config = {}
+        self.currSeqNo = 0
         self.HASHER = nacl.hash.sha256
         self.core_data = {}
+        self.currConfigSeqNo = 0
+
+    def receive(msg=('config_changed', currConfigSeqNoFromOlympus), from_= olympus):
+        output('Message type: [config_changed] Received from: ' + str(olympus))
+        self.currConfigSeqNo = currConfigSeqNoFromOlympus
 
     def receive(msg=('cur_conf', config), from_= olympus):
         output('Message type: [cur_conf] Received from: ' + str(olympus))

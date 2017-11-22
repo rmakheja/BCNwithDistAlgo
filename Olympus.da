@@ -23,13 +23,12 @@ class Olympus(process):
         self.reconfig_in_progress = False
         self.wedged_from_all = {}
         self.wedged_from_quorum = {}
-        self.longest_history_slot_operation_map = {}
+        self.longest_history_slot_orderstatement_map = {}
         self.get_running_state_send = False
         self.quorum_replicas = []
         self.list_replica_for_quorum_select = []
         self.recent_result_shuttle_for_every_client = {}
         ## RECONFIG VARIABLES - end
-
 
         output("Setting up the Olympus...")
         ## use pynacl lib to initiailze all keys
@@ -197,7 +196,7 @@ class Olympus(process):
         self.reconfig_in_progress = False
         self.wedged_from_all = {}
         self.wedged_from_quorum = {}
-        self.longest_history_slot_operation_map = {}
+        self.longest_history_slot_orderstatement_map = {}
         self.get_running_state_send = False
         self.quorum_replicas = []
         self.list_replica_for_quorum_select = []
@@ -221,6 +220,10 @@ class Olympus(process):
                 encrypted_msg = getEncryptedMsg(inithist_msg, self.replica_public_keys[str(each_replica)])
                 output('Message type: [inithist] Sending to: ' + str(each_replica))
                 send(('inithist', encrypted_msg), to= each_replica)
+
+            for each_client in list_clients:
+                output('Message type: [config_changed] sending to ' + str(each_client))
+                send(('config_changed', self.currConfigSeqNo), to= each_client)
         else:
             new_selected_replica_str = numpy.random.choice(quorum_replicas, size=1)
             new_selected_replica = getReplicaFromName(new_selected_replica_str)
@@ -238,7 +241,7 @@ class Olympus(process):
         if(self.caughtupMessageHash == "DEFAULT"):
             self.caughtupMessageHash = payload['hash_current_state']
         else:
-            if(self.get_running_state_send == False)
+            if(self.get_running_state_send == False):
                 self.get_running_state_send = True
                 binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
                 signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
@@ -319,7 +322,7 @@ class Olympus(process):
 
     def getClientFromName(client_name):
         for each_client in list_clients:
-            if(str(each_client) == client_name)
+            if(str(each_client) == client_name):
                 return each_client
 
     def getEncryptedMsg(msg, receiverPubKey):
