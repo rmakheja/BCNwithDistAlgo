@@ -26,8 +26,11 @@ class Olympus(process):
         self.longest_history_slot_orderstatement_map = {}
         self.get_running_state_send = False
         self.quorum_replicas = []
+        self.quorum_replicas_combo = set()
         self.list_replica_for_quorum_select = []
         self.recent_result_shuttle_for_every_client = {}
+
+        self.all_wedged_responses = []
         ## RECONFIG VARIABLES - end
 
         output("Setting up the Olympus...")
@@ -208,7 +211,7 @@ class Olympus(process):
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
-        binary_current_state = pickle.dump(payload['core_data'])
+        binary_current_state = pickle.dumps(payload['running_state'])
         hash_current_state = HASHER(binary_current_state, encoder=nacl.encoding.HexEncoder)
 
         if(hash_current_state == self.caughtupMessageHash):
@@ -216,7 +219,7 @@ class Olympus(process):
                 self.currConfigSeqNo = self.currConfigSeqNo + 1
                 cleanReconfigVariables()
                 inithist_msg = {}
-                inithist_msg['current_state'] = payload['core_data']
+                inithist_msg['current_state'] = payload['running_state']
                 encrypted_msg = getEncryptedMsg(inithist_msg, self.replica_public_keys[str(each_replica)])
                 output('Message type: [inithist] Sending to: ' + str(each_replica))
                 send(('inithist', encrypted_msg), to= each_replica)
@@ -238,40 +241,47 @@ class Olympus(process):
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
+        output('*** - Till here 1 - ***')
         if(self.caughtupMessageHash == "DEFAULT"):
+            output('*** - Till here 2 - ***')
             self.caughtupMessageHash = payload['hash_current_state']
-        else:
-            if(self.get_running_state_send == False):
-                self.get_running_state_send = True
-                binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
-                signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
-                output('Message type: [get_running_state] sending to ' + str(sender))
-                send(('get_running_state', signed_get_running_state_msg), to= sender)
 
-        res_proof = payload['recent_result_proof_for_every_client']
-        client_name = res_proof[0][0]
-        result_shuttle = {}
-        if(client_name in self.recent_result_shuttle_for_every_client):
-            result_shuttle = recent_result_shuttle_for_every_client[client_name]
+        res_proofs = payload['recent_result_proof_for_every_client']
+        for client_name, each_res_proof in res_proofs.items():
+            result_shuttle_t = {}
+            if(client_name in self.recent_result_shuttle_for_every_client):
+                result_shuttle_t = recent_result_shuttle_for_every_client[client_name]
 
-        result_shuttle[str(sender)] = res_proof
-        self.recent_result_shuttle_for_every_client[client_name] = result_shuttle
+            output('length of quorum_replicas - ' + str(len(result_shuttle_t)))
+            result_shuttle_t[str(sender)] = each_res_proof
+            self.recent_result_shuttle_for_every_client[client_name] = result_shuttle_t
 
-        if(len(self.recent_result_shuttle_for_every_client[client_name]) == len(quorum_replicas)):
-            ## Received all result proofs from quorum of replicas and
-            seq_no = res_proof[0][1]
-            operation_name = res_proof[0][2]
-            result_c = res_proof[0][4]
-            clientResult = {}
-            clientResult['seqNo'] = seq_no
-            clientResult['client'] = client_name
-            clientResult['oper'] = operation_name
-            clientResult['result'] = result_c
-            clientResult['result_proof'] = self.recent_result_shuttle_for_every_client[client_name]
+            output('*** - Till here 4 - ***')
+            output('length of recent_result_shuttle_for_every_client[client_name] - ' + str(len(self.recent_result_shuttle_for_every_client[client_name])))
+            output('length of quorum_replicas - ' + str(len(self.quorum_replicas)))
+            if(len(self.recent_result_shuttle_for_every_client[client_name]) == len(self.quorum_replicas)):
+                if(self.get_running_state_send == False):
+                    output('*** - Till here 5 - ***')
+                    self.get_running_state_send = True
+                    binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
+                    signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
+                    output('Message type: [get_running_state] sending to ' + str(sender))
+                    send(('get_running_state', signed_get_running_state_msg), to= sender)
+                output('*** - Till here 6 - ***')
+                ## Received all result proofs from quorum of replicas and
+                seq_no = each_res_proof[0][1]
+                operation_name = each_res_proof[0][2]
+                result_c = each_res_proof[0][4]
+                clientResult = {}
+                clientResult['seqNo'] = seq_no
+                clientResult['client'] = client_name
+                clientResult['oper'] = operation_name
+                clientResult['result'] = result_c
+                clientResult['result_proof'] = self.recent_result_shuttle_for_every_client[client_name]
 
-            client_from_name = getClientFromName(client_name)
-            encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[client_from_name])
-            send(('result_message_from_olympus', encrypted_msg), to= client_from_name)
+                output('*** - Till here 7 - *** CLIENTNAME IS - ' + str(client_name))
+                encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(client_name)])
+                send(('result_message_from_olympus', encrypted_msg), to= client_name)
 
     def receive(msg=('wedged', encrypted_payload), from_= sender):
         output('Message type: [wedged] Received from: ' + str(sender))
@@ -280,21 +290,31 @@ class Olympus(process):
         payload = pickle.loads(plaintext)
 
         self.wedged_from_all[str(sender)] = payload['History']
+        self.all_wedged_responses.append([str(sender), payload['History']])
+
+        '''
+        if(len(wedged_from_all) >= (config['t'] + 2)):
+            list_quorum_replicas_combo = list(itertools.combinations(all_wedged_responses, (config['t'] + 1)))
+            self.quorum_replicas_combo.union(list_quorum_replicas_combo)
+        '''
+
         if((str(sender)) in self.quorum_replicas):
             print('Adding quorum wedged response')
             self.wedged_from_quorum[str(sender)] = payload['History']
 
         if(len(self.wedged_from_quorum) == len(self.quorum_replicas)):
             print('Received all quorum wedged replies')
-            # Received al the wedged replies from quorum. Start computing history now.
+            # Received all the wedged replies from quorum. Start computing history now.
             new_history = checkConsistency_n_getLongestHistory()
 
+            '''
             # SEND ABORT MSG to old replicas
             binary_abort_stmt = pickle.dumps('ABORT')
             signed_abort_stmt = self.olympus_signing_key.sign(binary_abort_stmt)
             for each_replica in self.replica_list:
                 output('Message type: [Abort] sending to ' + str(each_replica))
                 send(('abort', signed_abort_stmt), to= each_replica)
+            '''
 
             computeAndSendCatchUp(new_history)
 
@@ -333,26 +353,29 @@ class Olympus(process):
 
     def receive(msg=('reconfigure', encrypted_payload), from_= sender):
         output('Message type: [reconfigure] Received from: ' + str(sender))
-        if(self.reconfig_in_progress == False):
-            self.reconfig_in_progress = True
-            payload = {}
-            if(str(sender) in client_public_keys):
-                decrypt_box = Box(self.oly_private_key, client_public_keys[str(sender)])
-                plaintext = decrypt_box.decrypt(encrypted_payload)
-                payload = pickle.loads(plaintext)
-            else:
-                decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
-                plaintext = decrypt_box.decrypt(encrypted_payload)
-                payload = pickle.loads(plaintext)
-                if(validateReplicaReconfigRequest(payload)):
-                    output("Valid Reconfiguration request")
+        payload = {}
+        if(str(sender) in client_public_keys):
+            decrypt_box = Box(self.oly_private_key, client_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+        else:
+            decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+
+            if(validateReplicaReconfigRequest(payload)):
+                output("Valid Reconfiguration request")
+                if(self.reconfig_in_progress == False):
+                    self.reconfig_in_progress = True
                     binary_wedge_stmt = pickle.dumps('WEDGE')
                     signed_wedge_stmt = self.olympus_signing_key.sign(binary_wedge_stmt)
                     for replica in replica_list:
                         output('Message type: [Wedge] sending to ' + str(replica))
                         send(('wedge', signed_wedge_stmt), to= replica)
                 else:
-                    output("Invalid Reconfiguration Request")
+                    output('Reconfiguration is already in progress...!!')
+            else:
+                output("Invalid Reconfiguration Request")
 
     def validateReplicaReconfigRequest(payload):
         if(payload['replicaConfigSeqNo'] == self.currConfigSeqNo):

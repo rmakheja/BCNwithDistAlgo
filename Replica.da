@@ -41,7 +41,6 @@ class Replica(process):
         self.drop_res = [False]*config['num_clients']
         self.failures = extract_failures()
         self.HASHER = nacl.hash.sha256
-        self.replica_verify_keys = {}
         self.timer = config['nonhead_timeout']
         if(self == list_replicas[0]):
             timer = config['head_timeout']
@@ -71,7 +70,6 @@ class Replica(process):
         self.drop_res = [False]*config['num_clients']
         self.failures = extract_failures()
         self.HASHER = nacl.hash.sha256
-        self.replica_verify_keys = {}
         self.timer = config['nonhead_timeout']
         if(self == list_replicas[0]):
             timer = config['head_timeout']
@@ -123,6 +121,7 @@ class Replica(process):
             reply_msg = {}
             reply_msg['running_state'] = self.core_data
             encrypted_msg = getEncryptedMsg(reply_msg, self.oly_public_key)
+            output('Message type: [running_state] Sending to: ' + str(olympus))
             send(('running_state', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
              output("Signature verification failed for GET_RUNNING_STATE request.")
@@ -133,6 +132,7 @@ class Replica(process):
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
+        output("Number of catchup_orders received - " + str(len(payload['catchup_order_statements'])))
         for each_order_stmt in payload['catchup_order_statements']:
             operation = each_order_stmt[3]
             result = execute_actual_command(operation)
@@ -146,18 +146,19 @@ class Replica(process):
             binary_result_stmt = pickle.dumps(result_stmt)
             signed_result_stmt = self.signingKey.sign(binary_result_stmt)
 
-            recent_result_proof_for_c = [result_stmt, signed_result_stmt]
+            recent_result_proof_for_c = ([result_stmt, signed_result_stmt])
             clientName = each_order_stmt[1]
             self.recent_result_proof_for_every_client[clientName] = recent_result_proof_for_c
 
 
-        binary_current_state = pickle.dump(self.core_data)
+        binary_current_state = pickle.dumps(self.core_data)
         hash_current_state = HASHER(binary_current_state, encoder=nacl.encoding.HexEncoder)
 
         caughtup_msg = {}
         caughtup_msg['hash_current_state'] = hash_current_state
         caughtup_msg['recent_result_proof_for_every_client'] = self.recent_result_proof_for_every_client
         encrypted_msg = getEncryptedMsg(caughtup_msg, self.oly_public_key)
+        output('Message type: [caughtup] Sending to: ' + str(olympus))
         send(('caughtup', encrypted_msg), to= olympus)
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
