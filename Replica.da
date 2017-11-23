@@ -163,6 +163,12 @@ class Replica(process):
         if check_failures('result_shuttle', client_id) == False:
             return
         cache[str(payload['client']) + ' : ' + str(payload['seqNo'])] = payload
+
+        if(validateResultShuttle(payload) == False):
+            output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: Error in result shuttle-result proof validation ')
+            sendReconfigReq()
+            return
+
         ind -= 1
         if(ind >= 0):
             payload = inject_ch_res(client_id, payload, ind)
@@ -172,6 +178,35 @@ class Replica(process):
             output('S: [result_shuttle] F: Replica ' + getSelfId() + ' T: Replica' + str(ind) + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(payload['seqNo']) +' oper-' + payload['oper'])
 
             send(('result_shuttle', encrypted_result_shuttle, str(ind)), to= list_replicas[ind])
+
+    def validateResultShuttle(payload):
+        result_proof = payload['result_proof']
+        result = payload['result']
+        operation = payload['oper']
+        binary_result = pickle.dumps(result)
+        cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+        mismatches = 0;
+        for replicaName, result_proof_i in result_proof.items():
+            curr_signed_result_p = result_proof_i[1]
+            try:
+                self.replica_verify_keys[replicaName].verify(curr_signed_result_p)
+            except nacl.exceptions.BadSignatureError:
+                mismatches += 1
+                if(mismatches > int(config['t'])):
+                    output('E: [Result Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + operation )
+                    return False
+
+        noOfmatches = 0;
+        for replicaName, res_stmt in result_proof.items():
+            if(res_stmt[0][3] == cur_hash and res_stmt[0][2] == operation):
+                noOfmatches += 1
+
+        if(noOfmatches < int(config['t']) + 1):
+            output('E: [Result Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - Less than t+1 result hash/operation match for operation: ' + operation)
+            return False
+
+        output('I: [Result Proof Validation] [SUCCESS] [Replica ' + getSelfId() +'] - for operation: ' + operation )
+        return True
 
     def receive(msg=('execute', encrypted_payload, replica_index), from_= sender):
 
