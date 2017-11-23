@@ -8,9 +8,10 @@ import nacl
 import nacl.encoding
 import nacl.hash
 import nacl.signing
-
+import time
 class Replica(process):
     def setup(olympus: Olympus, list_clients: list, list_replicas: list, config: set, currConfigSeqNo: int):
+        output('currConfigSeqNo ' + str(currConfigSeqNo))
         output("R: [Setup] Replica " + getSelfId() + " : " + str(self))
         self.logger = logging.getLogger(__name__)
         self.history = {}
@@ -32,7 +33,6 @@ class Replica(process):
         self.m_shuttle = [-1]*config['num_clients']
         self.m_r_shuttle = [-1]*config['num_clients']
         self.m_wedge_request = -1
-        self.m_new_conf = -1
         self.m_chkpnt = -1
         self.m_chkpnt_completed = -1
         self.m_running_state = -1
@@ -53,7 +53,7 @@ class Replica(process):
         self.checkpoints = []
         self.checkpoint_complete = True
         self.recent_result_proof_for_every_client = {}
-        if check_failures('new_conf', -1) == False:
+        if check_failures('new_config', -1) == False:
             return
         self.retrans_req = []
 
@@ -94,9 +94,9 @@ class Replica(process):
             wedged_response = {}
             wedged_response['History'] = self.history
 
-            output('S: [wedged] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: history len - ' + str(len(self.history)))
             inject_trunc(wedged_response)
             encrypted_msg = getEncryptedMsg(wedged_response, self.oly_public_key)
+            output('S: [wedged] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: history len - ' + str(len(self.history)))
             send(('wedged', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
             output('I: Signature verification failed for WEDGE request at Replica ' + getSelfId())
@@ -151,7 +151,7 @@ class Replica(process):
         caughtup_msg['hash_current_state'] = hash_current_state
         caughtup_msg['recent_result_proof_for_every_client'] = self.recent_result_proof_for_every_client
         encrypted_msg = getEncryptedMsg(caughtup_msg, self.oly_public_key)
-        output('Message type: [caughtup] Sending to: ' + str(olympus) + ' sending ' + str(caughtup_msg))
+        output('Message type: [caughtup] Sending to: ' + str(olympus))
         send(('caughtup', encrypted_msg), to= olympus)
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
@@ -427,6 +427,7 @@ class Replica(process):
 
     def check_failures(type, client_id):
         failure_key = ''
+
         if type == 'client_request':
             self.m_client_req[client_id] += 1
             failure_key =  'client_request(' + str(client_id) + ',' + str(self.m_client_req[client_id]) + ')'
@@ -443,8 +444,7 @@ class Replica(process):
             self.m_wedge_request += 1
             failure_key = 'wedge_request(' + str(self.m_wedge_request) + ')'
         elif type == 'new_config':
-            self.m_new_conf += 1
-            failure_key = 'new_configuration(' + str(self.m_new_conf) + ')'
+            failure_key = 'new_configuration(' + str(self.currConfigSeqNo) + ')'
         elif type == 'chkpnt':
             self.m_chkpnt += 1
             failure_key = 'checkpoint(' + str(self.m_chkpnt) + ')'
@@ -469,9 +469,9 @@ class Replica(process):
                     self.drop_res[client_id] = True
                 elif failure == 'truncate_history()':
                     self.trunc = int(failure[17:-1])
-                elif failure.startsWith('sleep('):
+                elif failure.startswith('sleep('):
                     t = int(failure[6:-1])
-                    sleep(t/1000)
+                    time.sleep(t/1000)
                 elif failure == 'drop()':
                     return False
                 elif failure == 'increment_slot()':
@@ -485,8 +485,8 @@ class Replica(process):
                     self.invalidResultSig = True
                 elif failure == 'drop_checkpt_stmts()':
                     self.drop_chkpnts = True
-                elif failure == 'crash':
-                    os._exit(-1)
+                elif failure == 'crash()':
+                    self.terminate = True
         return True
 
     def extract_failures() :

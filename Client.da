@@ -10,7 +10,7 @@ class Client(process):
         output("Setting up the Client...")
         self.logger = logging.getLogger(__name__)
         self.successFlag = False
-        self.resultList = []
+        self.resultList = {}
         self.seqNo = -1
         self.foundResponse = False
         self.responsesCount = 0
@@ -29,8 +29,9 @@ class Client(process):
         result = pickle.loads(plaintext)
 
         output('Received valid result: ' + str(result["result"]) + ' for operation: ' + str(result["oper"]))
-        resultList.append(result['result'])
-        successFlag = True
+        if(int(result['seqNo']) not in resultList):
+            resultList[int(result['seqNo'])] = result['result']
+            successFlag = True
 
     '''
     def receive(msg=('config_changed', config), from_= sender):
@@ -54,7 +55,8 @@ class Client(process):
         if self.seqNo == int(result['seqNo']) and result['client'] == self:
             if is_valid_response(result):
                 output('Received valid result: ' + str(result["result"]) + ' for operation: ' + str(result["oper"]))
-                resultList.append(result['result'])
+                #resultList.append(result['result'])
+                resultList[int(result['seqNo'])] = result['result']
                 successFlag = True
             else:
                 output('Result Validation falied for seqNo: ' + str(result["seqNo"]) + ' oper: ' + result["oper"] + '...Ask for reconfig.')
@@ -70,7 +72,8 @@ class Client(process):
             if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['t'] + 1:
                 responsesCount += 1
                 if is_valid_response(result) :
-                    resultList.append(result['result'])
+                    #resultList.append(result['result'])
+                    resultList[int(result['seqNo'])] = result['result']
                     foundResponse = True
                 else :
                     invalidResponses += 1
@@ -102,14 +105,14 @@ class Client(process):
             output('Message type: [execute] Sending to: ' + str(self.curr_config['head_replica']))
             send(('execute', encrypted_msg, 0), to= self.curr_config['head_replica'])
             #send(('execute', msg, 0), to= self.curr_config['head_replica'])
-            if await(successFlag):
+            if await(self.seqNo in resultList):
                 print('SuccessFlag is set True')
                 #output('Received result successfully verified...Result is')
                 #output(resultList[self.seqNo])
             elif timeout(sys_config['client_timeout']):
                 output('Timeout...Executing retransmission...')
                 execute_retransmission(msg);
-                if await(foundResponse):
+                if await(self.seqNo in resultList):
                     print('foundResponse set True')
                     #output('Received result successfully verified...Result is')
                     #output(resultList[self.seqNo])
@@ -157,7 +160,7 @@ class Client(process):
         self.invalidResponses = 0
         send(('is_reconfig_in_progress'), to= olympus)
         await(not(self.reconfig_in_progress))
-        if(successFlag == True):
+        if(self.seqNo in resultList):
             return
         for i in range(0, len(curr_config['replicas'])):
             encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['replicas'][i])])
@@ -188,23 +191,28 @@ class Client(process):
                 workload = workloads[client_id]
                 if index < len(workload):
                     res = execute_actual_command(workload[index])
-                    output('o: '+workload[index] + ' res: ', res)
+                    re = 'o: '+workload[index] + ' expected res: '+ res
                     if client_id == self_id and (index >= len(resultList) or res != resultList[index]):
                         if index < len(resultList) :
                             output('Invalid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
                         else :
-                            output('result not present')
+                            output(re + ' received res: result not present')
+                    else :
+                        output(re + ' received res: ' + resultList[index])
     def execute_actual_command(operation):
+
         result = ""
-        ## execute operation on current state
+
         splits = operation.split("'")
         if(operation[0] == 'p'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
             key = operation[4:ind].strip('\'').strip()
             val = operation[ind+1 : ind1].strip('\'')
+
             core_data[key] = val
             result = "OK"
+
         elif(operation[0] == 'g'):
             ind = operation.index('(')+1
             ind1 = len(operation) - 1
@@ -213,6 +221,7 @@ class Client(process):
                 result = core_data[key]
             else:
                 result = ""
+
         elif(operation[0] == 'a'):
             ind = operation.index(',')
             ind1 = len(operation) - 1
@@ -223,17 +232,21 @@ class Client(process):
                 result = "OK"
             else:
                 result = "fail"
+
         elif(operation[0] == 's'):
             ind = operation.index(',')
             ind1 = len(operation) - 2
             key = operation[6:ind].strip('\'').strip()
             ran = operation[ind+2 : ind1]
             start_end = ran.split(':')
+
             if(key in core_data and (int(start_end[0]) >= 0) and (int(start_end[1]) <= len(core_data[key]))):
                 core_data[key] = core_data[key][int(start_end[0]):int(start_end[1])]
                 result = "OK"
             else:
                 result = "Fail"
+
         else:
-            result = "fail"
+            result = "Fail"
+
         return result
