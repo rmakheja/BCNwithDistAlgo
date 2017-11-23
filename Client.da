@@ -184,11 +184,15 @@ class Client(process):
         return d
 
     def validate_test_case():
+        output('***LEN of resultList - ' + str(len(resultList)))
         workloads = sys_config['workload']
+        output('***LEN of workloads - ' + str(len(workloads)))
         self_id = str(self)
+        output('***Self ID - ' + self_id)
         for index in range (0, len(workloads[self_id])):
             for client_id in workloads:
                 workload = workloads[client_id]
+                output('***index is - ' + str(index))
                 if index < len(workload):
                     res = execute_actual_command(workload[index])
                     re = 'o: '+workload[index] + ' expected res: '+ res
@@ -198,7 +202,11 @@ class Client(process):
                         else :
                             output(re + ' received res: result not present')
                     else :
-                        output(re + ' received res: ' + resultList[index])
+                        if index in resultList:
+                            output(re + ' received  res: ' + resultList[index])
+                        else :
+                            output(re + ' received  res: ' + resultList[index])
+
     def execute_actual_command(operation):
 
         result = ""
