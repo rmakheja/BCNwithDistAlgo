@@ -1,12 +1,13 @@
 
-PLATFORM.  describe the software platform(s) used in your testing, including DistAlgo version, Python implementation (normally CPython) and version, operating system, and types of hosts (e.g., laptop (without any VMs), VMs running on VMWare Workstation Player on a laptop, VMs on Google Cloud Compute Engine, VMs on Amazon Web Services EC2).  for testcases involving multiple hosts, specify the platform for each host.  [2017-10-05 added this]
+PLATFORM.  
+
 We are using python version 3.5.2 with DistAlgo version 1.0.9.
 We are using python-library PyNaCl for computing digital signatures, computing hashes and sending encrypted messages
 between different node processes. We have used VMs on Google Cloud Platform for testing on multiple hosts.
 Operating system used on local laptops were Darwin Kernel Version 16.4.0.
 Operating system used on Google Clound platform VMs were Linux instance-4 4.9.0-3-amd64 SMP Debian 4.9.30-2+deb9u5 (2017-09-19) x86_64 GNU/Linux
 
-INSTRUCTIONS.  instructions to build and run your system.  the instructions should not rely on an IDE.  provide a detailed sequence of commands, a shell script, or something similar.  include a specific example of the command(s) to run a selected test case.
+INSTRUCTIONS.  
 First, we start all the slave nodes with -D flag.
 Once all slave nodes are up and running, we start the masterNode that creates and assigns all the processes to those slave nodes.
 
@@ -49,6 +50,11 @@ The pseudorandom workload genrator generates a mixed workload. It supports both 
 
 BUGS AND LIMITATIONS.  a list of all known bugs in and limitations of your code.
 
+1. Sometimes the system goes in infinite loop for get_running_state calling running state again and again due to wrong random quorum selection .
+So need to restart the code so that right quorum selection could be done. This happens rarely though.
+
+2. Client doesn't send reconig request because be have designed client to be a passive stackholder in the desgin. Replicas makes sure in detecting the problem or misbehaviour and triggering a reconfig.
+
 CONTRIBUTIONS.  
 
 Sanket Dige
@@ -60,7 +66,9 @@ Sanket Dige
 5) (Replica)Dictionary object: support put, get, slice, append
 6) Failure free flow of messages 
 7) Workload extraction from config file
-
+8) Reconfiguration with wedge, wedged, longest history then create and seed new history state on replicas
+9) Olympus sends the information to client whenever change in configuration is success.
+10) Catchup - caughtup request handling with get_running_state
 
 Rashmi Makheja
 
@@ -71,7 +79,8 @@ Rashmi Makheja
 5) (Client) Generate request sequence from workload
 6) (Client) Validating test case :check that dictionary contains expected content at end of test case
 7) Documentation and test case generation
-
+8) Chekcpointing initiate periodically and start checkpoint shuttle
+9) Validate checkpoint shuttle and delete history prefix
 
 
 
@@ -86,14 +95,14 @@ Client.da ==> Client code
 
 CODE SIZE.  
 
-__init__.da ==>  Algorithm - 127 Other - 22 Total - 149
-Olympus.da 	==>	 Algorithm - 20 Other - 68 Total - 88
-Replica.da  ==>  Algorithm - 230 Other - 217 Total - 447
-Client.da 	==>  Algorithm - 80 Other 108 - Total - 188
+__init__.da ==>  Algorithm - 140 Other - 33 Total - 173
+Olympus.da 	==>	 Algorithm - 257 Other - 264 Total - 521
+Replica.da  ==>  Algorithm - 476 Other - 279 Total - 755
+Client.da 	==>  Algorithm - 127 Other 133 - Total - 260
 
 Used CLOC https://github.com/AlDanial/cloc) to get the lines of code. Manually calculated the 'other' lines
 
-Roughly 80% of the "algorithm" code is for the algorithm itself
+Roughly 70% of the "algorithm" code is for the algorithm itself
 
 LANGUAGE FEATURE USAGE. 
 
@@ -104,3 +113,13 @@ Aggregations					==> None
 Quantifications					==> None
 
 OTHER COMMENTS
+
+Whenever we initiate the reconfiguration of the replicas, a stable state from consistent quorum of replicas is computed and new set of replicas are created. This new set of replicas are seeded with the newly computed stable state and old replicas are aborted. We reset all the paramters in replicas
+keeping eveything clean expect it state changes to stable state.
+
+PERFORMANCE COMPARISION BETWEEN RAFT vs BCR
+
+Test case used for perfomace comparision - 'perform900'
+
+BCR time - elapsed time (seconds):  18.822170972824097
+RAFT time - elapsed time (seconds):  8.799721002578735
