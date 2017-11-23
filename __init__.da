@@ -28,67 +28,6 @@ def main1():
     await(terminate)
 '''
 
-def main():
-    terminate = False
-    if(len(sys.argv) != 2):
-        print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
-    else:
-        print("Selected config file is - " + sys.argv[1])
-
-        conf = read_config()
-        all_workloads = {}
-        current_workload_id = sys.argv[1]
-        hosts = get_hosts_from_config(conf['hosts'])
-        client_host_index = get_hosts_from_config(conf['client_hosts'])
-        replica_host_index = get_hosts_from_config(conf['replica_hosts'])
-        replicaHostIPs = []
-        clientHostIPs = []
-        for i in range(0, len(replica_host_index)):
-            replicaHostIPs.append(hosts[int(replica_host_index[i])])
-        conf['replicaHostIPs'] = replicaHostIPs
-        for i in range(0, len(client_host_index)):
-            clientHostIPs.append(hosts[int(client_host_index[i])])
-        olympusHostIP = ""
-        if('olympus_host' in conf):
-            olympusHostIP = hosts[int(conf['olympus_host'])]
-        else:
-            # Else take first host as default olympus
-            olympusHostIP = hosts[0]
-        no_clients = int(conf['num_clients'])
-        #olympus = new(o.Olympus, num=1)
-        #olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
-        olympus = new(o.Olympus, num=1, at="OlympusNode@"+olympusHostIP)
-
-        #olympus = new(o.Olympus, num=1)
-        #client_set = new(c.Client, num=no_clients)
-        #client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
-        list_client = []
-        for i in range(0, len(clientHostIPs)):
-            client = new(c.Client, num=1, at="ClientNode@"+clientHostIPs[i])
-            list_client.append(client.pop())
-        #print(list_client)
-
-        #client_set = new(c.Client, num=no_clients)
-        for i in range(0, len(list_client)):
-            workloads = []
-            curr_workload = "workload[" + str(i) + "]"
-            workloads = conf[curr_workload].split(';')
-            for wIndex in range(0, len(workloads)):
-                oper = workloads[wIndex].strip()
-                if oper.startswith('pseudorandom', 0):
-                    workloads = pseudorandom(oper);
-                else :
-                    workloads[wIndex] = oper
-            all_workloads[str(list_client[i])] = workloads
-        conf['workload'] = all_workloads
-
-        setup(olympus, (list_client, conf))
-        setup(list_client, (olympus, conf))
-
-        start(olympus)
-        start(list_client)
-        await(terminate)
-
 def read_config():
     config = {}
     with open(sys.argv[1], 'r') as f:
@@ -170,3 +109,64 @@ def pseudorandom(oper):
                 val = random.randint(0, 10)
             workloads.append('append(' + str(key) + ',' + str(val) + ')')
     return workloads
+
+def main():
+    terminate = False
+    if(len(sys.argv) != 2):
+        print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
+    else:
+        print("Selected config file is - " + sys.argv[1])
+
+        conf = read_config()
+        all_workloads = {}
+        current_workload_id = sys.argv[1]
+        hosts = get_hosts_from_config(conf['hosts'])
+        client_host_index = get_hosts_from_config(conf['client_hosts'])
+        replica_host_index = get_hosts_from_config(conf['replica_hosts'])
+        replicaHostIPs = []
+        clientHostIPs = []
+        for i in range(0, len(replica_host_index)):
+            replicaHostIPs.append(hosts[int(replica_host_index[i])])
+        conf['replicaHostIPs'] = replicaHostIPs
+        for i in range(0, len(client_host_index)):
+            clientHostIPs.append(hosts[int(client_host_index[i])])
+        olympusHostIP = ""
+        if('olympus_host' in conf):
+            olympusHostIP = hosts[int(conf['olympus_host'])]
+        else:
+            # Else take first host as default olympus
+            olympusHostIP = hosts[0]
+        no_clients = int(conf['num_clients'])
+        #olympus = new(o.Olympus, num=1)
+        #olympus = new(o.Olympus, num=1, at="OlympusNode@127.0.0.1")
+        olympus = new(o.Olympus, num=1, at="OlympusNode@"+olympusHostIP)
+
+        #olympus = new(o.Olympus, num=1)
+        #client_set = new(c.Client, num=no_clients)
+        #client_set = new(c.Client, num=no_clients, at="ClientNode@127.0.0.1")
+        list_client = []
+        for i in range(0, len(clientHostIPs)):
+            client = new(c.Client, num=1, at="ClientNode@"+clientHostIPs[i])
+            list_client.append(client.pop())
+        #print(list_client)
+
+        #client_set = new(c.Client, num=no_clients)
+        for i in range(0, len(list_client)):
+            workloads = []
+            curr_workload = "workload[" + str(i) + "]"
+            workloads = conf[curr_workload].split(';')
+            for wIndex in range(0, len(workloads)):
+                oper = workloads[wIndex].strip()
+                if oper.startswith('pseudorandom', 0):
+                    workloads = pseudorandom(oper);
+                else :
+                    workloads[wIndex] = oper
+            all_workloads[str(list_client[i])] = workloads
+        conf['workload'] = all_workloads
+
+        setup(olympus, (list_client, conf))
+        setup(list_client, (olympus, conf))
+
+        start(olympus)
+        start(list_client)
+        await(terminate)

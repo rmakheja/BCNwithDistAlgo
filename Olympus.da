@@ -293,6 +293,7 @@ class Olympus(process):
 
             for each_client in list_clients:
                 sendCurrentConfiguration(each_client)
+                #sendReconfigStatus(each_client)
         else:
             new_selected_replica_str = numpy.random.choice(quorum_replicas, size=1)
             new_selected_replica = getReplicaFromName(new_selected_replica_str)
@@ -300,6 +301,22 @@ class Olympus(process):
             signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
             output('Message type: [get_running_state] sending to ' + str(new_selected_replica))
             send(('get_running_state', signed_get_running_state_msg), to= new_selected_replica)
+
+    '''
+    def sendReconfigStatus(receiver):
+        clientResult = {}
+        clientResult['reconfig_in_progress'] = self.reconfig_in_progress
+
+        encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(receiver)])
+        send(('config_changed', encrypted_msg), to= receiver)
+    '''
+
+    def receive(msg=('is_reconfig_in_progress'), from_= sender):
+        clientResult = {}
+        clientResult['reconfig_in_progress'] = self.reconfig_in_progress
+
+        encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(sender)])
+        send(('is_reconfig_in_progress_response', encrypted_msg), to= sender)
 
     def receive(msg=('caughtup', encrypted_payload), from_= sender):
         output('Message type: [caughtup] Received from: ' + str(sender))
