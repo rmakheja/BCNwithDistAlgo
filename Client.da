@@ -4,11 +4,13 @@ import nacl
 import nacl.utils
 from nacl.public import PrivateKey, Box
 import logging
+import time
 
 class Client(process):
     def setup(olympus: Olympus, sys_config: set):
         output("Setting up the Client...")
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
         self.successFlag = False
         self.resultList = {}
         self.seqNo = -1
@@ -97,11 +99,11 @@ class Client(process):
             seqNo += 1;
             successFlag = False;
             msg = {'seqNo': self.seqNo, 'oper': oper, 'client': self}
-            encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['head_replica'])])
 
+            self.reconfig_in_progress = True
             send(('is_reconfig_in_progress'), to= olympus)
             await(not(self.reconfig_in_progress))
-
+            encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['head_replica'])])
             output('Message type: [execute] Sending to: ' + str(self.curr_config['head_replica']))
             send(('execute', encrypted_msg, 0), to= self.curr_config['head_replica'])
             #send(('execute', msg, 0), to= self.curr_config['head_replica'])
@@ -146,7 +148,7 @@ class Client(process):
         return False
 
     def receive(msg=('is_reconfig_in_progress_response', encrypted_result), from_= sender):
-        output('Message type: [is_reconfig_not_in_progress_response] Received from: ' + str(sender))
+        output('Message type: [is_reconfig_in_progress_response] Received from: ' + str(sender))
         decrypt_box = Box(curr_config['client_private_key'], curr_config['oly_public_key'])
         plaintext = decrypt_box.decrypt(encrypted_result)
         result = pickle.loads(plaintext)
@@ -158,6 +160,7 @@ class Client(process):
         self.foundResponse = False
         self.responsesCount = 0
         self.invalidResponses = 0
+        self.reconfig_in_progress = True
         send(('is_reconfig_in_progress'), to= olympus)
         await(not(self.reconfig_in_progress))
         if(self.seqNo in resultList):
@@ -168,12 +171,15 @@ class Client(process):
             send(('retrans', encrypted_msg, str(i)), to= curr_config['replicas'][i])
 
     def run():
+        start_time = time.time()
         fetch_config();
         await(not reconfig_in_progress)
         execute_operation()
         output('Validating Test cases ...')
+        end_time = time.time()
         validate_test_case()
         output('Terminating')
+        output("elapsed time (seconds): ", end_time - start_time)
 
     def dict_to_binary(the_dict):
         binary = pickle.dumps(the_dict)
@@ -184,26 +190,19 @@ class Client(process):
         return d
 
     def validate_test_case():
-        output('***LEN of resultList - ' + str(len(resultList)))
         workloads = sys_config['workload']
-        output('***LEN of workloads - ' + str(len(workloads)))
         self_id = str(self)
-        output('***Self ID - ' + self_id)
         for index in range (0, len(workloads[self_id])):
             for client_id in workloads:
                 workload = workloads[client_id]
-                output('***index is - ' + str(index))
                 if index < len(workload):
                     res = execute_actual_command(workload[index])
                     re = 'o: '+workload[index] + ' expected res: '+ res
-                    if client_id == self_id and (index >= len(resultList) or res != resultList[index]):
-                        if index < len(resultList) :
+                    if client_id == self_id :
+                        if index >= len(resultList):
+                             output(re + ' received res: result not received')
+                        elif res != resultList[index]:
                             output('Invalid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
-                        else :
-                            output(re + ' received res: result not present')
-                    else :
-                        if index in resultList:
-                            output(re + ' received  res: ' + resultList[index])
                         else :
                             output(re + ' received  res: ' + resultList[index])
 
