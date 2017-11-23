@@ -19,7 +19,7 @@ class Olympus(process):
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
         self.HASHER = nacl.hash.sha256
-        self.currConfigSeqNo = 0
+        self.currConfigSeqNo = -1
 
         ## RECONFIG VARIABLES - start
         self.reconfig_in_progress = False
@@ -262,7 +262,7 @@ class Olympus(process):
             if(each_quorum_r in list_replica_for_quorum_select_t):
                 list_replica_for_quorum_select_t.remove(each_quorum_r)
 
-
+        self.currConfigSeqNo += 1
         self.list_replica_for_quorum_select = list_replica_for_quorum_select_t
         setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
         start(list_replica)
@@ -306,7 +306,6 @@ class Olympus(process):
             ## Abort all old replicas
             abortOld_createNewReplicas()
             for each_replica in self.replica_list:
-                self.currConfigSeqNo = self.currConfigSeqNo + 1
                 cleanReconfigVariables()
                 inithist_msg = {}
                 inithist_msg['current_state'] = payload['running_state']
@@ -435,6 +434,7 @@ class Olympus(process):
                     # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
                     operations_to_catchup.append(self.longest_history_slot_orderstatement_map[sample_slot_no])
 
+            #output("****REPLICA is " + str(replica_key) + " and type is " + str(type(replica_key)))
             catchup_msg = {}
             catchup_msg['catchup_order_statements'] = operations_to_catchup
             encrypted_msg = getEncryptedMsg(catchup_msg, self.replica_public_keys[replica_key])
