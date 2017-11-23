@@ -55,49 +55,14 @@ class Replica(process):
         self.recent_result_proof_for_every_client = {}
         if check_failures('new_conf', -1) == False:
             return
-
+        self.retrans_req = []
 
     def receive(msg=('inithist', encrypted_payload), from_= sender):
         output('Message type: [inithist] Received from: ' + str(sender))
         decrypt_box = Box(self.privateKey, self.oly_public_key)
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
-
-        if check_failures('new_conf', -1) == False:
-            return
-
-        self.history = {}
-        self.cache = {}
-        self.slot_no = 0
         self.core_data = payload['current_state']
-        self.isImmutable = False
-        self.m_client_req = [-1]*config['num_clients']
-        self.m_fwd_req = [-1]*config['num_clients']
-        self.m_shuttle = [-1]*config['num_clients']
-        self.m_r_shuttle = [-1]*config['num_clients']
-        self.m_wedge_request = -1
-        self.m_new_conf = -1
-        self.m_chkpnt = -1
-        self.m_chkpnt_completed = -1
-        self.m_running_state = -1
-        self.m_catch_up = -1
-        self.ch_oper = [False]*config['num_clients']
-        self.ch_res = [False]*config['num_clients']
-        self.drop_res = [False]*config['num_clients']
-        self.trunc = 0
-        self.invalidOrderSig = False
-        self.invalidResultSig = False
-        self.drop_chkpnts = False
-        self.failures = extract_failures()
-        self.HASHER = nacl.hash.sha256
-        self.timer = config['nonhead_timeout']
-        if(self == list_replicas[0]):
-            timer = config['head_timeout']
-        self.checkpoint_len = 5
-        self.checkpoints = []
-        self.checkpoint_complete = True
-        self.recent_result_proof_for_every_client = {}
-
 
     def receive(msg=('keys', payload), from_= sender):
         output('R: [keys] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
@@ -156,9 +121,10 @@ class Replica(process):
         decrypt_box = Box(self.privateKey, self.oly_public_key)
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
+
         if check_failures('catchup', -1) == False:
             return
-        output("Number of catchup_orders received - " + str(len(payload['catchup_order_statements'])))
+        output("The catchup_orders received are [" + str(len(payload['catchup_order_statements'])) + "] - " + str(payload['catchup_order_statements']))
         for each_order_stmt in payload['catchup_order_statements']:
             operation = each_order_stmt[3]
             result = execute_actual_command(operation)
@@ -174,6 +140,7 @@ class Replica(process):
 
             recent_result_proof_for_c = ([result_stmt, signed_result_stmt])
             clientName = each_order_stmt[1]
+            output("*** CLIENT-NAME - " + str(clientName))
             self.recent_result_proof_for_every_client[clientName] = recent_result_proof_for_c
 
 
@@ -184,7 +151,7 @@ class Replica(process):
         caughtup_msg['hash_current_state'] = hash_current_state
         caughtup_msg['recent_result_proof_for_every_client'] = self.recent_result_proof_for_every_client
         encrypted_msg = getEncryptedMsg(caughtup_msg, self.oly_public_key)
-        output('Message type: [caughtup] Sending to: ' + str(olympus))
+        output('Message type: [caughtup] Sending to: ' + str(olympus) + ' sending ' + str(caughtup_msg))
         send(('caughtup', encrypted_msg), to= olympus)
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
@@ -247,7 +214,6 @@ class Replica(process):
             order_proof = {} if head else order_shuttle['order_proof']
             result_proof =  {} if head else order_shuttle['result_proof']
 
-
             if head or (validate_order_proof(order_shuttle["order_proof"], order_stmt) and validate_result_proof(result_proof, result, order_shuttle['oper'])):
                 self.history[order_shuttle['slot_no']] = list(order_stmt)
                 if not isTail(ind):
@@ -295,8 +261,6 @@ class Replica(process):
             output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +']- Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
             return False
 
-        binary_order_stmt = pickle.dumps(order_stmt)
-        signed_order_stmt = self.signingKey.sign(binary_order_stmt)
         for replicaName, each_order_p in order_proof.items():
             curr_signed_order_p = each_order_p[1]
             try:
@@ -305,10 +269,16 @@ class Replica(process):
                 output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
                 return False
 
+            if(each_order_p[0] != order_stmt):
+                output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+                return False
+
+        '''
         for replicaName, each_order_p in order_proof.items():
             if(each_order_p[0] != order_stmt):
                 output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
-                return False;
+                return False
+        '''
 
         output('I: [SUCCESS] [Order Proof Validation] [Replica ' + getSelfId() +'] - operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
         return True
@@ -426,6 +396,10 @@ class Replica(process):
                     if(stmt[1] == command['client'] and stmt[2] == command['seqNo']):
                         foundSlot = True
                 if not foundSlot:
+                    cur_stmt = [command['client'], command['seqNo']]
+                    if cur_stmt in retrans_req:
+                        return
+                    retrans_req.append(cur_stmt)
                     output('S: [execute] F: Replica '+ getSelfId() + ' T: Head I: Retrans req, Client ' + str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper -' + command['oper'])
 
                     encrypted_command = getEncryptedMsg(command, self.replica_public_keys[str(self.list_replicas[0])])
@@ -447,7 +421,7 @@ class Replica(process):
                 output('S: [retrans_res] [received shuttle] F: Replica ' + getSelfId() + ' T: Client ' + str(client_id) + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
 
                 send(('retrans_res', encrypted_cache), to= command['client'])
-            elif timeout(self.timer):
+            elif timeout(self.timer * 10):
                     output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: [timer expired] Retransmission Failed for client Id - '+ str(client_id) + ' seqNo - '+ str(command['seqNo']) +' oper-' + command['oper'])
                     sendReconfigReq()
 

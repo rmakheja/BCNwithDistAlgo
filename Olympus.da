@@ -40,6 +40,8 @@ class Olympus(process):
         self.oly_public_key = oly_priv_key.public_key
         self.checkpoint_slot_no = 0
 
+        self.replica_list = []
+
         self.olympus_signing_key = nacl.signing.SigningKey.generate()
         self.olympus_verify_key = self.olympus_signing_key.verify_key
 
@@ -51,6 +53,13 @@ class Olympus(process):
         self.client_public_keys = {}
         self.caughtupMessageHash = "DEFAULT"
 
+        for client in list_clients:
+            priv_key = PrivateKey.generate()
+            self.client_public_keys[str(client)] = priv_key.public_key
+            self.client_private_keys[str(client)] = priv_key
+
+        createAndSetupReplicas()
+        '''
         ## Create replica processes here
         no_replicas = int(config["num_replicas"])
         list_replica = []
@@ -72,11 +81,6 @@ class Olympus(process):
         setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
         start(list_replica)
         self.replica_list = list_replica
-
-        for client in list_clients:
-            priv_key = PrivateKey.generate()
-            self.client_public_keys[str(client)] = priv_key.public_key
-            self.client_private_keys[str(client)] = priv_key
 
         for replica in replica_list:
             priv_key = PrivateKey.generate()
@@ -102,25 +106,28 @@ class Olympus(process):
 
         output("Replica List: " + str(replica_list))
         output("Client List: " + str(list_clients))
+
+        '''
         ## Olympus terminating flag
         self.terminate = False
 
-    def receive(msg=('current_configuration'), from_= sender):
-        sender_id = str(sender)
-        ##output({'message':"received MSG_CLIENT_INIT_RESPONSE (current configuration) from Olympus", 'name':'sender_id'})
-        output('Message type: [current_configuration] Received from: ' + sender_id)
+    def sendCurrentConfiguration(sender):
+        output('Message type: [current_configuration] Received from: ' + str(sender))
         client_config = {}
         client_config["currConfigSeqNo"] = self.currConfigSeqNo
         client_config["oly_public_key"] = self.oly_public_key
         client_config["replica_public_keys"] = self.replica_public_keys
-        client_config["client_public_key"] = self.client_public_keys[sender_id]
-        client_config["client_private_key"] = self.client_private_keys[sender_id]
+        client_config["client_public_key"] = self.client_public_keys[str(sender)]
+        client_config["client_private_key"] = self.client_private_keys[str(sender)]
         client_config["head_replica"] = self.replica_list[0]
         client_config["tail_replica"] = self.replica_list[len(replica_list)-1]
         client_config["replicas"] = self.replica_list
         client_config["replica_verify_keys"] = self.replica_verify_keys
-        output('Message type: [cur_conf] Sending to: ' + sender_id)
+        output('Message type: [cur_conf] Sending to: ' + str(sender))
         send(('cur_conf', client_config), to= sender)
+
+    def receive(msg=('current_configuration'), from_= sender):
+        sendCurrentConfiguration(sender)
 
     def getLongestHistory():
         slot_seqNo_dict = {}
@@ -205,6 +212,64 @@ class Olympus(process):
         self.list_replica_for_quorum_select = []
         self.recent_result_shuttle_for_every_client = {}
 
+    def abortOld_createNewReplicas():
+        binary_abort_stmt = pickle.dumps('ABORT')
+        signed_abort_stmt = self.olympus_signing_key.sign(binary_abort_stmt)
+        for each_replica in self.replica_list:
+            output('Message type: [Abort] sending to ' + str(each_replica))
+            send(('abort', signed_abort_stmt), to= each_replica)
+
+        createAndSetupReplicas()
+
+    def createAndSetupReplicas():
+        ## Create replica processes here
+        output("Creating and setting up new Replicas..!")
+        no_replicas = int(config["num_replicas"])
+        list_replica = []
+        list_replica_for_quorum_select_t = []
+        for i in range(0, len(config['replicaHostIPs'])):
+            replica = new(r.Replica, num=1, at="ReplicaNode@"+config['replicaHostIPs'][i])
+            replica_obj = replica.pop()
+            list_replica.append(replica_obj)
+            list_replica_for_quorum_select_t.append(str(replica_obj))
+
+        self.quorum_replicas = list(numpy.random.choice(list_replica_for_quorum_select_t, size=(int(config['t']) + 1), replace=False))
+        # Delete the current quorum_replicas from list_replica for future use
+        for each_quorum_r in self.quorum_replicas:
+            if(each_quorum_r in list_replica_for_quorum_select_t):
+                list_replica_for_quorum_select_t.remove(each_quorum_r)
+
+
+        self.list_replica_for_quorum_select = list_replica_for_quorum_select_t
+        setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
+        start(list_replica)
+        self.replica_list = list_replica
+
+        for replica in replica_list:
+            priv_key = PrivateKey.generate()
+            signing_key = nacl.signing.SigningKey.generate()
+            self.replica_public_keys[str(replica)] = priv_key.public_key
+            self.replica_private_keys[str(replica)] = priv_key
+
+            self.replica_signing_keys[str(replica)] = signing_key
+            self.replica_verify_keys[str(replica)] = signing_key.verify_key
+
+        for replica in replica_list:
+            keysForReplica = {}
+            keysForReplica['olympus_verify_key'] = self.olympus_verify_key
+            keysForReplica['oly_public_key'] = self.oly_public_key
+            keysForReplica['private_key'] = self.replica_private_keys[str(replica)]
+            keysForReplica['public_key'] = self.replica_public_keys[str(replica)]
+            keysForReplica['client_public_keys'] = self.client_public_keys
+            keysForReplica['replica_public_keys'] = self.replica_public_keys
+            keysForReplica['replica_verify_keys'] = self.replica_verify_keys
+            keysForReplica['signing_key'] = self.replica_signing_keys[str(replica)]
+            output('Message type: [Keys] sending to ' + str(replica))
+            send(('keys', keysForReplica), to= replica)
+
+        output("Replica List: " + str(replica_list))
+        output("Client List: " + str(list_clients))
+
     def receive(msg=('running_state', encrypted_payload), from_= sender):
         output('Message type: [running_state] Received from: ' + str(sender))
         decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
@@ -215,6 +280,8 @@ class Olympus(process):
         hash_current_state = HASHER(binary_current_state, encoder=nacl.encoding.HexEncoder)
 
         if(hash_current_state == self.caughtupMessageHash):
+            ## Abort all old replicas
+            abortOld_createNewReplicas()
             for each_replica in self.replica_list:
                 self.currConfigSeqNo = self.currConfigSeqNo + 1
                 cleanReconfigVariables()
@@ -225,8 +292,8 @@ class Olympus(process):
                 send(('inithist', encrypted_msg), to= each_replica)
 
             for each_client in list_clients:
-                output('Message type: [config_changed] sending to ' + str(each_client))
-                send(('config_changed', self.currConfigSeqNo), to= each_client)
+                sendCurrentConfiguration(each_client)
+                #sendReconfigStatus(each_client)
         else:
             new_selected_replica_str = numpy.random.choice(quorum_replicas, size=1)
             new_selected_replica = getReplicaFromName(new_selected_replica_str)
@@ -235,15 +302,29 @@ class Olympus(process):
             output('Message type: [get_running_state] sending to ' + str(new_selected_replica))
             send(('get_running_state', signed_get_running_state_msg), to= new_selected_replica)
 
+    '''
+    def sendReconfigStatus(receiver):
+        clientResult = {}
+        clientResult['reconfig_in_progress'] = self.reconfig_in_progress
+
+        encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(receiver)])
+        send(('config_changed', encrypted_msg), to= receiver)
+    '''
+
+    def receive(msg=('is_reconfig_in_progress'), from_= sender):
+        clientResult = {}
+        clientResult['reconfig_in_progress'] = self.reconfig_in_progress
+
+        encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(sender)])
+        send(('is_reconfig_in_progress_response', encrypted_msg), to= sender)
+
     def receive(msg=('caughtup', encrypted_payload), from_= sender):
         output('Message type: [caughtup] Received from: ' + str(sender))
         decrypt_box = Box(self.oly_private_key, replica_public_keys[str(sender)])
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
-        output('*** - Till here 1 - ***')
         if(self.caughtupMessageHash == "DEFAULT"):
-            output('*** - Till here 2 - ***')
             self.caughtupMessageHash = payload['hash_current_state']
 
         res_proofs = payload['recent_result_proof_for_every_client']
@@ -252,22 +333,18 @@ class Olympus(process):
             if(client_name in self.recent_result_shuttle_for_every_client):
                 result_shuttle_t = recent_result_shuttle_for_every_client[client_name]
 
-            output('length of quorum_replicas - ' + str(len(result_shuttle_t)))
             result_shuttle_t[str(sender)] = each_res_proof
             self.recent_result_shuttle_for_every_client[client_name] = result_shuttle_t
 
-            output('*** - Till here 4 - ***')
             output('length of recent_result_shuttle_for_every_client[client_name] - ' + str(len(self.recent_result_shuttle_for_every_client[client_name])))
             output('length of quorum_replicas - ' + str(len(self.quorum_replicas)))
             if(len(self.recent_result_shuttle_for_every_client[client_name]) == len(self.quorum_replicas)):
                 if(self.get_running_state_send == False):
-                    output('*** - Till here 5 - ***')
                     self.get_running_state_send = True
                     binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
                     signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
                     output('Message type: [get_running_state] sending to ' + str(sender))
                     send(('get_running_state', signed_get_running_state_msg), to= sender)
-                output('*** - Till here 6 - ***')
                 ## Received all result proofs from quorum of replicas and
                 seq_no = each_res_proof[0][1]
                 operation_name = each_res_proof[0][2]
@@ -279,7 +356,6 @@ class Olympus(process):
                 clientResult['result'] = result_c
                 clientResult['result_proof'] = self.recent_result_shuttle_for_every_client[client_name]
 
-                output('*** - Till here 7 - *** CLIENTNAME IS - ' + str(client_name))
                 encrypted_msg = getEncryptedMsg(clientResult, client_public_keys[str(client_name)])
                 send(('result_message_from_olympus', encrypted_msg), to= client_name)
 
