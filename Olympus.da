@@ -8,6 +8,8 @@ import nacl.signing
 import nacl.encoding
 import nacl.hash
 import numpy
+import itertools
+import random
 from collections import Counter
 
 r = import_da("Replica")
@@ -26,9 +28,10 @@ class Olympus(process):
         self.longest_history_slot_orderstatement_map = {}
         self.get_running_state_send = False
         self.quorum_replicas = []
-        self.quorum_replicas_combo = set()
+        self.quorum_replicas_combo = []
         self.list_replica_for_quorum_select = []
         self.recent_result_shuttle_for_every_client = {}
+        self.first_time_quorum_select = True
 
         self.all_wedged_responses = []
         ## RECONFIG VARIABLES - end
@@ -70,14 +73,14 @@ class Olympus(process):
             list_replica.append(replica_obj)
             list_replica_for_quorum_select_t.append(str(replica_obj))
 
-        self.quorum_replicas = list(numpy.random.choice(list_replica_for_quorum_select_t, size=(int(config['t']) + 1), replace=False))
+        #self.quorum_replicas = list(numpy.random.choice(list_replica_for_quorum_select_t, size=(int(config['t']) + 1), replace=False))
         # Delete the current quorum_replicas from list_replica for future use
-        for each_quorum_r in self.quorum_replicas:
-            if(each_quorum_r in list_replica_for_quorum_select_t):
-                list_replica_for_quorum_select_t.remove(each_quorum_r)
+        #for each_quorum_r in self.quorum_replicas:
+        #    if(each_quorum_r in list_replica_for_quorum_select_t):
+        #        list_replica_for_quorum_select_t.remove(each_quorum_r)
 
 
-        self.list_replica_for_quorum_select = list_replica_for_quorum_select_t
+        #self.list_replica_for_quorum_select = list_replica_for_quorum_select_t
         setup(list_replica, (self, list_clients, list_replica, config, currConfigSeqNo))
         start(list_replica)
         self.replica_list = list_replica
@@ -147,14 +150,12 @@ class Olympus(process):
                     slot_seqNo_dict[key_slot_no] = []
                     slot_seqNo_dict[key_slot_no].append(each_order_stmt[2])
 
-        print('Till here 1')
         for each_slot, list_seq in slot_seqNo_dict.items():
             cnt = Counter(list_seq)
             most_common_seq_no = cnt.most_common(1)[0][0]
             longest_history.append([each_slot, most_common_seq_no])
             final_history_dict[each_slot] = most_common_seq_no
 
-        print('Till here 2')
         for replica_key, each_wedged in self.wedged_from_quorum.items():
             sample_history = each_wedged
             for key_slot_no, each_order_stmt in sample_history.items():
@@ -168,7 +169,6 @@ class Olympus(process):
 
         self.longest_history_slot_orderstatement_map = slot_orderstatement_map
 
-        print('Till here 3')
         output = {}
         output['inconsistent_replicas'] = inconsistent_replicas
         output['longest_history'] = longest_history
@@ -182,6 +182,15 @@ class Olympus(process):
 
         while(len(inconsistent_replicas) > 0):
             output('Inconsistent replicas FOUND...Choosing new quorum')
+            self.quorum_replicas = []
+            self.wedged_from_quorum = {}
+            quorum_replicas_t = random.choice(self.quorum_replicas_combo)
+            self.quorum_replicas_combo.remove(quorum_replicas_t)
+            for each_quorum_replica in quorum_replicas_t:
+                self.quorum_replicas.append(each_quorum_replica[0])
+                self.wedged_from_quorum[each_quorum_replica[0]] = each_quorum_replica[1]
+
+            '''
             for each_inconsistent_replica in inconsistent_replicas:
                 self.wedged_from_quorum.pop(each_inconsistent_replica)
                 self.quorum_replicas.remove(each_inconsistent_replica)
@@ -190,12 +199,12 @@ class Olympus(process):
                 self.list_replica_for_quorum_select.remove(new_replacing_replica)
                 self.quorum_replicas.append(new_replacing_replica)
                 self.wedged_from_quorum[new_replacing_replica] = self.wedged_from_all[new_replacing_replica]
+            '''
 
             new_output = getLongestHistory();
             inconsistent_replicas = new_output['inconsistent_replicas']
             longest_history = new_output['longest_history']
 
-        print('Till here 4')
         ## Now sort the history entries based on slot_no
         longest_history.sort(key=lambda tup: tup[0])
         output('Longest history is - ')
@@ -203,6 +212,7 @@ class Olympus(process):
         return longest_history
 
     def cleanReconfigVariables():
+        self.first_time_quorum_select = True
         self.reconfig_in_progress = False
         self.wedged_from_all = {}
         self.wedged_from_quorum = {}
@@ -365,14 +375,28 @@ class Olympus(process):
         payload = pickle.loads(plaintext)
 
         self.wedged_from_all[str(sender)] = payload['History']
-        self.all_wedged_responses.append([str(sender), payload['History']])
+        self.all_wedged_responses.append((str(sender), payload['History']))
+
+        if(len(wedged_from_all) >= (int(config['t']) + 1)):
+            list_quorum_replicas_combo = list(itertools.combinations(all_wedged_responses, (int(config['t']) + 1)))
+            for each_combo in list_quorum_replicas_combo:
+                if(each_combo not in self.quorum_replicas_combo):
+                    self.quorum_replicas_combo.append(each_combo)
+
+            if(self.first_time_quorum_select):
+                self.quorum_replicas = []
+                self.wedged_from_quorum = {}
+                self.first_time_quorum_select = False
+                quorum_replicas_t = random.choice(self.quorum_replicas_combo)
+                self.quorum_replicas_combo.remove(quorum_replicas_t)
+                for each_quorum_replica in quorum_replicas_t:
+                    self.quorum_replicas.append(each_quorum_replica[0])
+                    self.wedged_from_quorum[each_quorum_replica[0]] = each_quorum_replica[1]
+
+                new_history = checkConsistency_n_getLongestHistory()
+                computeAndSendCatchUp(new_history)
 
         '''
-        if(len(wedged_from_all) >= (config['t'] + 2)):
-            list_quorum_replicas_combo = list(itertools.combinations(all_wedged_responses, (config['t'] + 1)))
-            self.quorum_replicas_combo.union(list_quorum_replicas_combo)
-        '''
-
         if((str(sender)) in self.quorum_replicas):
             print('Adding quorum wedged response')
             self.wedged_from_quorum[str(sender)] = payload['History']
@@ -382,16 +406,8 @@ class Olympus(process):
             # Received all the wedged replies from quorum. Start computing history now.
             new_history = checkConsistency_n_getLongestHistory()
 
-            '''
-            # SEND ABORT MSG to old replicas
-            binary_abort_stmt = pickle.dumps('ABORT')
-            signed_abort_stmt = self.olympus_signing_key.sign(binary_abort_stmt)
-            for each_replica in self.replica_list:
-                output('Message type: [Abort] sending to ' + str(each_replica))
-                send(('abort', signed_abort_stmt), to= each_replica)
-            '''
-
             computeAndSendCatchUp(new_history)
+        '''
 
     def computeAndSendCatchUp(new_history):
         for replica_key, each_wedged_history in self.wedged_from_quorum.items():
