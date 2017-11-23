@@ -32,6 +32,7 @@ class Olympus(process):
         self.list_replica_for_quorum_select = []
         self.recent_result_shuttle_for_every_client = {}
         self.first_time_quorum_select = True
+        self.checkpoints_from_all = {}
 
         self.all_wedged_responses = []
         ## RECONFIG VARIABLES - end
@@ -138,6 +139,19 @@ class Olympus(process):
         final_history_dict = {}
         inconsistent_replicas = []
         slot_orderstatement_map = {}
+
+        for replica_key, checkpoint_history in self.checkpoints_from_all.items():
+            for key_slot_no, each_order_stmt in checkpoint_history.items():
+                # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
+                if(key_slot_no not in slot_orderstatement_map):
+                    slot_orderstatement_map[key_slot_no] = each_order_stmt
+                if(key_slot_no in slot_seqNo_dict):
+                    curr_seq_no = each_order_stmt[2]
+                    slot_seqNo_dict[key_slot_no].append(curr_seq_no)
+                else:
+                    slot_seqNo_dict[key_slot_no] = []
+                    slot_seqNo_dict[key_slot_no].append(each_order_stmt[2])
+
         for replica_key, each_wedged in self.wedged_from_quorum.items():
             sample_history = each_wedged
             for key_slot_no, each_order_stmt in sample_history.items():
@@ -146,7 +160,6 @@ class Olympus(process):
                     curr_seq_no = each_order_stmt[2]
                     slot_seqNo_dict[key_slot_no].append(curr_seq_no)
                 else:
-                    # Till this point is the longest valid history - use this one
                     slot_seqNo_dict[key_slot_no] = []
                     slot_seqNo_dict[key_slot_no].append(each_order_stmt[2])
 
@@ -164,8 +177,7 @@ class Olympus(process):
                     inconsistent_replicas.append(replica_key)
                     break;
                 else:
-                    if(key_slot_no not in slot_orderstatement_map):
-                        slot_orderstatement_map[key_slot_no] = each_order_stmt
+                    slot_orderstatement_map[key_slot_no] = each_order_stmt
 
         self.longest_history_slot_orderstatement_map = slot_orderstatement_map
 
@@ -221,6 +233,7 @@ class Olympus(process):
         self.quorum_replicas = []
         self.list_replica_for_quorum_select = []
         self.recent_result_shuttle_for_every_client = {}
+        self.checkpoints_from_all = {}
 
     def abortOld_createNewReplicas():
         binary_abort_stmt = pickle.dumps('ABORT')
@@ -374,6 +387,8 @@ class Olympus(process):
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
+        self.checkpoints_from_all[str(sender)] = payload['Checkpoint']
+
         self.wedged_from_all[str(sender)] = payload['History']
         self.all_wedged_responses.append((str(sender), payload['History']))
 
@@ -419,6 +434,7 @@ class Olympus(process):
                     # structure of order_stmt is [self.slot_no, payload['client'], payload['seqNo'], payload['oper']]
                     operations_to_catchup.append(self.longest_history_slot_orderstatement_map[sample_slot_no])
 
+            #output("****REPLICA is " + str(replica_key) + " and type is " + str(type(replica_key)))
             catchup_msg = {}
             catchup_msg['catchup_order_statements'] = operations_to_catchup
             encrypted_msg = getEncryptedMsg(catchup_msg, self.replica_public_keys[replica_key])
