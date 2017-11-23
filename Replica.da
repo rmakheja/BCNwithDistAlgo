@@ -58,11 +58,10 @@ class Replica(process):
         self.retrans_req = []
 
     def receive(msg=('inithist', encrypted_payload), from_= sender):
-        output('Message type: [inithist] Received from: ' + str(sender))
-        decrypt_box = Box(self.privateKey, self.oly_public_key)
-        plaintext = decrypt_box.decrypt(encrypted_payload)
-        payload = pickle.loads(plaintext)
+        output('R: [inithist] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
+        payload = decrypt(encrypted_payload, sender)
         self.core_data = payload['current_state']
+        output('I: [inithist] core data - ' + str(core_data))
 
     def receive(msg=('keys', payload), from_= sender):
         output('R: [keys] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
@@ -81,13 +80,12 @@ class Replica(process):
             self.olympus_verify_key.verify(signed_abort)
             self.terminate = True
         except:
-            output('I: Signature verification failed for ABORT request at Replica ' + getSelfId())
+            output('I: [Signature verification] [FAIL]  failed for ABORT request at Replica ' + getSelfId())
 
     def receive(msg=('wedge', signed_wedge), from_= sender):
         output('R: [wedge] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
         if check_failures('wedge', -1) == False:
             return
-
         try:
             self.olympus_verify_key.verify(signed_wedge)
             self.isImmutable = True
@@ -100,13 +98,14 @@ class Replica(process):
 
             inject_trunc(wedged_response)
             encrypted_msg = getEncryptedMsg(wedged_response, self.oly_public_key)
+            output('I: [wedge] wedge response - ' + str(wedged_response))
             output('S: [wedged] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: history len - ' + str(len(self.history)))
             send(('wedged', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
             output('I: Signature verification failed for WEDGE request at Replica ' + getSelfId())
 
     def receive(msg=('get_running_state', signed_get_running_state_msg), from_= sender):
-        output('Message type: [get_running_state] Received from: ' + str(sender))
+        output('R: [get_running_state] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
         if check_failures('get_running_state', -1) == False:
             return
         try:
@@ -115,20 +114,18 @@ class Replica(process):
             reply_msg = {}
             reply_msg['running_state'] = self.core_data
             encrypted_msg = getEncryptedMsg(reply_msg, self.oly_public_key)
-            output('Message type: [running_state] Sending to: ' + str(olympus))
+            output('S: [running_state] F: Replica ' + getSelfId() + ' T: ' + str(olympus) + 'I: core data len - ' + str(len(self.core_data)) + ' core data - ' + str(self.core_data))
             send(('running_state', encrypted_msg), to= olympus)
         except nacl.exceptions.BadSignatureError:
-             output("Signature verification failed for GET_RUNNING_STATE request.")
+             output("E: [running state] Signature verification failed for GET_RUNNING_STATE request.")
 
     def receive(msg=('catchup', encrypted_payload), from_= sender):
-        output('Message type: [catchup] Received from: ' + str(sender))
-        decrypt_box = Box(self.privateKey, self.oly_public_key)
-        plaintext = decrypt_box.decrypt(encrypted_payload)
-        payload = pickle.loads(plaintext)
+        output('R: [catchup] F: ' + getSenderId(sender) + ' T: Replica ' + getSelfId())
+        payload = decrypt(encrypted_payload, sender)
 
         if check_failures('catch_up', -1) == False:
             return
-        output("The catchup_orders received are [" + str(len(payload['catchup_order_statements'])) + "] - " + str(payload['catchup_order_statements']))
+        output("I : [catchup] The catchup_orders received are [" + str(len(payload['catchup_order_statements'])) + "] - " + str(payload['catchup_order_statements']))
         for each_order_stmt in payload['catchup_order_statements']:
             operation = each_order_stmt[3]
             result = execute_actual_command(operation)
@@ -137,8 +134,8 @@ class Replica(process):
             binary_result = pickle.dumps(result)
             result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
 
-            output('Adding result statement to recent_result_proof_for_every_client')
             result_stmt = [each_order_stmt[1], each_order_stmt[2], each_order_stmt[3], result_hash, result]
+            output('I : [catchup] Added result statement ' + str(result_stmt) + ' to recent_result_proof_for_every_client')
             binary_result_stmt = pickle.dumps(result_stmt)
             signed_result_stmt = self.signingKey.sign(binary_result_stmt)
 
@@ -154,7 +151,7 @@ class Replica(process):
         caughtup_msg['hash_current_state'] = hash_current_state
         caughtup_msg['recent_result_proof_for_every_client'] = self.recent_result_proof_for_every_client
         encrypted_msg = getEncryptedMsg(caughtup_msg, self.oly_public_key)
-        output('Message type: [caughtup] Sending to: ' + str(olympus))
+        output('S: [caughtup] F: Replica ' + getSelfId() + ' T: ' + str(olympus))
         send(('caughtup', encrypted_msg), to= olympus)
 
     def receive(msg=('result_shuttle', encrypted_payload, replica_index), from_= sender):
@@ -209,7 +206,7 @@ class Replica(process):
                     self.slot_no +=1
 
                 else :
-                    output('I: invalid slot_no... or waiting for previous slot at head')
+                    output('E: invalid slot_no... or waiting for previous slot at head')
                     sendReconfigReq()
                     return
 
@@ -245,12 +242,11 @@ class Replica(process):
         order_proof[str(self)] = ([order_stmt, signed_order_stmt])
         order_shuttle['order_proof'] = order_proof
 
-
         result_stmt = [order_stmt[1], order_stmt[2], order_stmt[3], result_hash, result]
         binary_result_stmt = pickle.dumps(result_stmt)
         signed_result_stmt = self.signingKey.sign(binary_result_stmt)
 
-        output('I: adding result stmt : ' + str(result_stmt) + ' at Replica ' + getSelfId())
+        output('I: added result stmt : ' + str(result_stmt) + ' at Replica ' + getSelfId())
 
         result_proof[str(self)] = ([result_stmt, signed_result_stmt])
         clientName = order_stmt[1]
@@ -263,7 +259,7 @@ class Replica(process):
 
         slot_no = int(order_stmt[0])
         if(slot_no in self.history):
-            output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +']- Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+            output('E: [Order Proof Validation] [FAIL] [Replica ' + getSelfId() +']- Slot pre-occupied for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
             return False
 
         for replicaName, each_order_p in order_proof.items():
@@ -271,21 +267,21 @@ class Replica(process):
             try:
                 self.replica_verify_keys[replicaName].verify(curr_signed_order_p)
             except nacl.exceptions.BadSignatureError:
-                output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+                output('E: [Order Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
                 return False
 
             if(each_order_p[0] != order_stmt):
-                output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+                output('E: [Order Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
                 return False
 
         '''
         for replicaName, each_order_p in order_proof.items():
             if(each_order_p[0] != order_stmt):
-                output('E: [FAIL] [Order Proof Validation] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+                output('E: [Order Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - Order statement mismatch for operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
                 return False
         '''
 
-        output('I: [SUCCESS] [Order Proof Validation] [Replica ' + getSelfId() +'] - operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
+        output('I: [Order Proof Validation] [SUCCESS] [Replica ' + getSelfId() +'] - operation: ' + order_stmt[3] + ' slot_no: ' + str(order_stmt[0]) + ' seqNo: ' + str(order_stmt[2]))
         return True
 
     def validate_result_proof(result_proof, result, operation):
@@ -298,17 +294,17 @@ class Replica(process):
             try:
                 self.replica_verify_keys[replicaName].verify(curr_signed_result_p)
             except nacl.exceptions.BadSignatureError:
-                output('E: [FAIL] [Result Proof Validation] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + operation )
+                output('E: [Result Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - Signature verification failed for operation: ' + operation )
                 return False
 
         for replicaName, res_stmt in result_proof.items():
             if(res_stmt[0][3] != cur_hash):
-                output('E: [FAIL] [Result Proof Validation] [Replica ' + getSelfId() +'] - result hash mismatch for operation: ' + operation)
+                output('E: [Result Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - result hash mismatch for operation: ' + operation)
                 return False
             elif (res_stmt[0][2] != operation):
-                output('E: [FAIL] [Result Proof Validation] [Replica ' + getSelfId() +'] - operation mismatch for operation: ' + operation + ' received operation : '+ res_stmt[0][2])
+                output('E: [Result Proof Validation] [FAIL] [Replica ' + getSelfId() +'] - operation mismatch for operation: ' + operation + ' received operation : '+ res_stmt[0][2])
                 return False
-        output('I: [SUCCESS] [Result Proof Validation] [Replica ' + getSelfId() +'] - for operation: ' + operation )
+        output('I: [Result Proof Validation] [SUCCESS] [Replica ' + getSelfId() +'] - for operation: ' + operation )
         return True
 
     def execute_actual_command(operation):
@@ -360,7 +356,7 @@ class Replica(process):
 
         else:
             result = "fail"
-        output('I: [SUCCESS] [Execute Command] [Replica ' + getSelfId() +'] - command: ' + operation + ' result : '+ result)
+        output('I: [Execute Command] [SUCCESS] [Replica ' + getSelfId() +'] - command: ' + operation + ' result : '+ result)
         return result
 
     def receive(msg=('retrans', encrypted_command, replica_index), from_= sender):
@@ -464,7 +460,7 @@ class Replica(process):
             failure_key = 'catch_up(' + str(self.m_catch_up) + ')'
 
         if failure_key in self.failures :
-            output('I: [failure Trigger] [Replica ' +getSelfId() + '] trigger : ' + failure_key + 'failure ' + str(self.failures[failure_key]))
+            output('I: [FAILURE TRIGGERED] [Replica ' +getSelfId() + '] trigger : ' + failure_key + ' failure ' + str(self.failures[failure_key]))
             for failure in self.failures[failure_key]:
                 if failure == 'change_operation()':
                     self.ch_oper[client_id] = True
@@ -476,13 +472,19 @@ class Replica(process):
                     self.trunc = int(failure[17:-1])
                 elif failure.startswith('sleep('):
                     t = int(failure[6:-1])
+                    output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [sleep] I: sleeping for ' + str(t) + ' milliseconds')
                     time.sleep(t/1000)
                 elif failure == 'drop()':
+                    output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [drop] I: this message is being dropped')
                     return False
                 elif failure == 'increment_slot()':
                     if(self == self.list_replicas[0]):
+                        output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [increment_slot]')
                         self.slot_no += 1
+                    else :
+                        output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [increment_slot] NOTE: Replica is not head, so no effect')
                 elif failure == 'extra_op()' :
+                    output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [extra_op] I: executing put(\'a\',\'a\')')
                     execute_actual_command('put(\'a\',\'a\')')
                 elif failure == 'invalid_order_sig()':
                     self.invalidOrderSig = True
@@ -491,6 +493,7 @@ class Replica(process):
                 elif failure == 'drop_checkpt_stmts()':
                     self.drop_chkpnts = True
                 elif failure == 'crash()':
+                    output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [crash] I: terminating the replica')
                     self.terminate = True
         return True
 
@@ -511,6 +514,7 @@ class Replica(process):
                     t_failures[trig_key].append(val)
                 else:
                     t_failures[trig_key] = [val]
+            output('I: [ extract Failures] [Config ' + str(self.currConfigSeqNo) + '] [Replica ' + getSelfId() + '] - ' + str(t_failures))
         return t_failures
 
     def receive(msg=('checkpoint_proof', encrypted_payload, replica_index), from_= sender):
@@ -542,6 +546,7 @@ class Replica(process):
             return
 
         truncateHistory(0, chkpnt_len)
+        output('I: History truncated, new history len -' + str(len(self.history)))
         self.checkpoints.append(chkpnt_stmt)
         self.checkpoint_complete = True
         if ind >= 0 :
@@ -551,24 +556,32 @@ class Replica(process):
             send(('checkpoint_completed', encrypted_checkpoint, ind), to= self.list_replicas[ind])
 
     def validCheckpointProof(proof, slice_hash):
-        noOfmatches = 0
-        for hash in proof :
-            if slice_hash != hash:
-                output("E: [FAIL] [checkpoint proof] [Replica "+ getSelfId() + "]")
-                return False
-        return True
+        if proof:
+            for hash in proof :
+                if slice_hash != hash:
+                    output("E: [checkpoint proof] [FAIL] [Replica "+ getSelfId() + "]")
+                    return False
+            output("E: [checkpoint proof] [SUCCESS] [Replica "+ getSelfId() + "]")
+            return True
+        output("E: [checkpoint proof] [FAIL] [Replica "+ getSelfId() + "]")
+        return False
+
 
     def validCompletedCheckpointProof(proof, slice_hash):
-        noOfmatches = 0
-        for hash in proof :
-            if slice_hash == hash:
-                noOfmatches += 1
+        if proof:
+            output('proof len ' + str(len(proof)))
+            noOfmatches = 0
+            for hash in proof :
+                if slice_hash == hash:
+                    noOfmatches += 1
 
-        if noOfmatches >= int(config['t'])+1:
-            return True
+            if noOfmatches >= int(config['t'])+1:
+                output("E: [completed checkpoint proof] [SUCCESS] [Replica "+ getSelfId() + "]")
+                return True
 
-        output("E: [FAIL] [completed checkpoint proof] [Replica "+ getSelfId() + "]")
+        output("E: [completed checkpoint proof] [FAIL] [Replica "+ getSelfId() + "]")
         return False
+
 
 
     def truncateHistory(startInd, endInd):
@@ -583,7 +596,7 @@ class Replica(process):
         slice =  {k: self.history[k] for k in sorted(self.history.keys())[:chkpnt_len]}
         binary_slice = pickle.dumps(slice)
         slice_hash = self.HASHER(binary_slice, encoder=nacl.encoding.HexEncoder)
-        if validCheckpointProof(proof, slice_hash) == False:
+        if ind != 1 and validCheckpointProof(proof, slice_hash) == False:
             output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: Error in checkpoint proof validation')
             sendReconfigReq()
             return
@@ -593,7 +606,9 @@ class Replica(process):
         if isTail(ind):
             truncateHistory(0, chkpnt_len)
             self.checkpoints.append(chkpnt_stmt)
-            inject_drop_checkpt_stmts(proof)
+
+            chkpnt_stmt[2] = inject_drop_checkpt_stmts(proof)
+
             output('S: [checkpoint_completed] F: Replica ' + getSelfId() + ' T: Replica ' + str(ind-2) + ' I: current history len ' + str(len(self.history)) + ' checkpoint len - ' + str(chkpnt_len))
             encrypted_checkpoint = getEncryptedMsg(chkpnt_stmt, self.replica_public_keys[str(list_replicas[ind-2])])
             send(('checkpoint_completed', encrypted_checkpoint, ind-2), to= self.list_replicas[ind-2])
@@ -610,7 +625,11 @@ class Replica(process):
         send(('reconfigure', encrypted_msg), to= olympus)
 
     def decrypt(encrypted_payload, sender):
-        if(str(sender) in client_public_keys):
+        if sender == olympus:
+            decrypt_box = Box(self.privateKey, self.oly_public_key)
+            plaintext = decrypt_box.decrypt(encrypted_payload)
+            payload = pickle.loads(plaintext)
+        elif(str(sender) in client_public_keys):
             decrypt_box = Box(self.privateKey, client_public_keys[str(sender)])
             plaintext = decrypt_box.decrypt(encrypted_payload)
             payload = pickle.loads(plaintext)
@@ -691,9 +710,9 @@ class Replica(process):
             binary_result = pickle.dumps('OK')
             result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
             stmt = shuttle['result_proof'][str(self)][0]
-            output("before: " + str(stmt[3]))
+            output(" [change result] before changing result, hash : " + str(stmt[3]))
             stmt[3] = result_hash
-            output("after: " + str(stmt[3]))
+            output(" [change result] after  changing result, hash : " + str(stmt[3]))
             binary_result_stmt = pickle.dumps(stmt)
             signed_result_stmt = self.signingKey.sign(binary_result_stmt)
             shuttle['result_proof'][str(self)] = ([stmt, signed_result_stmt])
@@ -702,8 +721,10 @@ class Replica(process):
     def inject_drop_res(client_id, shuttle):
         if self.drop_res[client_id] :
             output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [drop result] client ' + str(client_id))
+            output('I: before dropping head resut, proof len ' + str(len(shuttle['result_proof'])))
             shuttle['result_proof'].pop(str(list_replicas[0]))
             self.drop_res[client_id] = False
+            output('I: after dropping head resut, proof len ' + str(len(shuttle['result_proof'])))
         return shuttle
     def inject_ch_oper(client_id, stmt):
         if self.ch_oper[client_id] :
@@ -713,15 +734,16 @@ class Replica(process):
 
     def inject_trunc(wedge):
         if(self.trunc > 0):
+            output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [truncate history] orig history len ' + str(len(self.history)))
             last_ele = list(wedge['History'].items())[-self.trunc:]
             for k,v in last_ele:
                 wedge['History'].pop(k)
-            print(wedge['History'])
-            print(last_ele)
+            output('I: Truncated history len ' + str(len(self.history)))
             self.trunc = 0
 
     def inject_invalid_order_sig(shuttle):
         if self.invalidOrderSig :
+            output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [invalid order signature]')
             self.invalidOrderSig = False
             signed = shuttle['order_proof'][str(self)][1]
             signedlist = list(signed)
@@ -732,6 +754,7 @@ class Replica(process):
 
     def inject_invalid_result_sig(shuttle):
         if self.invalidResultSig :
+            output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [invalid result signature]')
             self.invalidResultSig = False
             signed = shuttle['result_proof'][str(self)][1]
             signedlist = list(signed)
@@ -742,12 +765,14 @@ class Replica(process):
 
     def inject_drop_checkpt_stmts(proof):
         if self.drop_chkpnts :
+            output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [drop checkpoint statements]')
             self.drop_chkpnts = False
-            t1 = (int(config['t']) + 1)
-            if(len(proof) > t1):
-                proof = proof[:-t1]
+            t1 = (int(config['t']) + 2)
+            if(len(proof) >= t1):
+                proof = proof[t1:]
             else:
                 proof = []
+            return proof
 
     def isHead(ind):
         return ind <= 1
