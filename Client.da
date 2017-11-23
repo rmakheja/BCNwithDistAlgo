@@ -10,6 +10,7 @@ class Client(process):
     def setup(olympus: Olympus, sys_config: set):
         output("Setting up the Client...")
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
         self.successFlag = False
         self.resultList = {}
         self.seqNo = -1
@@ -99,7 +100,7 @@ class Client(process):
             successFlag = False;
             msg = {'seqNo': self.seqNo, 'oper': oper, 'client': self}
 
-
+            self.reconfig_in_progress = True
             send(('is_reconfig_in_progress'), to= olympus)
             await(not(self.reconfig_in_progress))
             encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['head_replica'])])
@@ -147,7 +148,7 @@ class Client(process):
         return False
 
     def receive(msg=('is_reconfig_in_progress_response', encrypted_result), from_= sender):
-        output('Message type: [is_reconfig_not_in_progress_response] Received from: ' + str(sender))
+        output('Message type: [is_reconfig_in_progress_response] Received from: ' + str(sender))
         decrypt_box = Box(curr_config['client_private_key'], curr_config['oly_public_key'])
         plaintext = decrypt_box.decrypt(encrypted_result)
         result = pickle.loads(plaintext)
@@ -159,6 +160,7 @@ class Client(process):
         self.foundResponse = False
         self.responsesCount = 0
         self.invalidResponses = 0
+        self.reconfig_in_progress = True
         send(('is_reconfig_in_progress'), to= olympus)
         await(not(self.reconfig_in_progress))
         if(self.seqNo in resultList):

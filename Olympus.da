@@ -18,6 +18,7 @@ class Olympus(process):
 
     def setup(list_clients: list, config: set):
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
         self.HASHER = nacl.hash.sha256
         self.currConfigSeqNo = -1
 
@@ -350,6 +351,13 @@ class Olympus(process):
             self.caughtupMessageHash = payload['hash_current_state']
 
         res_proofs = payload['recent_result_proof_for_every_client']
+        if len(res_proofs) == 0:
+            if(self.get_running_state_send == False):
+                self.get_running_state_send = True
+                binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
+                signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
+                output('Message type: [get_running_state] sending to ' + str(sender))
+                send(('get_running_state', signed_get_running_state_msg), to= sender)
         for client_name, each_res_proof in res_proofs.items():
             result_shuttle_t = {}
             if(client_name in self.recent_result_shuttle_for_every_client):
@@ -392,7 +400,7 @@ class Olympus(process):
         self.wedged_from_all[str(sender)] = payload['History']
         self.all_wedged_responses.append((str(sender), payload['History']))
 
-        if(len(wedged_from_all) >= (int(config['t']) + 1)):
+        if(len(wedged_from_all) == (int(config['t'])*2 + 1)):
             list_quorum_replicas_combo = list(itertools.combinations(all_wedged_responses, (int(config['t']) + 1)))
             for each_combo in list_quorum_replicas_combo:
                 if(each_combo not in self.quorum_replicas_combo):
