@@ -111,6 +111,7 @@ def pseudorandom(oper):
     return workloads
 
 def main():
+    config(channel={"reliable","fifo"})
     terminate = False
     if(len(sys.argv) != 2):
         print("Invalid number of arguments for __init__.da script. Expected only 1 argument which is 'config file'")
