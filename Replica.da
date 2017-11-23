@@ -125,7 +125,7 @@ class Replica(process):
         plaintext = decrypt_box.decrypt(encrypted_payload)
         payload = pickle.loads(plaintext)
 
-        if check_failures('catchup', -1) == False:
+        if check_failures('catch_up', -1) == False:
             return
         output("The catchup_orders received are [" + str(len(payload['catchup_order_statements'])) + "] - " + str(payload['catchup_order_statements']))
         for each_order_stmt in payload['catchup_order_statements']:
@@ -167,8 +167,8 @@ class Replica(process):
         cache[str(payload['client']) + ' : ' + str(payload['seqNo'])] = payload
         ind -= 1
         if(ind >= 0):
-            inject_ch_res(client_id, payload, ind)
-            inject_drop_res(client_id, payload)
+            payload = inject_ch_res(client_id, payload, ind)
+            payload = inject_drop_res(client_id, payload)
             encrypted_result_shuttle = getEncryptedMsg(payload, replica_public_keys[str(list_replicas[ind])])
 
             output('S: [result_shuttle] F: Replica ' + getSelfId() + ' T: Replica' + str(ind) + ' I: client Id - '+ str(client_id) + ' seqNo - '+ str(payload['seqNo']) +' oper-' + payload['oper'])
@@ -291,6 +291,7 @@ class Replica(process):
 
         binary_result = pickle.dumps(result)
         cur_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+
         for replicaName, result_proof_i in result_proof.items():
             curr_signed_result_p = result_proof_i[1]
             try:
@@ -379,8 +380,8 @@ class Replica(process):
 
         if(cache_key in cache):
             clientResult = cache[cache_key]
-            inject_ch_res(client_id, clientResult, ind)
-            inject_drop_res(client_id, clientResult)
+            clientResult=inject_ch_res(client_id, clientResult, ind)
+            clientResult=inject_drop_res(client_id, clientResult)
             if isTail(ind+1):
                 inject_invalid_result_sig(clientResult)
             encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
@@ -416,8 +417,8 @@ class Replica(process):
             if await(cache_key in cache):
                 clientResult = cache[cache_key]
 
-                inject_ch_res(client_id, clientResult, ind)
-                inject_drop_res(client_id, clientResult)
+                clientResult=inject_ch_res(client_id, clientResult, ind)
+                clientResult=inject_drop_res(client_id, clientResult)
                 if isTail(ind) :
                     inject_invalid_result_sig(clientResult)
                 encrypted_cache = getEncryptedMsg(clientResult, self.client_public_keys[str(command['client'])])
@@ -431,7 +432,6 @@ class Replica(process):
 
     def check_failures(type, client_id):
         failure_key = ''
-
         if type == 'client_request':
             self.m_client_req[client_id] += 1
             failure_key =  'client_request(' + str(client_id) + ',' + str(self.m_client_req[client_id]) + ')'
@@ -471,7 +471,7 @@ class Replica(process):
                     self.ch_res[client_id] = True
                 elif failure == 'drop_result_stmt()':
                     self.drop_res[client_id] = True
-                elif failure == 'truncate_history()':
+                elif failure.startswith('truncate_history('):
                     self.trunc = int(failure[17:-1])
                 elif failure.startswith('sleep('):
                     t = int(failure[6:-1])
@@ -494,7 +494,6 @@ class Replica(process):
         return True
 
     def extract_failures() :
-        output('currConfigSeqNo :' +str(currConfigSeqNo))
         t_failures = {}
         key = 'failures[' + str(self.currConfigSeqNo) + ',' + getSelfId() + ']'
         if key in config:
@@ -536,7 +535,7 @@ class Replica(process):
         slice =  {k: self.history[k] for k in sorted(self.history.keys())[:chkpnt_len]}
         binary_slice = pickle.dumps(slice)
         slice_hash = self.HASHER(binary_slice, encoder=nacl.encoding.HexEncoder)
-        if validCheckpointProof(chkpnt_stmt[2], slice_hash) == False:
+        if validCompletedCheckpointProof(chkpnt_stmt[2], slice_hash) == False:
             output('S: [recofig] F: Replica ' + getSelfId() + ' T: olympus I: Error in checkpoint proof validation')
             sendReconfigReq()
             return
@@ -551,11 +550,25 @@ class Replica(process):
             send(('checkpoint_completed', encrypted_checkpoint, ind), to= self.list_replicas[ind])
 
     def validCheckpointProof(proof, slice_hash):
+        noOfmatches = 0
         for hash in proof :
             if slice_hash != hash:
-                output("E: [FAILL] [checkpoint proof] [Replica "+ getSelfId() + "]")
+                output("E: [FAIL] [checkpoint proof] [Replica "+ getSelfId() + "]")
                 return False
         return True
+
+    def validCompletedCheckpointProof(proof, slice_hash):
+        noOfmatches = 0
+        for hash in proof :
+            if slice_hash == hash:
+                noOfmatches += 1
+
+        if noOfmatches >= int(config['t'])+1:
+            return True
+
+        output("E: [FAIL] [completed checkpoint proof] [Replica "+ getSelfId() + "]")
+        return False
+
 
     def truncateHistory(startInd, endInd):
         keys = [k for k in sorted(self.history.keys())[startInd:endInd]]
@@ -618,8 +631,8 @@ class Replica(process):
 
             cache[str(order_shuttle['client']) + ' : ' + str(order_shuttle['seqNo'])] = clientResult
 
-            inject_ch_res(client_id, clientResult, ind)
-            inject_drop_res(client_id, clientResult)
+            clientResult = inject_ch_res(client_id, clientResult, ind)
+            clientResult = inject_drop_res(client_id, clientResult)
 
             ## ind is already beyond last replica index. So subtract 2
             ind = ind - 2
@@ -672,18 +685,25 @@ class Replica(process):
 
     def inject_ch_res(client_id, shuttle, ind):
         if self.ch_res[client_id]:
+            self.ch_res[client_id] = False
             output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [change result] client ' + str(client_id))
             binary_result = pickle.dumps('OK')
             result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
-            shuttle['result_proof'][str(list_replicas[ind-1])][0][3] = result_hash
-            self.ch_res[client_id] = False
+            stmt = shuttle['result_proof'][str(self)][0]
+            output("before: " + str(stmt[3]))
+            stmt[3] = result_hash
+            output("after: " + str(stmt[3]))
+            binary_result_stmt = pickle.dumps(stmt)
+            signed_result_stmt = self.signingKey.sign(binary_result_stmt)
+            shuttle['result_proof'][str(self)] = ([stmt, signed_result_stmt])
+        return shuttle
 
     def inject_drop_res(client_id, shuttle):
         if self.drop_res[client_id] :
             output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [drop result] client ' + str(client_id))
             shuttle['result_proof'].pop(str(list_replicas[0]))
             self.drop_res[client_id] = False
-
+        return shuttle
     def inject_ch_oper(client_id, stmt):
         if self.ch_oper[client_id] :
             output('I: [INJECT FAILURE] [Replica ' + getSelfId() + '] [change operation] I: client ' + str(client_id) + ' order_stmt - ' + str(stmt))
@@ -695,6 +715,8 @@ class Replica(process):
             last_ele = list(wedge['History'].items())[-self.trunc:]
             for k,v in last_ele:
                 wedge['History'].pop(k)
+            print(wedge['History'])
+            print(last_ele)
             self.trunc = 0
 
     def inject_invalid_order_sig(shuttle):

@@ -350,6 +350,13 @@ class Olympus(process):
             self.caughtupMessageHash = payload['hash_current_state']
 
         res_proofs = payload['recent_result_proof_for_every_client']
+        if len(res_proofs) == 0:
+            if(self.get_running_state_send == False):
+                self.get_running_state_send = True
+                binary_get_running_state_msg = pickle.dumps('GET RUNNING STATE')
+                signed_get_running_state_msg = self.olympus_signing_key.sign(binary_get_running_state_msg)
+                output('Message type: [get_running_state] sending to ' + str(sender))
+                send(('get_running_state', signed_get_running_state_msg), to= sender)
         for client_name, each_res_proof in res_proofs.items():
             result_shuttle_t = {}
             if(client_name in self.recent_result_shuttle_for_every_client):
