@@ -455,7 +455,10 @@ class Olympus(process):
             catchup_msg = {}
             catchup_msg['catchup_order_statements'] = operations_to_catchup
             encrypted_msg = getEncryptedMsg(catchup_msg, self.replica_public_keys[replica_key])
-            replica_to_send = getReplicaFromName(replica_key)
+            if(type(replica_key) == type("abc")):
+                replica_to_send = getReplicaFromName(replica_key)
+            else:
+                replica_to_send = replica_key
             output('Message type: [catchup] Sending to: ' + str(replica_to_send))
             send(('catchup', encrypted_msg), to= replica_to_send)
 

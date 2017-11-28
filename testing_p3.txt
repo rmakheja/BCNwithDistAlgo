@@ -1,0 +1,15 @@
+File name : case11_system.conf
+	test_case_name = change_result_at_tail
+	t = 1
+	num_clients = 4
+	failures[0,2] = shuttle(1,4), change_result();
+
+	Scenario tested : 
+
+			Pseudorandom workload is generated. Result at tail is changed due to failure trigger on shuttle
+
+	Expected behavior : 
+
+			tail should append hash of 'OK' in the result statement. But, client accepts the result as in the result proof t+1 correct hashes are present. The client will proceed to next request
+
+			If the original result was 'OK', there will be no mismatch

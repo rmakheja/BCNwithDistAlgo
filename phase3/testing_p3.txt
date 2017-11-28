@@ -1,0 +1,165 @@
+File name : P3_case1.conf
+	test_case_name = case1
+	t = 1
+	num_clients = 1
+	failures[0,1] = shuttle(0,4), drop_checkpt_stmts(); checkpoint(0), change_result()
+
+	Scenario tested : Triggers - shuttle, checkpoint
+					  Failures - drop_checkpt_stmts, change_result
+
+
+	Expected behavior : 
+		when checkpoint len is set to 2, the first checkpoint will start at operation 3. When the fourth shuttle message arrives, most likely the first checkpoint will have been completed by then. If not, t+1(=2) checkpoint statements will be dropped, and hence it will fail the validation. This will lead to reconfiguration of the system.
+
+
+File name : P3_case2.conf
+	test_case_name = case2
+	t = 1
+	num_clients = 1
+	failures[0,0] = client_request(0,0), sleep(4000); client_request(0,2), increment_slot()
+
+	Scenario tested : Triggers - client_request
+					  Failures - sleep, increment_slot
+
+	Expected behavior : 
+		When the first execute request comes from client, it will go to sleep and hence will lead to timeout on client and thus retransmission. After sleep, it will execute the shuttle normally. However the client will retransmit and expect the retransmission result and not the result_message. The retransmission request may or may not arrive before the result is cached. If cached, it will send the result, if not it will start the timer. If timer expires, reconfiguration will take place. on the arrival of 3rd message, the slot no will be incremented and thus lead to invalid slot error and thus reconfiguration
+
+File name : P3_case3.conf
+	test_case_name = case3
+	t = 1
+	num_clients = 1
+	failures[0,1] = new_configuration(0), extra_op(); completed_checkpoint(0), drop_result_stmt()
+
+	
+	Scenario tested : Triggers - new_configuration, completed_checkpoint
+					  Failures - extra_op, drop_result_stmt
+
+	Expected behavior : 
+		When the replica is setup, it will execute the extra_op i.e. put('a','a') Whenever the first completed_checkpoint will arrive, it will drop the result statement in next outgoing result shuttle message. This 'truncated' result proof will still be valid as there are still t+1 (=2) valid result statements in the proof. 
+
+
+File name : P3_case4.conf
+	test_case_name = case4
+	t = 2
+	num_clients = 1
+	failures[0,0] = checkpoint(1), increment_slot(); wedge_request(0), truncate_history(2)
+
+	Scenario tested : Triggers - checkpoint, wedge_request
+					  Failures - increment_slot, truncate_history
+			
+	Expected behavior : 
+		When the checkpoint trigger will increment the slot leading to reconfiguration, the wedge_request(0) will be triggered, and this replica will send history truncated by 2. Thus this replica if in quorum will get the catch up message.
+
+
+File name : P3_case5.conf
+	test_case_name = case5
+	t = 2
+	num_clients = 1
+	failures[0,1] = shuttle(0,1), invalid_result_sig(); get_running_state(0), extra_op()
+	failures[1,0] = shuttle(0, 3), invalid_order_sig(); catch_up(0), increment_slot()
+
+	Scenario tested : Triggers - shuttle, get_running_state, catch_up
+					  Failures - invalid_result_sig, invalid_order_sig, extra_op, increment_slot
+	
+	Expected behavior : 
+		Here in the first configuration, due to invalid_order_sig, reconfiguration will start and if the replica happens to be in the quorum then it will receive the get_running_state message leading to execution of extra_op. This will lead to cache inconsistent with other histories and thus end up in infinite loop. IF this replica is not in quorum, then this trigger will be avoided and the failures for the next configuration will be triggered. Due to invalid_result_sig, the reconfiguration will start again. If this replica receives a catch up message, it will increment the slot. but since the config is being changed, this injected failure will have no effect
+
+
+File name : P3_case6.conf
+	test_case_name = case6
+	t = 4
+	num_clients = 1
+	failures[0,1] = completed_checkpoint(1), drop_checkpt_stmts()
+
+	Scenario tested :Triggers - completed_checkpoint
+					  Failures - drop_checkpt_stmts
+
+	Expected behavior : 
+		Due to trigger, the replica will drop t+1 checkpoint statement from the checkpoint proof in the completed_checkpoint_shuttle. This will lead to validation error and hence reconfigured. 
+
+File name : P3_case7.conf
+	test_case_name = case7
+	t = 1
+	num_clients = 1
+	failures[0,0] = result_shuttle(0,0), crash()
+
+	Scenario tested : Triggers - result_shuttle
+					  Failures - crash
+
+	Expected behavior : 
+		When the head receives result shuttle for first request, it will crash. The clients will not receive the message and retransmit. Again the other replicas not finding the operation in their history, try to forward the request to head which is crashed. This will lead to timer expiration and thus reconfig.
+
+
+File name : P3_case8.conf
+	test_case_name = case8
+	t = 1
+	num_clients = 1
+	failures[0,1] = new_configuration(0), extra_op(); client_request(0,1), increment_slot()
+
+	Scenario tested : Triggers - new_configuration, client_request
+					  Failures - extra_op, increment_slot
+	
+	Expected behavior : 
+		When the replica is setup, it will execute the extra operation. Due to client_request trigger, increment_slot() will be injected but as the replica is not head, this will have no effect and operations be executed normally.
+
+File name : P3_case9.conf
+	test_case_name = case9
+	t = 2
+	num_clients = 1
+	failures[0,2] = new_configuration(0), truncate_history(1); shuttle(0,1), invalid_result_sig()
+	failures[1,2] = new_configuration(1), truncate_history(1); shuttle(0,1), invalid_order_sig()
+
+	Scenario tested : Triggers - new_configuration, shuttle
+					  Failures - truncate_history, invalid_result_sig, invalid_order_sig
+
+
+	Expected behavior : 
+		on the receipt of 1st shuttle message, the replica will inject invalid_result_sig and thus lead to validation failure and thus reconfiguration. As the new_configuration trigger had occured, whenever the wedge response is sent, it sends the truncated history. IF this replica is in quorum it will not have the longest history.
+
+File name : P3_case10.conf
+	test_case_name = case10
+	t = 3
+	num_clients = 1
+	failures[0,1] = completed_checkpoint(1), extra_op(); checkpoint(1), change_result()
+
+	Scenario tested : Triggers - completed_checkpoint, checkpoint
+					  Failures - extra_op, change_result
+
+
+	Expected behavior : 
+		On receipt of 1st checkpoint message, it will change the result. the change result will lead to invalid result statement to be passed to the next replica. However, the result_proof will still have t+1 correct statements, it accepts the result. If not, it will lead to reconfiguration and due to receipt of completed_checkpoint, extra operation will be executed. this will lead to an infinite loop if the replica is chosen in quorum due to inconsistent core_data
+
+File name : P3_case11.conf
+	test_case_name = case11
+	t = 2
+	num_clients = 10
+	# FAILURE SCENARIO : no failures
+
+	Scenario tested : Stress test with pseudorandom behavior
+
+	Expected behavior : 
+		If the client tiemout is too low, this might lead to multiple timeouts and thus retransmission and thus may lead to reconfiguration. Otherwise, the execution occurs without any error.
+
+
+File name : P3_case12.conf
+	test_case_name = case12
+	t = 3
+	num_clients = 4
+	# FAILURE SCENARIO : no failures
+
+	Scenario tested : Normal working
+
+	Expected behavior : 
+		this case as no failures and has few operations. It is used to demonstrate the proper failure free case
+
+File name : P3_case13.conf
+	test_case_name = case13
+	t = 1
+	num_clients = 1
+	failures[0,0] = client_request(0,0), sleep(4000); forward_request(0,0), extra_op()
+
+	Scenario tested : Triggers - client_request, forward_request
+					  Failures - sleep, invalid_result_sig, extra_op
+
+	Expected behavior : 
+		As the head will go to sleep due to receipt of client_Request, it will lead to timeout at client. It will thus cause retransmission and replicas will receive request from client. IF head is still sleeping or the shuttle hasn't reached the other replicas, they will forward the result to head, causing the forward_request trigger. This trigger leads to execution of extra operation. After which proceeds like a failure free scenario.

@@ -1,0 +1,259 @@
+import sys
+import pickle
+import nacl
+import nacl.utils
+from nacl.public import PrivateKey, Box
+import logging
+import time
+
+class Client(process):
+    def setup(olympus: Olympus, sys_config: set):
+        output("Setting up the Client...")
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        self.successFlag = False
+        self.resultList = {}
+        self.seqNo = -1
+        self.foundResponse = False
+        self.responsesCount = 0
+        self.invalidResponses = 0
+        self.curr_config = {}
+        self.currSeqNo = 0
+        self.HASHER = nacl.hash.sha256
+        self.core_data = {}
+        self.reconfig_in_progress = True
+
+    def receive(msg=('result_message_from_olympus', encrypted_result), from_= sender):
+
+        output('Message type: [result_message_from_olympus] Received from: ' + str(sender))
+        decrypt_box = Box(curr_config['client_private_key'], curr_config['oly_public_key'])
+        plaintext = decrypt_box.decrypt(encrypted_result)
+        result = pickle.loads(plaintext)
+
+        output('Received valid result: ' + str(result["result"]) + ' for operation: ' + str(result["oper"]))
+        if(int(result['seqNo']) not in resultList):
+            resultList[int(result['seqNo'])] = result['result']
+            successFlag = True
+
+    '''
+    def receive(msg=('config_changed', config), from_= sender):
+        output('Message type: [config_changed] Received from: ' + str(sender))
+        self.reconfig_in_progress = False
+    '''
+
+    def receive(msg=('cur_conf', config), from_= sender):
+        output('Message type: [cur_conf] Received from: ' + str(sender))
+        self.curr_config = config
+        reconfig_in_progress = False
+
+    def receive(msg=('result_message', encrypted_result), from_= sender):
+        output('Message type: [result_message] Received from: ' + str(sender))
+        decrypt_box = Box(curr_config['client_private_key'], curr_config['replica_public_keys'][str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_result)
+        result = pickle.loads(plaintext)
+
+        #output("Decrypted result is as below")
+        #output(result)
+        if self.seqNo == int(result['seqNo']) and result['client'] == self:
+            if is_valid_response(result):
+                output('Received valid result: ' + str(result["result"]) + ' for operation: ' + str(result["oper"]))
+                #resultList.append(result['result'])
+                resultList[int(result['seqNo'])] = result['result']
+                successFlag = True
+            else:
+                output('Result Validation falied for seqNo: ' + str(result["seqNo"]) + ' oper: ' + result["oper"] + '...Ask for reconfig.')
+
+    def receive(msg=('retrans_res', encrypted_result), from_= sender):
+        output('Message type: [retrans_res] Received from: ' + str(sender))
+
+        decrypt_box = Box(curr_config['client_private_key'], curr_config['replica_public_keys'][str(sender)])
+        plaintext = decrypt_box.decrypt(encrypted_result)
+        result = pickle.loads(plaintext)
+
+        if self.seqNo == int(result['seqNo']) :
+            if not foundResponse and responsesCount != self.sys_config['num_replicas'] and invalidResponses <= self.sys_config['t'] + 1:
+                responsesCount += 1
+                if is_valid_response(result) :
+                    #resultList.append(result['result'])
+                    resultList[int(result['seqNo'])] = result['result']
+                    foundResponse = True
+                else :
+                    invalidResponses += 1
+
+    def receive(msg=(('Error - Replica Immutable')), from_= sender):
+        ## validate with encription if valid sender has send this error msg
+        ## if so retrive latest configuration and try again
+        output('Message type: [Error - Replica Immutable] Received from: ' + str(sender))
+
+    def getEncryptedMsg(msg, receiverPubKey):
+        box = Box(curr_config['client_private_key'], receiverPubKey)
+        binary_msg = pickle.dumps(msg)
+        encrypted_msg = box.encrypt(binary_msg)
+        return encrypted_msg
+
+    def execute_operation():
+        operations = sys_config['workload'][str(self)]
+        #output('Sending operations: ')
+        #output(operations)
+        for oper in operations:
+            seqNo += 1;
+            successFlag = False;
+            msg = {'seqNo': self.seqNo, 'oper': oper, 'client': self}
+
+            self.reconfig_in_progress = True
+            send(('is_reconfig_in_progress'), to= olympus)
+            await(not(self.reconfig_in_progress))
+            encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['head_replica'])])
+            output('Message type: [execute] Sending to: ' + str(self.curr_config['head_replica']))
+            send(('execute', encrypted_msg, 0), to= self.curr_config['head_replica'])
+            #send(('execute', msg, 0), to= self.curr_config['head_replica'])
+            if await(self.seqNo in resultList):
+                print('SuccessFlag is set True')
+                #output('Received result successfully verified...Result is')
+                #output(resultList[self.seqNo])
+            elif timeout(sys_config['client_timeout']):
+                output('Timeout...Executing retransmission...')
+                execute_retransmission(msg);
+                if await(self.seqNo in resultList):
+                    print('foundResponse set True')
+                    #output('Received result successfully verified...Result is')
+                    #output(resultList[self.seqNo])
+                elif timeout(sys_config['client_timeout']):
+                    return
+    def fetch_config():
+        output('Message type: [current_configuration] Sending to: ' + str(olympus))
+        send(('current_configuration'), to= olympus)
+
+    def is_valid_response(res):
+        #output("Validating the result-shuttle...")
+        no_of_matches = 0
+        binary_result = pickle.dumps(res['result'])
+        result_hash = self.HASHER(binary_result, encoder=nacl.encoding.HexEncoder)
+
+        for replicaName, result_proof_i in res['result_proof'].items():
+            curr_signed_result_p = result_proof_i[1]
+            try:
+                curr_config['replica_verify_keys'][replicaName].verify(curr_signed_result_p)
+            except nacl.exceptions.BadSignatureError:
+                output("Signature verification failed for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
+                return False
+
+        for replicaName, result_proof_i in res['result_proof'].items():
+            if((result_hash == result_proof_i[0][3]) and (result_proof_i[0][2] == sys_config['workload'][str(self)][self.seqNo])):
+                no_of_matches += 1
+            if(no_of_matches == (int(sys_config['t']) + 1)):
+                output("Result-shuttle validation success for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
+                return True
+        output("Result validation failed....Less than T+1 result hashes matched for operation: " + res['oper'] + " seqNo: " + str(res['seqNo']))
+        return False
+
+    def receive(msg=('is_reconfig_in_progress_response', encrypted_result), from_= sender):
+        output('Message type: [is_reconfig_in_progress_response] Received from: ' + str(sender))
+        decrypt_box = Box(curr_config['client_private_key'], curr_config['oly_public_key'])
+        plaintext = decrypt_box.decrypt(encrypted_result)
+        result = pickle.loads(plaintext)
+
+        self.reconfig_in_progress = result['reconfig_in_progress']
+
+    def execute_retransmission(msg):
+        output('Executing retransmission for :', str(msg))
+        self.foundResponse = False
+        self.responsesCount = 0
+        self.invalidResponses = 0
+        self.reconfig_in_progress = True
+        send(('is_reconfig_in_progress'), to= olympus)
+        await(not(self.reconfig_in_progress))
+        if(self.seqNo in resultList):
+            return
+        for i in range(0, len(curr_config['replicas'])):
+            encrypted_msg = getEncryptedMsg(msg, curr_config['replica_public_keys'][str(curr_config['replicas'][i])])
+            output('Message type: [retrans] Sending to: ' + str(curr_config['replicas'][i]))
+            send(('retrans', encrypted_msg, str(i)), to= curr_config['replicas'][i])
+
+    def run():
+        start_time = time.time()
+        fetch_config();
+        await(not reconfig_in_progress)
+        execute_operation()
+        output('Validating Test cases ...')
+        end_time = time.time()
+        validate_test_case()
+        output('Terminating')
+        output("elapsed time (seconds): ", end_time - start_time)
+
+    def dict_to_binary(the_dict):
+        binary = pickle.dumps(the_dict)
+        return binary
+
+    def binary_to_dict(the_binary):
+        d = pickle.loads(the_binary)
+        return d
+
+    def validate_test_case():
+        workloads = sys_config['workload']
+        self_id = str(self)
+        for index in range (0, len(workloads[self_id])):
+            for client_id in workloads:
+                workload = workloads[client_id]
+                if index < len(workload):
+                    res = execute_actual_command(workload[index])
+                    re = 'o: '+workload[index] + ' expected res: '+ res
+                    if client_id == self_id :
+                        if index >= len(resultList):
+                             output(re + ' received res: result not received')
+                        elif res != resultList[index]:
+                            output('Invalid result ==>> Client: ' + client_id + ', Operation :' + workload[index] + ', validation Result : ' + res + ', Received result : ' + resultList[index])
+                        else :
+                            output(re + ' received  res: ' + resultList[index])
+
+    def execute_actual_command(operation):
+
+        result = ""
+
+        splits = operation.split("'")
+        if(operation[0] == 'p'):
+            ind = operation.index(',')
+            ind1 = len(operation) - 1
+            key = operation[4:ind].strip('\'').strip()
+            val = operation[ind+1 : ind1].strip('\'')
+
+            core_data[key] = val
+            result = "OK"
+
+        elif(operation[0] == 'g'):
+            ind = operation.index('(')+1
+            ind1 = len(operation) - 1
+            key = operation[ind: ind1].strip('\'').strip()
+            if(key in core_data):
+                result = core_data[key]
+            else:
+                result = ""
+
+        elif(operation[0] == 'a'):
+            ind = operation.index(',')
+            ind1 = len(operation) - 1
+            key = operation[8:ind].strip('\'').strip()
+            val = operation[ind+1 : ind1].strip('\'')
+            if(key in core_data):
+                core_data[key] = str(core_data[key]) + str(val)
+                result = "OK"
+            else:
+                result = "fail"
+
+        elif(operation[0] == 's'):
+            ind = operation.index(',')
+            ind1 = len(operation) - 2
+            key = operation[6:ind].strip('\'').strip()
+            ran = operation[ind+2 : ind1]
+            start_end = ran.split(':')
+
+            if(key in core_data and (int(start_end[0]) >= 0) and (int(start_end[1]) <= len(core_data[key]))):
+                core_data[key] = core_data[key][int(start_end[0]):int(start_end[1])]
+                result = "OK"
+            else:
+                result = "Fail"
+
+        else:
+            result = "Fail"
+
+        return result

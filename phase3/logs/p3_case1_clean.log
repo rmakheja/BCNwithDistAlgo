@@ -1,0 +1,622 @@
+[2017-11-23 18:36:52,828] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Setting up the Olympus...
+[2017-11-23 18:36:52,831] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Creating and setting up new Replicas..!
+[2017-11-23 18:36:52,921] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [Setup] Replica 0 : <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:52,926] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [Setup] Replica 1 : <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:52,926] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [ extract Failures] [Config 0] [Replica 1] - {'checkpoint(0)': ['change_result()'], 'shuttle(0,4)': ['drop_checkpt_stmts()']}
+[2017-11-23 18:36:52,929] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [Setup] Replica 2 : <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:52,936] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:52,937] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:52,938] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:52,939] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:87002#OlympusNode> T: Replica 0
+[2017-11-23 18:36:52,939] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Replica List: [<Replica:45402#ReplicaNode>, <Replica:45403#ReplicaNode>, <Replica:45404#ReplicaNode>]
+[2017-11-23 18:36:52,940] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Client List: [<Client:34802#ClientNode>]
+[2017-11-23 18:36:52,940] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:52,941] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:52,944] Client.Client<Client:34802#ClientNode>:OUTPUT: Setting up the Client...
+[2017-11-23 18:36:52,947] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Started Olympus...Waiting for an operations...
+[2017-11-23 18:36:52,950] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [current_configuration] Sending to: {<Olympus:87002#OlympusNode>}
+[2017-11-23 18:36:52,953] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [current_configuration] Received from: <Client:34802#ClientNode>
+[2017-11-23 18:36:52,953] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [cur_conf] Sending to: <Client:34802#ClientNode>
+[2017-11-23 18:36:52,958] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [cur_conf] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:52,962] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:52,962] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:52,966] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,966] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : put('movie','star')
+[2017-11-23 18:36:52,966] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: put('movie','star') result : OK
+[2017-11-23 18:36:52,967] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: Head assigned slot : 0 for : client Id - 0 seqNo - 0 oper -put('movie','star')
+[2017-11-23 18:36:52,967] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:34802#ClientNode>, 0, "put('movie','star')"] at Replica 0
+[2017-11-23 18:36:52,968] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 0
+[2017-11-23 18:36:52,968] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,973] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,973] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : put('movie','star')
+[2017-11-23 18:36:52,973] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: put('movie','star') result : OK
+[2017-11-23 18:36:52,974] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: put('movie','star') slot_no: 0 seqNo: 0
+[2017-11-23 18:36:52,974] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: put('movie','star')
+[2017-11-23 18:36:52,974] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:34802#ClientNode>, 0, "put('movie','star')"] at Replica 1
+[2017-11-23 18:36:52,975] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 1
+[2017-11-23 18:36:52,975] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,979] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,979] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('movie','star')
+[2017-11-23 18:36:52,980] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('movie','star') result : OK
+[2017-11-23 18:36:52,980] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: put('movie','star') slot_no: 0 seqNo: 0
+[2017-11-23 18:36:52,981] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: put('movie','star')
+[2017-11-23 18:36:52,981] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:34802#ClientNode>, 0, "put('movie','star')"] at Replica 2
+[2017-11-23 18:36:52,981] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 2
+[2017-11-23 18:36:52,982] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,985] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,986] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,987] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,989] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:52,990] Client.Client<Client:34802#ClientNode>:OUTPUT: Result-shuttle validation success for operation: put('movie','star') seqNo: 0
+[2017-11-23 18:36:52,991] Client.Client<Client:34802#ClientNode>:OUTPUT: Received valid result: OK for operation: put('movie','star')
+[2017-11-23 18:36:52,991] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:36:52,994] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:52,994] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:52,996] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:52,996] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : put('planet','earth')
+[2017-11-23 18:36:52,996] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: put('planet','earth') result : OK
+[2017-11-23 18:36:52,997] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: Head assigned slot : 1 for : client Id - 0 seqNo - 1 oper -put('planet','earth')
+[2017-11-23 18:36:52,997] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"] at Replica 0
+[2017-11-23 18:36:52,997] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 0
+[2017-11-23 18:36:52,997] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,000] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,000] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : put('planet','earth')
+[2017-11-23 18:36:53,000] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: put('planet','earth') result : OK
+[2017-11-23 18:36:53,001] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: put('planet','earth') slot_no: 1 seqNo: 1
+[2017-11-23 18:36:53,001] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: put('planet','earth')
+[2017-11-23 18:36:53,001] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"] at Replica 1
+[2017-11-23 18:36:53,001] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 1
+[2017-11-23 18:36:53,002] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,005] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,006] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('planet','earth')
+[2017-11-23 18:36:53,006] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('planet','earth') result : OK
+[2017-11-23 18:36:53,007] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: put('planet','earth') slot_no: 1 seqNo: 1
+[2017-11-23 18:36:53,007] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: put('planet','earth')
+[2017-11-23 18:36:53,007] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"] at Replica 2
+[2017-11-23 18:36:53,008] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 2
+[2017-11-23 18:36:53,008] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,009] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,011] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,011] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,011] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,012] Client.Client<Client:34802#ClientNode>:OUTPUT: Result-shuttle validation success for operation: put('planet','earth') seqNo: 1
+[2017-11-23 18:36:53,013] Client.Client<Client:34802#ClientNode>:OUTPUT: Received valid result: OK for operation: put('planet','earth')
+[2017-11-23 18:36:53,014] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:36:53,015] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:53,016] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:53,018] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,018] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('movie')
+[2017-11-23 18:36:53,018] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('movie') result : star
+[2017-11-23 18:36:53,018] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: Head assigned slot : 2 for : client Id - 0 seqNo - 2 oper -get('movie')
+[2017-11-23 18:36:53,018] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: adding order stmt : [2, <Client:34802#ClientNode>, 2, "get('movie')"] at Replica 0
+[2017-11-23 18:36:53,019] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] at Replica 0
+[2017-11-23 18:36:53,019] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,020] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: S: [checkpoint_proof] F: Replica 0 T: Replica -1 I: current history len 3 checkpoint len - 2
+[2017-11-23 18:36:53,021] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,022] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : get('movie')
+[2017-11-23 18:36:53,022] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: get('movie') result : star
+[2017-11-23 18:36:53,023] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: get('movie') slot_no: 2 seqNo: 2
+[2017-11-23 18:36:53,023] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: get('movie')
+[2017-11-23 18:36:53,023] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: adding order stmt : [2, <Client:34802#ClientNode>, 2, "get('movie')"] at Replica 1
+[2017-11-23 18:36:53,023] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] at Replica 1
+[2017-11-23 18:36:53,024] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,025] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [checkpoint_proof] F: Replica 0 T: Replica 1 I: current history len 3
+[2017-11-23 18:36:53,026] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [FAILURE TRIGGERED] [Replica 1] trigger : checkpoint(0) failure ['change_result()']
+[2017-11-23 18:36:53,026] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: E: [checkpoint proof] [SUCCESS] [Replica 1]
+[2017-11-23 18:36:53,026] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,026] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : get('movie')
+[2017-11-23 18:36:53,026] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [checkpoint_proof] F: Replica 1 T: Replica 0 I: current history len 3 checkpoint len - 2
+[2017-11-23 18:36:53,026] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: get('movie') result : star
+[2017-11-23 18:36:53,027] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: get('movie') slot_no: 2 seqNo: 2
+[2017-11-23 18:36:53,028] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: get('movie')
+[2017-11-23 18:36:53,028] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: adding order stmt : [2, <Client:34802#ClientNode>, 2, "get('movie')"] at Replica 2
+[2017-11-23 18:36:53,028] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] at Replica 2
+[2017-11-23 18:36:53,029] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,030] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,031] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,031] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [INJECT FAILURE] [Replica 1] [change result] client 0
+[2017-11-23 18:36:53,032] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT:  [change result] before changing result, hash : b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560'
+[2017-11-23 18:36:53,032] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,032] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT:  [change result] after  changing result, hash : b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f'
+[2017-11-23 18:36:53,032] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [checkpoint_proof] F: Replica 1 T: Replica 2 I: current history len 3
+[2017-11-23 18:36:53,032] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: E: [checkpoint proof] [SUCCESS] [Replica 2]
+[2017-11-23 18:36:53,033] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,033] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [checkpoint_completed] F: Replica 2 T: Replica 1 I: current history len 1 checkpoint len - 2
+[2017-11-23 18:36:53,033] Client.Client<Client:34802#ClientNode>:OUTPUT: Result-shuttle validation success for operation: get('movie') seqNo: 2
+[2017-11-23 18:36:53,033] Client.Client<Client:34802#ClientNode>:OUTPUT: Received valid result: star for operation: get('movie')
+[2017-11-23 18:36:53,035] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:36:53,036] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [checkpoint_completed] F: Replica 2 T: Replica 1 I: current history len 3 checkpoint len - 2
+[2017-11-23 18:36:53,036] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: E: [completed checkpoint proof] [FAIL] [Replica 1]
+[2017-11-23 18:36:53,036] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [recofig] F: Replica 1 T: olympus I: Error in checkpoint proof validation
+[2017-11-23 18:36:53,037] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:53,038] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:53,038] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [reconfigure] Received from: <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:53,039] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Valid Reconfiguration request
+[2017-11-23 18:36:53,039] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:53,040] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:53,040] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:53,040] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('planet')
+[2017-11-23 18:36:53,041] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,041] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('planet') result : earth
+[2017-11-23 18:36:53,041] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: Head assigned slot : 3 for : client Id - 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:36:53,042] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: adding order stmt : [3, <Client:34802#ClientNode>, 3, "get('planet')"] at Replica 0
+[2017-11-23 18:36:53,042] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:53,042] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 0
+[2017-11-23 18:36:53,043] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:53,043] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:34802#ClientNode>, 0, "put('movie','star')"], 1: [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"], 2: [2, <Client:34802#ClientNode>, 2, "get('movie')"]}}
+[2017-11-23 18:36:53,043] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 1 T: <Olympus:87002#OlympusNode>I: history len - 3
+[2017-11-23 18:36:53,044] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:53,045] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {0: [0, <Client:34802#ClientNode>, 0, "put('movie','star')"], 1: [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"]}, 'History': {2: [2, <Client:34802#ClientNode>, 2, "get('movie')"]}}
+[2017-11-23 18:36:53,045] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 2 T: <Olympus:87002#OlympusNode>I: history len - 1
+[2017-11-23 18:36:53,045] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:87002#OlympusNode> T: Replica 0
+[2017-11-23 18:36:53,045] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:53,046] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T : Replica 1I: ReplicaImmutable
+[2017-11-23 18:36:53,046] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [Error - Replica Immutable] F: Replica 1 T: Replica 0 I: execute request
+[2017-11-23 18:36:53,046] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:34802#ClientNode>, 0, "put('movie','star')"], 1: [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"], 2: [2, <Client:34802#ClientNode>, 2, "get('movie')"], 3: [3, <Client:34802#ClientNode>, 3, "get('planet')"]}}
+[2017-11-23 18:36:53,047] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 0 T: <Olympus:87002#OlympusNode>I: history len - 4
+[2017-11-23 18:36:53,047] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,049] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:53,051] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Longest history is - 
+[2017-11-23 18:36:53,051] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: [[0, 0], [1, 1], [2, 2]]
+[2017-11-23 18:36:53,051] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [catchup] Sending to: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,052] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [catchup] Sending to: <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:53,053] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [catchup] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:53,054] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I : [catchup] The catchup_orders received are [2] - [[0, <Client:34802#ClientNode>, 0, "put('movie','star')"], [1, <Client:34802#ClientNode>, 1, "put('planet','earth')"]]
+[2017-11-23 18:36:53,054] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('movie','star')
+[2017-11-23 18:36:53,054] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [catchup] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:53,054] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('movie','star') result : OK
+[2017-11-23 18:36:53,054] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I : [catchup] The catchup_orders received are [0] - []
+[2017-11-23 18:36:53,055] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I : [catchup] Added result statement [<Client:34802#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] to recent_result_proof_for_every_client
+[2017-11-23 18:36:53,055] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: S: [caughtup] F: Replica 1 T: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:53,055] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('planet','earth')
+[2017-11-23 18:36:53,055] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('planet','earth') result : OK
+[2017-11-23 18:36:53,055] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I : [catchup] Added result statement [<Client:34802#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] to recent_result_proof_for_every_client
+[2017-11-23 18:36:53,056] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [caughtup] F: Replica 2 T: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:53,057] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [caughtup] Received from: <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:53,057] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: CH is being set for this replica - value is b'9dd2a0cc7dc551f472f7f40aea179ce56f8d318082a262d7919cbd61f921f386'
+[2017-11-23 18:36:53,058] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: length of recent_result_shuttle_for_every_client[client_name] - 1
+[2017-11-23 18:36:53,058] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: length of quorum_replicas - 2
+[2017-11-23 18:36:53,058] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [caughtup] Received from: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,059] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: length of recent_result_shuttle_for_every_client[client_name] - 2
+[2017-11-23 18:36:53,059] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: length of quorum_replicas - 2
+[2017-11-23 18:36:53,059] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [get_running_state] sending to <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,061] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [get_running_state] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:53,062] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [result_message_from_olympus] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:53,062] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: S: [running_state] F: Replica 2 T: <Olympus:87002#OlympusNode>I: core data len - 2 core data - {'movie': 'star', 'planet': 'earth'}
+[2017-11-23 18:36:53,062] Client.Client<Client:34802#ClientNode>:OUTPUT: Received valid result: OK for operation: put('planet','earth')
+[2017-11-23 18:36:53,063] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [running_state] Received from: <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,064] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Hash values are : [curr_hash] -b'9dd2a0cc7dc551f472f7f40aea179ce56f8d318082a262d7919cbd61f921f386' TYPE -<class 'bytes'> || [caughtupMessageHash] -b'9dd2a0cc7dc551f472f7f40aea179ce56f8d318082a262d7919cbd61f921f386' TYPE - <class 'bytes'>
+[2017-11-23 18:36:53,064] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Abort] sending to <Replica:45402#ReplicaNode>
+[2017-11-23 18:36:53,065] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Abort] sending to <Replica:45403#ReplicaNode>
+[2017-11-23 18:36:53,066] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Abort] sending to <Replica:45404#ReplicaNode>
+[2017-11-23 18:36:53,066] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: R: [abort] F: Olympus <Olympus:87002#OlympusNode> T: Replica 0
+[2017-11-23 18:36:53,067] Replica.Replica<Replica:45402#ReplicaNode>:OUTPUT: I: [Terminated] Replica 0
+[2017-11-23 18:36:53,067] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Creating and setting up new Replicas..!
+[2017-11-23 18:36:53,067] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: R: [abort] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:53,068] Replica.Replica<Replica:45403#ReplicaNode>:OUTPUT: I: [Terminated] Replica 1
+[2017-11-23 18:36:53,068] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: R: [abort] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:53,069] Replica.Replica<Replica:45404#ReplicaNode>:OUTPUT: I: [Terminated] Replica 2
+[2017-11-23 18:36:53,132] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [Setup] Replica 0 : <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:53,134] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [Setup] Replica 1 : <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:53,137] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [Setup] Replica 2 : <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:53,144] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:53,145] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:53,146] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:53,147] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:87002#OlympusNode> T: Replica 0
+[2017-11-23 18:36:53,148] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Replica List: [<Replica:45405#ReplicaNode>, <Replica:45406#ReplicaNode>, <Replica:45407#ReplicaNode>]
+[2017-11-23 18:36:53,148] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Client List: [<Client:34802#ClientNode>]
+[2017-11-23 18:36:53,148] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [inithist] Sending to: <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:53,149] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:53,149] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:53,150] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [inithist] Sending to: <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:53,151] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [inithist] F: Olympus <Olympus:87002#OlympusNode> T: Replica 0
+[2017-11-23 18:36:53,151] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [inithist] Sending to: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:53,152] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: [inithist] core data - {'movie': 'star', 'planet': 'earth'}
+[2017-11-23 18:36:53,152] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [inithist] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:53,152] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [current_configuration] Received from: <Client:34802#ClientNode>
+[2017-11-23 18:36:53,152] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [cur_conf] Sending to: <Client:34802#ClientNode>
+[2017-11-23 18:36:53,152] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: [inithist] core data - {'movie': 'star', 'planet': 'earth'}
+[2017-11-23 18:36:53,153] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [inithist] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:53,154] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [inithist] core data - {'movie': 'star', 'planet': 'earth'}
+[2017-11-23 18:36:53,155] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [cur_conf] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:56,040] Client.Client<Client:34802#ClientNode>:OUTPUT: Timeout...Executing retransmission...
+[2017-11-23 18:36:56,041] Client.Client<Client:34802#ClientNode>:OUTPUT: Executing retransmission for : {'oper': "get('planet')", 'client': <Client:34802#ClientNode>, 'seqNo': 3}
+[2017-11-23 18:36:56,045] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:56,045] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [retrans] Sending to: <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:56,048] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [retrans] Sending to: <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:56,049] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [retrans] F: Client 0T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,050] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Head I: Retrans req, Client 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:36:56,051] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [retrans] Sending to: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,052] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,053] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('planet')
+[2017-11-23 18:36:56,053] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('planet') result : earth
+[2017-11-23 18:36:56,053] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [retrans] F: Client 0T: Replica 1I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,053] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: Head assigned slot : 0 for : client Id - 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:36:56,053] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: S: [retrans] F: Replica 1 T: Head I: Retrans req, Client 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:36:56,053] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:34802#ClientNode>, 3, "get('planet')"] at Replica 0
+[2017-11-23 18:36:56,054] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 0
+[2017-11-23 18:36:56,058] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [retrans] F: Client 0T: Replica 2I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,055] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,065] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: S: [retrans] F: Replica 2 T: Head I: Retrans req, Client 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:36:56,071] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [retrans] F: Replica 1T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,071] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,071] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : get('planet')
+[2017-11-23 18:36:56,072] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: get('planet') result : earth
+[2017-11-23 18:36:56,072] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: get('planet') slot_no: 0 seqNo: 3
+[2017-11-23 18:36:56,072] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [retrans] F: Replica 2T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,072] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: get('planet')
+[2017-11-23 18:36:56,073] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:34802#ClientNode>, 3, "get('planet')"] at Replica 1
+[2017-11-23 18:36:56,073] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 1
+[2017-11-23 18:36:56,073] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,078] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,078] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : get('planet')
+[2017-11-23 18:36:56,079] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: get('planet') result : earth
+[2017-11-23 18:36:56,079] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: get('planet') slot_no: 0 seqNo: 3
+[2017-11-23 18:36:56,080] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: get('planet')
+[2017-11-23 18:36:56,080] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:34802#ClientNode>, 3, "get('planet')"] at Replica 2
+[2017-11-23 18:36:56,081] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:34802#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 2
+[2017-11-23 18:36:56,081] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,090] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: S: [recofig] F: Replica 1 T: olympus I: [timer expired] Retransmission Failed for client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,100] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [reconfigure] Received from: <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:56,101] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,101] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Valid Reconfiguration request
+[2017-11-23 18:36:56,103] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:56,103] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,103] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: S: [recofig] F: Replica 0 T: olympus I: [timer expired] Retransmission Failed for client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,104] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,105] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:56,107] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,109] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:87002#OlympusNode> T: Replica 0
+[2017-11-23 18:36:56,109] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:87002#OlympusNode> T: Replica 1
+[2017-11-23 18:36:56,110] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [reconfigure] Received from: <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:56,110] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:34802#ClientNode>, 3, "get('planet')"]}}
+[2017-11-23 18:36:56,110] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:34802#ClientNode>, 3, "get('planet')"]}}
+[2017-11-23 18:36:56,110] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Valid Reconfiguration request
+[2017-11-23 18:36:56,111] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Reconfiguration is already in progress...!!
+[2017-11-23 18:36:56,111] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 0 T: <Olympus:87002#OlympusNode>I: history len - 1
+[2017-11-23 18:36:56,112] Replica.Replica<Replica:45406#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 1 T: <Olympus:87002#OlympusNode>I: history len - 1
+[2017-11-23 18:36:56,119] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,121] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:56,122] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:45406#ReplicaNode>
+[2017-11-23 18:36:56,122] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,124] Client.Client<Client:34802#ClientNode>:OUTPUT: Result-shuttle validation success for operation: get('planet') seqNo: 3
+[2017-11-23 18:36:56,124] Client.Client<Client:34802#ClientNode>:OUTPUT: Received valid result: earth for operation: get('planet')
+[2017-11-23 18:36:56,131] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:56,120] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 0 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,121] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 2 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,141] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:56,143] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:34802#ClientNode>, 3, "get('planet')"]}}
+[2017-11-23 18:36:56,143] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 2 T: <Olympus:87002#OlympusNode>I: history len - 1
+[2017-11-23 18:36:56,147] Replica.Replica<Replica:45405#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 0 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:36:56,147] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,150] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,151] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Longest history is - 
+[2017-11-23 18:36:56,151] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:56,151] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: [[0, 3], [2, 2]]
+[2017-11-23 18:36:56,152] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [catchup] Sending to: None
+[2017-11-23 18:36:56,152] Client.Client<Client:34802#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:45405#ReplicaNode>
+[2017-11-23 18:36:56,153] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [catchup] Sending to: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,155] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: R: [catchup] F: Olympus <Olympus:87002#OlympusNode> T: Replica 2
+[2017-11-23 18:36:56,155] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I : [catchup] The catchup_orders received are [1] - [[2, <Client:34802#ClientNode>, 2, "get('movie')"]]
+[2017-11-23 18:36:56,156] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : get('movie')
+[2017-11-23 18:36:56,156] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: get('movie') result : star
+[2017-11-23 18:36:56,156] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: I : [catchup] Added result statement [<Client:34802#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] to recent_result_proof_for_every_client
+[2017-11-23 18:36:56,159] Replica.Replica<Replica:45407#ReplicaNode>:OUTPUT: S: [caughtup] F: Replica 2 T: <Olympus:87002#OlympusNode>
+[2017-11-23 18:36:56,162] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: Message type: [caughtup] Received from: <Replica:45407#ReplicaNode>
+[2017-11-23 18:36:56,163] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: length of recent_result_shuttle_for_every_client[client_name] - 1
+[2017-11-23 18:36:56,163] Olympus.Olympus<Olympus:87002#OlympusNode>:OUTPUT: length of quorum_replicas - 2
+[2017-11-23 18:38:13,497] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Setting up the Olympus...
+[2017-11-23 18:38:13,498] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Creating and setting up new Replicas..!
+[2017-11-23 18:38:13,570] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [Setup] Replica 0 : <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,572] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [Setup] Replica 1 : <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,573] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [ extract Failures] [Config 0] [Replica 1] - {'checkpoint(0)': ['change_result()'], 'shuttle(0,4)': ['drop_checkpt_stmts()']}
+[2017-11-23 18:38:13,576] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [Setup] Replica 2 : <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,582] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,583] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,585] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,586] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:25002#OlympusNode> T: Replica 0
+[2017-11-23 18:38:13,586] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Replica List: [<Replica:58002#ReplicaNode>, <Replica:58003#ReplicaNode>, <Replica:58004#ReplicaNode>]
+[2017-11-23 18:38:13,586] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Client List: [<Client:b1c02#ClientNode>]
+[2017-11-23 18:38:13,586] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:25002#OlympusNode> T: Replica 1
+[2017-11-23 18:38:13,588] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,591] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Setting up the Client...
+[2017-11-23 18:38:13,594] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Started Olympus...Waiting for an operations...
+[2017-11-23 18:38:13,596] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [current_configuration] Sending to: {<Olympus:25002#OlympusNode>}
+[2017-11-23 18:38:13,599] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [current_configuration] Received from: <Client:b1c02#ClientNode>
+[2017-11-23 18:38:13,599] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [cur_conf] Sending to: <Client:b1c02#ClientNode>
+[2017-11-23 18:38:13,603] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [cur_conf] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,606] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,607] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,610] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,611] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : put('movie','star')
+[2017-11-23 18:38:13,611] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: put('movie','star') result : OK
+[2017-11-23 18:38:13,611] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: Head assigned slot : 0 for : client Id - 0 seqNo - 0 oper -put('movie','star')
+[2017-11-23 18:38:13,611] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"] at Replica 0
+[2017-11-23 18:38:13,612] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 0
+[2017-11-23 18:38:13,612] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,616] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,616] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : put('movie','star')
+[2017-11-23 18:38:13,616] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: put('movie','star') result : OK
+[2017-11-23 18:38:13,617] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: put('movie','star') slot_no: 0 seqNo: 0
+[2017-11-23 18:38:13,617] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: put('movie','star')
+[2017-11-23 18:38:13,617] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"] at Replica 1
+[2017-11-23 18:38:13,617] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 1
+[2017-11-23 18:38:13,618] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,622] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,622] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('movie','star')
+[2017-11-23 18:38:13,622] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('movie','star') result : OK
+[2017-11-23 18:38:13,623] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: put('movie','star') slot_no: 0 seqNo: 0
+[2017-11-23 18:38:13,623] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: put('movie','star')
+[2017-11-23 18:38:13,623] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"] at Replica 2
+[2017-11-23 18:38:13,624] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 2
+[2017-11-23 18:38:13,624] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,627] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,628] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,628] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,631] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,632] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Result-shuttle validation success for operation: put('movie','star') seqNo: 0
+[2017-11-23 18:38:13,632] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Received valid result: OK for operation: put('movie','star')
+[2017-11-23 18:38:13,632] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 0 oper-put('movie','star')
+[2017-11-23 18:38:13,636] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,636] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,638] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,638] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : put('planet','earth')
+[2017-11-23 18:38:13,639] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: put('planet','earth') result : OK
+[2017-11-23 18:38:13,639] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: Head assigned slot : 1 for : client Id - 0 seqNo - 1 oper -put('planet','earth')
+[2017-11-23 18:38:13,639] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"] at Replica 0
+[2017-11-23 18:38:13,640] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 0
+[2017-11-23 18:38:13,640] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,642] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,642] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : put('planet','earth')
+[2017-11-23 18:38:13,642] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: put('planet','earth') result : OK
+[2017-11-23 18:38:13,643] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: put('planet','earth') slot_no: 1 seqNo: 1
+[2017-11-23 18:38:13,643] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: put('planet','earth')
+[2017-11-23 18:38:13,643] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"] at Replica 1
+[2017-11-23 18:38:13,643] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 1
+[2017-11-23 18:38:13,644] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,646] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,646] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('planet','earth')
+[2017-11-23 18:38:13,646] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('planet','earth') result : OK
+[2017-11-23 18:38:13,647] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: put('planet','earth') slot_no: 1 seqNo: 1
+[2017-11-23 18:38:13,647] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: put('planet','earth')
+[2017-11-23 18:38:13,647] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"] at Replica 2
+[2017-11-23 18:38:13,648] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] at Replica 2
+[2017-11-23 18:38:13,648] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,649] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,650] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,651] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,651] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,652] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Result-shuttle validation success for operation: put('planet','earth') seqNo: 1
+[2017-11-23 18:38:13,652] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Received valid result: OK for operation: put('planet','earth')
+[2017-11-23 18:38:13,653] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 1 oper-put('planet','earth')
+[2017-11-23 18:38:13,656] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,656] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,658] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,658] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('movie')
+[2017-11-23 18:38:13,658] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('movie') result : star
+[2017-11-23 18:38:13,658] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: Head assigned slot : 2 for : client Id - 0 seqNo - 2 oper -get('movie')
+[2017-11-23 18:38:13,659] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: adding order stmt : [2, <Client:b1c02#ClientNode>, 2, "get('movie')"] at Replica 0
+[2017-11-23 18:38:13,659] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] at Replica 0
+[2017-11-23 18:38:13,659] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,660] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: S: [checkpoint_proof] F: Replica 0 T: Replica -1 I: current history len 3 checkpoint len - 2
+[2017-11-23 18:38:13,662] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,662] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : get('movie')
+[2017-11-23 18:38:13,662] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: get('movie') result : star
+[2017-11-23 18:38:13,663] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: get('movie') slot_no: 2 seqNo: 2
+[2017-11-23 18:38:13,663] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: get('movie')
+[2017-11-23 18:38:13,663] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: adding order stmt : [2, <Client:b1c02#ClientNode>, 2, "get('movie')"] at Replica 1
+[2017-11-23 18:38:13,664] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] at Replica 1
+[2017-11-23 18:38:13,664] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [checkpoint_proof] F: Replica 0 T: Replica 1 I: current history len 3
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [FAILURE TRIGGERED] [Replica 1] trigger : checkpoint(0) failure ['change_result()']
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: E: [checkpoint proof] [SUCCESS] [Replica 1]
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : get('movie')
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [checkpoint_proof] F: Replica 1 T: Replica 0 I: current history len 3 checkpoint len - 2
+[2017-11-23 18:38:13,666] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: get('movie') result : star
+[2017-11-23 18:38:13,667] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: get('movie') slot_no: 2 seqNo: 2
+[2017-11-23 18:38:13,668] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: get('movie')
+[2017-11-23 18:38:13,668] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: adding order stmt : [2, <Client:b1c02#ClientNode>, 2, "get('movie')"] at Replica 2
+[2017-11-23 18:38:13,669] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 2, "get('movie')", b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560', 'star'] at Replica 2
+[2017-11-23 18:38:13,669] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,670] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,671] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,672] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [INJECT FAILURE] [Replica 1] [change result] client 0
+[2017-11-23 18:38:13,672] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT:  [change result] before changing result, hash : b'6b06ac1727d0c4a1a0f73572e0f1c7cdc6aec0ad5a4580035b225fa66fb21560'
+[2017-11-23 18:38:13,672] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,672] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT:  [change result] after  changing result, hash : b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f'
+[2017-11-23 18:38:13,672] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [checkpoint_proof] F: Replica 1 T: Replica 2 I: current history len 3
+[2017-11-23 18:38:13,673] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: E: [checkpoint proof] [SUCCESS] [Replica 2]
+[2017-11-23 18:38:13,673] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,673] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [checkpoint_completed] F: Replica 2 T: Replica 1 I: current history len 1 checkpoint len - 2
+[2017-11-23 18:38:13,673] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Result-shuttle validation success for operation: get('movie') seqNo: 2
+[2017-11-23 18:38:13,673] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Received valid result: star for operation: get('movie')
+[2017-11-23 18:38:13,676] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 2 oper-get('movie')
+[2017-11-23 18:38:13,676] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [checkpoint_completed] F: Replica 2 T: Replica 1 I: current history len 3 checkpoint len - 2
+[2017-11-23 18:38:13,677] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: E: [completed checkpoint proof] [FAIL] [Replica 1]
+[2017-11-23 18:38:13,677] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [recofig] F: Replica 1 T: olympus I: Error in checkpoint proof validation
+[2017-11-23 18:38:13,678] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,678] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,679] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [reconfigure] Received from: <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,679] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Valid Reconfiguration request
+[2017-11-23 18:38:13,680] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,681] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,681] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:13,681] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('planet')
+[2017-11-23 18:38:13,682] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('planet') result : earth
+[2017-11-23 18:38:13,682] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Wedge] sending to <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,682] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: Head assigned slot : 3 for : client Id - 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:38:13,682] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: adding order stmt : [3, <Client:b1c02#ClientNode>, 3, "get('planet')"] at Replica 0
+[2017-11-23 18:38:13,683] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 0
+[2017-11-23 18:38:13,683] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:13,683] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:25002#OlympusNode> T: Replica 1
+[2017-11-23 18:38:13,684] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"], 1: [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"], 2: [2, <Client:b1c02#ClientNode>, 2, "get('movie')"]}}
+[2017-11-23 18:38:13,684] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 1 T: <Olympus:25002#OlympusNode>I: history len - 3
+[2017-11-23 18:38:13,684] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,685] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {0: [0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"], 1: [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"]}, 'History': {2: [2, <Client:b1c02#ClientNode>, 2, "get('movie')"]}}
+[2017-11-23 18:38:13,686] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [wedge] F: Olympus <Olympus:25002#OlympusNode> T: Replica 0
+[2017-11-23 18:38:13,686] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 2 T: <Olympus:25002#OlympusNode>I: history len - 1
+[2017-11-23 18:38:13,687] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [wedge] wedge response - {'Checkpoint': {}, 'History': {0: [0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"], 1: [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"], 2: [2, <Client:b1c02#ClientNode>, 2, "get('movie')"], 3: [3, <Client:b1c02#ClientNode>, 3, "get('planet')"]}}
+[2017-11-23 18:38:13,687] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: S: [wedged] F: Replica 0 T: <Olympus:25002#OlympusNode>I: history len - 4
+[2017-11-23 18:38:13,687] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,687] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T : Replica 1I: ReplicaImmutable
+[2017-11-23 18:38:13,688] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [Error - Replica Immutable] F: Replica 1 T: Replica 0 I: execute request
+[2017-11-23 18:38:13,689] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,690] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [wedged] Received from: <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,691] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Longest history is - 
+[2017-11-23 18:38:13,691] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: [[0, 0], [1, 1], [2, 2]]
+[2017-11-23 18:38:13,692] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [catchup] Sending to: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,693] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [catchup] Sending to: <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,694] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [catchup] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,694] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I : [catchup] The catchup_orders received are [2] - [[0, <Client:b1c02#ClientNode>, 0, "put('movie','star')"], [1, <Client:b1c02#ClientNode>, 1, "put('planet','earth')"]]
+[2017-11-23 18:38:13,694] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('movie','star')
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('movie','star') result : OK
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I : [catchup] Added result statement [<Client:b1c02#ClientNode>, 0, "put('movie','star')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] to recent_result_proof_for_every_client
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [catchup] F: Olympus <Olympus:25002#OlympusNode> T: Replica 1
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : put('planet','earth')
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: put('planet','earth') result : OK
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I : [catchup] The catchup_orders received are [0] - []
+[2017-11-23 18:38:13,695] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I : [catchup] Added result statement [<Client:b1c02#ClientNode>, 1, "put('planet','earth')", b'993c86df9aeaf07579b44943216571b94456b0228e65b6e09384701a7c4ab03f', 'OK'] to recent_result_proof_for_every_client
+[2017-11-23 18:38:13,696] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: S: [caughtup] F: Replica 1 T: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,696] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [caughtup] F: Replica 2 T: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,698] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [caughtup] Received from: <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,699] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: CH is being set for this replica - value is b'f1b67df5c9a29e54c493a90fcf10ae0727c797ec0e2954c66bcb655d98ce9788'
+[2017-11-23 18:38:13,699] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: length of recent_result_shuttle_for_every_client[client_name] - 1
+[2017-11-23 18:38:13,699] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: length of quorum_replicas - 2
+[2017-11-23 18:38:13,700] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [caughtup] Received from: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,700] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: length of recent_result_shuttle_for_every_client[client_name] - 2
+[2017-11-23 18:38:13,700] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: length of quorum_replicas - 2
+[2017-11-23 18:38:13,701] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [get_running_state] sending to <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,703] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [get_running_state] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,704] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: S: [running_state] F: Replica 2 T: <Olympus:25002#OlympusNode>I: core data len - 2 core data - {'planet': 'earth', 'movie': 'star'}
+[2017-11-23 18:38:13,704] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [result_message_from_olympus] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:13,704] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Received valid result: OK for operation: put('planet','earth')
+[2017-11-23 18:38:13,706] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [running_state] Received from: <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,706] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Hash values are : [curr_hash] -b'f1b67df5c9a29e54c493a90fcf10ae0727c797ec0e2954c66bcb655d98ce9788' TYPE -<class 'bytes'> || [caughtupMessageHash] -b'f1b67df5c9a29e54c493a90fcf10ae0727c797ec0e2954c66bcb655d98ce9788' TYPE - <class 'bytes'>
+[2017-11-23 18:38:13,706] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Abort] sending to <Replica:58002#ReplicaNode>
+[2017-11-23 18:38:13,707] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Abort] sending to <Replica:58003#ReplicaNode>
+[2017-11-23 18:38:13,708] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Abort] sending to <Replica:58004#ReplicaNode>
+[2017-11-23 18:38:13,708] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: R: [abort] F: Olympus <Olympus:25002#OlympusNode> T: Replica 0
+[2017-11-23 18:38:13,709] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: R: [abort] F: Olympus <Olympus:25002#OlympusNode> T: Replica 1
+[2017-11-23 18:38:13,709] Replica.Replica<Replica:58002#ReplicaNode>:OUTPUT: I: [Terminated] Replica 0
+[2017-11-23 18:38:13,709] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Creating and setting up new Replicas..!
+[2017-11-23 18:38:13,710] Replica.Replica<Replica:58003#ReplicaNode>:OUTPUT: I: [Terminated] Replica 1
+[2017-11-23 18:38:13,711] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: R: [abort] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,711] Replica.Replica<Replica:58004#ReplicaNode>:OUTPUT: I: [Terminated] Replica 2
+[2017-11-23 18:38:13,772] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [Setup] Replica 0 : <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:13,776] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [Setup] Replica 1 : <Replica:58006#ReplicaNode>
+[2017-11-23 18:38:13,779] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: R: [Setup] Replica 2 : <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:13,786] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:13,787] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:58006#ReplicaNode>
+[2017-11-23 18:38:13,789] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [Keys] sending to <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:13,790] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:25002#OlympusNode> T: Replica 0
+[2017-11-23 18:38:13,791] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Replica List: [<Replica:58005#ReplicaNode>, <Replica:58006#ReplicaNode>, <Replica:58007#ReplicaNode>]
+[2017-11-23 18:38:13,791] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Client List: [<Client:b1c02#ClientNode>]
+[2017-11-23 18:38:13,792] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [inithist] Sending to: <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:13,792] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:25002#OlympusNode> T: Replica 1
+[2017-11-23 18:38:13,793] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [inithist] Sending to: <Replica:58006#ReplicaNode>
+[2017-11-23 18:38:13,794] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: R: [keys] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,794] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [inithist] F: Olympus <Olympus:25002#OlympusNode> T: Replica 0
+[2017-11-23 18:38:13,795] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [inithist] Sending to: <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:13,795] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: [inithist] core data - {'planet': 'earth', 'movie': 'star'}
+[2017-11-23 18:38:13,796] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [current_configuration] Received from: <Client:b1c02#ClientNode>
+[2017-11-23 18:38:13,796] Olympus.Olympus<Olympus:25002#OlympusNode>:OUTPUT: Message type: [cur_conf] Sending to: <Client:b1c02#ClientNode>
+[2017-11-23 18:38:13,797] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [inithist] F: Olympus <Olympus:25002#OlympusNode> T: Replica 1
+[2017-11-23 18:38:13,798] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [inithist] core data - {'planet': 'earth', 'movie': 'star'}
+[2017-11-23 18:38:13,798] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: R: [inithist] F: Olympus <Olympus:25002#OlympusNode> T: Replica 2
+[2017-11-23 18:38:13,799] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [inithist] core data - {'planet': 'earth', 'movie': 'star'}
+[2017-11-23 18:38:13,800] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [cur_conf] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:16,681] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Timeout...Executing retransmission...
+[2017-11-23 18:38:16,682] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Executing retransmission for : {'oper': "get('planet')", 'seqNo': 3, 'client': <Client:b1c02#ClientNode>}
+[2017-11-23 18:38:16,686] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:16,687] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans] Sending to: <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:16,689] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans] Sending to: <Replica:58006#ReplicaNode>
+[2017-11-23 18:38:16,691] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [retrans] F: Client 0T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,691] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Head I: Retrans req, Client 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:38:16,692] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans] Sending to: <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:16,693] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,693] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('planet')
+[2017-11-23 18:38:16,693] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('planet') result : earth
+[2017-11-23 18:38:16,693] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: Head assigned slot : 0 for : client Id - 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:38:16,694] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:b1c02#ClientNode>, 3, "get('planet')"] at Replica 0
+[2017-11-23 18:38:16,694] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [retrans] F: Client 0T: Replica 1I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,694] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: S: [retrans] F: Replica 1 T: Head I: Retrans req, Client 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:38:16,694] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 0
+[2017-11-23 18:38:16,695] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,698] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: R: [retrans] F: Client 0T: Replica 2I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,698] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: S: [retrans] F: Replica 2 T: Head I: Retrans req, Client 0 seqNo - 3 oper -get('planet')
+[2017-11-23 18:38:16,703] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,703] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : get('planet')
+[2017-11-23 18:38:16,703] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [retrans] F: Replica 1T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,704] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: get('planet') result : earth
+[2017-11-23 18:38:16,704] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: get('planet') slot_no: 0 seqNo: 3
+[2017-11-23 18:38:16,705] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: get('planet')
+[2017-11-23 18:38:16,705] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:b1c02#ClientNode>, 3, "get('planet')"] at Replica 1
+[2017-11-23 18:38:16,706] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 1
+[2017-11-23 18:38:16,706] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [retrans] F: Replica 2T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,706] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,711] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,711] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : get('planet')
+[2017-11-23 18:38:16,711] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: get('planet') result : earth
+[2017-11-23 18:38:16,712] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: get('planet') slot_no: 0 seqNo: 3
+[2017-11-23 18:38:16,713] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: get('planet')
+[2017-11-23 18:38:16,713] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: adding order stmt : [0, <Client:b1c02#ClientNode>, 3, "get('planet')"] at Replica 2
+[2017-11-23 18:38:16,714] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 3, "get('planet')", b'a50f46a3de964de849fe285a4305eb8b4f4dd1848f7ee570a33d0757d0714fb7', 'earth'] at Replica 2
+[2017-11-23 18:38:16,714] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,717] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,719] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,719] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,721] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 2 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,721] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 1 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,721] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:16,722] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,723] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 0 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,723] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Result-shuttle validation success for operation: get('planet') seqNo: 3
+[2017-11-23 18:38:16,724] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Received valid result: earth for operation: get('planet')
+[2017-11-23 18:38:16,726] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:16,731] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 0 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,732] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [is_reconfig_in_progress_response] Received from: <Olympus:25002#OlympusNode>
+[2017-11-23 18:38:16,734] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: S: [retrans_res] [received shuttle] F: Replica 0 T: Client 0 I: client Id - 0 seqNo - 3 oper-get('planet')
+[2017-11-23 18:38:16,735] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [execute] Sending to: <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:16,736] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:58006#ReplicaNode>
+[2017-11-23 18:38:16,738] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:16,738] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [execute] F: Client 0 T: Replica 0 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,738] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 0] - command : get('key')
+[2017-11-23 18:38:16,738] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:16,738] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 0] - command: get('key') result : 
+[2017-11-23 18:38:16,739] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: Head assigned slot : 1 for : client Id - 0 seqNo - 4 oper -get('key')
+[2017-11-23 18:38:16,739] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:b1c02#ClientNode>, 4, "get('key')"] at Replica 0
+[2017-11-23 18:38:16,739] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [retrans_res] Received from: <Replica:58005#ReplicaNode>
+[2017-11-23 18:38:16,740] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 4, "get('key')", b'9238a956da94f16cf609c1b8b8ca16940cf1c77a9fb8ecf7f67ef75f6b2e0f68', ''] at Replica 0
+[2017-11-23 18:38:16,740] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: S: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,743] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [execute] F: Replica 0 T: Replica 1 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,743] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 1] - command : get('key')
+[2017-11-23 18:38:16,744] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 1] - command: get('key') result : 
+[2017-11-23 18:38:16,744] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 1] - operation: get('key') slot_no: 1 seqNo: 4
+[2017-11-23 18:38:16,744] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 1] - for operation: get('key')
+[2017-11-23 18:38:16,744] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:b1c02#ClientNode>, 4, "get('key')"] at Replica 1
+[2017-11-23 18:38:16,745] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 4, "get('key')", b'9238a956da94f16cf609c1b8b8ca16940cf1c77a9fb8ecf7f67ef75f6b2e0f68', ''] at Replica 1
+[2017-11-23 18:38:16,745] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: S: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,748] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: R: [execute] F: Replica 1 T: Replica 2 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,748] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Execute Command] [Replica 2] - command : get('key')
+[2017-11-23 18:38:16,748] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Execute Command] [SUCCESS] [Replica 2] - command: get('key') result : 
+[2017-11-23 18:38:16,749] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Order Proof Validation] [SUCCESS] [Replica 2] - operation: get('key') slot_no: 1 seqNo: 4
+[2017-11-23 18:38:16,749] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: [Result Proof Validation] [SUCCESS] [Replica 2] - for operation: get('key')
+[2017-11-23 18:38:16,750] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: adding order stmt : [1, <Client:b1c02#ClientNode>, 4, "get('key')"] at Replica 2
+[2017-11-23 18:38:16,750] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: I: added result stmt : [<Client:b1c02#ClientNode>, 4, "get('key')", b'9238a956da94f16cf609c1b8b8ca16940cf1c77a9fb8ecf7f67ef75f6b2e0f68', ''] at Replica 2
+[2017-11-23 18:38:16,751] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 2 T: Replica 1 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,752] Replica.Replica<Replica:58007#ReplicaNode>:OUTPUT: S: [result_message] F: Replica 2 T: Client0 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,753] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 2 T: Replica 1I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,754] Replica.Replica<Replica:58006#ReplicaNode>:OUTPUT: S: [result_shuttle] F: Replica 1 T: Replica0 I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,754] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Message type: [result_message] Received from: <Replica:58007#ReplicaNode>
+[2017-11-23 18:38:16,755] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Result-shuttle validation success for operation: get('key') seqNo: 4
+[2017-11-23 18:38:16,756] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Received valid result:  for operation: get('key')
+[2017-11-23 18:38:16,756] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Validating Test cases ...
+[2017-11-23 18:38:16,756] Replica.Replica<Replica:58005#ReplicaNode>:OUTPUT: R: [result_shuttle] F: Replica 1 T: Replica 0I: client Id - 0 seqNo - 4 oper-get('key')
+[2017-11-23 18:38:16,756] Client.Client<Client:b1c02#ClientNode>:OUTPUT: o: put('movie','star') expected res: OK received  res: OK
+[2017-11-23 18:38:16,756] Client.Client<Client:b1c02#ClientNode>:OUTPUT: o: put('planet','earth') expected res: OK received  res: OK
+[2017-11-23 18:38:16,756] Client.Client<Client:b1c02#ClientNode>:OUTPUT: o: get('movie') expected res: star received  res: star
+[2017-11-23 18:38:16,757] Client.Client<Client:b1c02#ClientNode>:OUTPUT: o: get('planet') expected res: earth received  res: earth
+[2017-11-23 18:38:16,757] Client.Client<Client:b1c02#ClientNode>:OUTPUT: o: get('key') expected res:  received  res: 
+[2017-11-23 18:38:16,757] Client.Client<Client:b1c02#ClientNode>:OUTPUT: Terminating
+[2017-11-23 18:38:16,757] Client.Client<Client:b1c02#ClientNode>:OUTPUT: elapsed time (seconds):  3.159849166870117
