@@ -49,7 +49,7 @@ class Replica(process):
         self.timer = config['nonhead_timeout']
         if(self == list_replicas[0]):
             timer = config['head_timeout']
-        self.checkpoint_len = 2
+        self.checkpoint_len = 5
         self.checkpoints = []
         self.checkpoint_complete = True
         self.recent_result_proof_for_every_client = {}
